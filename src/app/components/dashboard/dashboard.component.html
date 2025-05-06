@@ -1,0 +1,83 @@
+<div class="p-10">
+    <div class="flex justify-between mb-6">
+        <h2>Dashboard</h2>
+        <button class="cursor-pointer">Logout</button>
+    </div>
+    <div class="grid grid-cols-2 gap-10">
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-light text-blue-500">
+                    <span class="text-3xl">New to learn </span>
+                    <span class="text-2xl"
+                        >({{ vocabularyStore.newVocabulary().length }})</span
+                    >
+                </h2>
+                <div class="flex gap-2 items-end">
+                    <div class="font-light text-blue-500 text-2xl">
+                        {{ vocabularyStore.learnedToday() }}
+                    </div>
+                    started today
+                </div>
+            </div>
+            <div class="flex gap-4 flex-col max-h-96 overflow-auto">
+                @for (
+                    translatedPhrase of vocabularyStore.newVocabulary();
+                    track translatedPhrase.id
+                ) {
+                    <app-phrase
+                        [showMenu]="false"
+                        [showReviewDate]="false"
+                        [showStage]="false"
+                        [translatedPhrase]="translatedPhrase"
+                    />
+                }
+            </div>
+        </div>
+        <div class="mb-6">
+            <div class="flex justify-between mb-4 items-center">
+                <h2 class="text-3xl font-light text-green-500">
+                    <span class="text-3xl">To review today </span>
+                    <span class="text-2xl"
+                        >({{ vocabularyStore.reviewVocabulary().length }})</span
+                    >
+                </h2>
+                <div class="flex items-end gap-2">
+                    <div class="font-light text-green-500 text-2xl">
+                        {{ vocabularyStore.reviewedToday() }}
+                    </div>
+                    reviewed today
+                </div>
+            </div>
+            <div class="flex gap-4 flex-col max-h-96 overflow-auto">
+                @for (
+                    translatedPhrase of vocabularyStore.reviewVocabulary();
+                    track translatedPhrase.id
+                ) {
+                    <app-phrase
+                        [showReviewDate]="true"
+                        [translatedPhrase]="translatedPhrase"
+                    />
+                }
+            </div>
+        </div>
+        <div class="col-span-2 mb-6">
+            <h2 class="text-3xl font-light mb-4 text-gray-500">
+                <span class="text-3xl">What comes next </span>
+                <span class="text-2xl"
+                    >({{ vocabularyStore.restVocabulary().length }})</span
+                >
+            </h2>
+            <div class="flex gap-4 flex-col max-h-96 overflow-auto">
+                @for (
+                    translatedPhrase of vocabularyStore.restVocabulary();
+                    track translatedPhrase.id
+                ) {
+                    <app-phrase
+                        [showReviewDate]="true"
+                        [translatedPhrase]="translatedPhrase"
+                    />
+                }
+            </div>
+        </div>
+    </div>
+</div>

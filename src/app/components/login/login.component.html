@@ -1,0 +1,42 @@
+<div class="h-screen bg-gray-200 flex justify-center items-center">
+    <div class="p-6 bg-white rounded-lg shadow-lg">
+        <h2 class="mb-6 text-xl">Login</h2>
+        <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
+            <input
+                type="email"
+                class="input input-lg block mb-6 w-80 placeholder:text-gray-400"
+                id="email"
+                name="email"
+                ngModel
+                required
+                email
+                placeholder="Email"
+            />
+            <input
+                type="password"
+                class="input input-lg block mb-2 w-80 placeholder:text-gray-400"
+                id="password"
+                name="password"
+                ngModel
+                required
+                placeholder="Password"
+            />
+            <div class="flex justify-end mb-8">
+                <button type="button" class="text-xs">Forgot password?</button>
+            </div>
+            @if (errorMessage()) {
+                <div class="text-red-500 text-sm mb-4">
+                    {{ errorMessage() }}
+                </div>
+            }
+            {{ loginForm.valid }}
+            <button
+                type="submit"
+                class="btn btn-block btn-lg"
+                [disabled]="!loginForm.valid || isLoading()"
+            >
+                {{ isLoading() ? 'Logging in...' : 'Login' }}
+            </button>
+        </form>
+    </div>
+</div>
