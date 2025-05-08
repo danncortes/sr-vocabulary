@@ -4,4 +4,5 @@ export default {
         extend: {},
     },
     plugins: [],
+    safelist: ['text-blue-500', 'text-green-500'],
 };

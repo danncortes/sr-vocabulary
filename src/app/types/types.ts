@@ -12,7 +12,12 @@ export interface TranslatedPhraseBase {
 export interface TranslatedPhrase
     extends Pick<
         TranslatedPhraseBase,
-        'id' | 'sr_stage_id' | 'review_date' | 'modified_at' | 'priority'
+        | 'id'
+        | 'sr_stage_id'
+        | 'review_date'
+        | 'modified_at'
+        | 'priority'
+        | 'learned'
     > {
     original: Phrase;
     translated: Phrase;

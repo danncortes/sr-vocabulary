@@ -2,10 +2,11 @@ import { Component, inject, OnInit } from '@angular/core';
 import { AuthService } from '../../services/auth/auth.service';
 import { VocabularyStore } from '../../store/vocabulary.store';
 import { PhraseComponent } from '../phrase/phrase.component';
+import { VocabularyListComponent } from '../vocabulary-list/vocabulary-list.component';
 
 @Component({
     selector: 'app-dashboard',
-    imports: [PhraseComponent],
+    imports: [PhraseComponent, VocabularyListComponent],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.css',
 })

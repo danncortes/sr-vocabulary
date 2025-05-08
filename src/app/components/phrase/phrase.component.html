@@ -1,60 +1,69 @@
 <div class="py-2 px-4 rounded-md bg-white shadow-md border border-gray-300">
     <div class="flex justify-between items-center gap-6">
         <button
-            class="grow-1 text-left cursor-pointer basis-lg"
+            class="grow-1 text-left cursor-pointer basis-[min-content]"
             (click)="revealTranslation()"
         >
             {{ translatedPhrase().original.text }}
         </button>
-        @if (showStage()) {
-            <div class="text-xs text-gray-500">
-                Stage {{ translatedPhrase().sr_stage_id }}
-            </div>
-        }
         @if (showReviewDate()) {
             <div class="text-sm text-gray-500">
                 {{ translatedPhrase().review_date | date: 'd MMM YY' }}
             </div>
         }
+        @if (showStage()) {
+            <div class="text-xs text-gray-500">
+                Stage {{ translatedPhrase().sr_stage_id }}
+            </div>
+        }
         <div class="flex gap-1">
-            <button
-                class="cursor-pointer"
-                (click)="playAudio(translatedPhrase().original.id)"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-5"
+            @if (loadingAudioId() === translatedPhrase().original.id) {
+                <span class="loading loading-spinner loading-xs"></span>
+            } @else {
+                <button
+                    class="cursor-pointer"
+                    (click)="playAudio(translatedPhrase().original.id)"
                 >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
-                    />
-                </svg>
-            </button>
-            <button
-                class="cursor-pointer"
-                (click)="setReviewedVocabulary(translatedPhrase().id)"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-5"
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-5"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                        />
+                    </svg>
+                </button>
+            }
+
+            @if (isReviewLoading()) {
+                <span class="loading loading-spinner loading-xs"></span>
+            } @else {
+                <button
+                    class="cursor-pointer"
+                    (click)="setReviewedVocabulary(translatedPhrase().id)"
                 >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                </svg>
-            </button>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-5"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                        />
+                    </svg>
+                </button>
+            }
             @if (showMenu()) {
                 <button class="cursor-pointer">
                     <svg
@@ -82,25 +91,33 @@
                     {{ translatedPhrase().translated.text }}
                 </div>
                 <div>
-                    <button
-                        class="cursor-pointer"
-                        (click)="playAudio(translatedPhrase().translated.id)"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                            class="size-5"
+                    @if (
+                        loadingAudioId() === translatedPhrase().translated.id
+                    ) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                    } @else {
+                        <button
+                            class="cursor-pointer"
+                            (click)="
+                                playAudio(translatedPhrase().translated.id)
+                            "
                         >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
-                            />
-                        </svg>
-                    </button>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="size-5"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                                />
+                            </svg>
+                        </button>
+                    }
                 </div>
             </div>
         </div>

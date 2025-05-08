@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID, Inject } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, of, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment.development';
 import { isPlatformBrowser } from '@angular/common';
@@ -51,6 +51,7 @@ export class AuthService {
                         this.setStorage('token', resp.access_token);
                         this.router.navigate(['/dashboard']);
                     }
+                    return of(resp);
                 }),
             );
     }

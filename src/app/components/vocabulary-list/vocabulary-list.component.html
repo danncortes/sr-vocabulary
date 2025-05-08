@@ -1,0 +1,29 @@
+<div class="flex justify-between items-center mb-6">
+    <h2 [class]="`font-light text-${color()}-500 flex gap-2 items-end`">
+        <span class="text-3xl">{{ title() }}</span>
+        <span class="text-2xl">({{ vocabulary().length }})</span>
+    </h2>
+    @if (statusText()) {
+        <div class="flex gap-2 items-end">
+            <div [class]="`font-light text-${color()}-500 text-2xl`">
+                {{ status() }}
+            </div>
+            {{ statusText() }}
+        </div>
+    }
+</div>
+<div class="flex gap-4 flex-col max-h-96 overflow-auto">
+    @for (translatedPhrase of vocabulary(); track translatedPhrase.id) {
+        <ng-container
+            [ngTemplateOutlet]="phrase"
+            [ngTemplateOutletContext]="{ translatedPhrase: translatedPhrase }"
+        >
+        </ng-container>
+    } @empty {
+        <div
+            class="text-gray-500 text-center p-1 rounded-md bg-gray-50 shadow-lg border border-gray-200"
+        >
+            There is no vocabulary to show
+        </div>
+    }
+</div>
