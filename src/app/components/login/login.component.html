@@ -1,10 +1,26 @@
 <div class="h-screen bg-gray-200 flex justify-center items-center">
     <div class="p-6 bg-white rounded-lg shadow-lg w-96">
         <h2 class="mb-6 text-xl">Login</h2>
+        <div class="join mb-6 w-full">
+            <button
+                class="btn btn-sm join-item basis-1/2"
+                [class.btn-primary]="twoFactorloginActive()"
+                (click)="setTwoFactorloginActive(true)"
+            >
+                With Two Factor
+            </button>
+            <button
+                class="btn btn-sm join-item basis-1/2"
+                [class.btn-primary]="!twoFactorloginActive()"
+                (click)="setTwoFactorloginActive(false)"
+            >
+                Two Factor setup
+            </button>
+        </div>
         <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
             <input
                 type="email"
-                class="input input-lg block mb-6 w-full placeholder:text-gray-400"
+                class="input input-bordered block mb-6 w-full placeholder:text-gray-400"
                 id="email"
                 name="email"
                 ngModel
@@ -14,7 +30,7 @@
             />
             <input
                 type="password"
-                class="input input-lg block mb-2 w-full placeholder:text-gray-400"
+                class="input input-bordered block mb-2 w-full placeholder:text-gray-400"
                 id="password"
                 name="password"
                 ngModel
@@ -22,20 +38,37 @@
                 placeholder="Password"
             />
             <div class="flex justify-end mb-8">
-                <button type="button" class="text-xs">Forgot password?</button>
+                <button type="button" class="text-sm">Forgot password?</button>
             </div>
             @if (errorMessage()) {
-                <div class="text-red-500 text-sm mb-4">
+                <div class="error-message text-red-500 text-sm mb-4">
                     {{ errorMessage() }}
                 </div>
             }
-            <button
-                type="submit"
-                class="btn btn-block btn-lg"
-                [disabled]="!loginForm.valid || isLoading()"
-            >
-                {{ isLoading() ? 'Logging in...' : 'Login' }}
-            </button>
+
+            @if (twoFactorloginActive()) {
+                <button
+                    type="submit"
+                    class="login-2FA-button btn btn-block btn-primary"
+                    [disabled]="!loginForm.valid || isLoading()"
+                >
+                    {{ isLoading() ? 'Logging in...' : 'Login with 2FA' }}
+                </button>
+            } @else {
+                <button
+                    type="submit"
+                    class="setup-2FA-button btn btn-block btn-primary"
+                    [disabled]="!loginForm.valid || isLoading()"
+                >
+                    {{ isLoading() ? 'Loading...' : 'Get 2FA QR' }}
+                </button>
+            }
         </form>
+        @if (qrCodeUrl()) {
+            <h3 class="mt-4 text-lg">
+                Scan this QR code with your authenticator app:
+            </h3>
+            <img [src]="qrCodeUrl()" alt="QR Code" class="mt-2" />
+        }
     </div>
 </div>

@@ -1,9 +1,37 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID, Inject } from '@angular/core';
-import { Observable, of, tap } from 'rxjs';
+import { catchError, Observable, of, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment.development';
 import { isPlatformBrowser } from '@angular/common';
+
+type LoginResponse = TwoFARequiredResponse | UnverifiedTwoFAResponse;
+export interface TwoFARequiredResponse {
+    message: '2FA required';
+    factorId: string;
+    userId: string;
+    token: string;
+}
+export interface UnverifiedTwoFAResponse {
+    message: 'unverified';
+    factorId: string;
+    token: string;
+}
+
+export interface TwoFactorEnrollResponse {
+    id: string;
+    type: 'totp';
+    friendly_name: string;
+    totp: {
+        qr_code: string;
+        secret: string;
+        uri: string;
+    };
+}
+
+interface TwoFactorResponse {
+    access_token: string;
+}
 
 @Injectable({
     providedIn: 'root',
@@ -36,13 +64,17 @@ export class AuthService {
     login(
         email: string,
         password: string,
-    ): Observable<Partial<{ access_token: string }>> {
+        code: string,
+    ): Observable<
+        Partial<LoginResponse | TwoFactorEnrollResponse | TwoFactorResponse>
+    > {
         return this.http
-            .post<Partial<{ access_token: string }>>(
+            .post<Partial<TwoFactorResponse>>(
                 `${environment.apiUrl}/user/login`,
                 {
                     email,
                     password,
+                    code,
                 },
             )
             .pipe(
@@ -52,6 +84,13 @@ export class AuthService {
                         this.router.navigate(['/dashboard']);
                     }
                     return of(resp);
+                }),
+                catchError((error) => {
+                    console.error(
+                        'Error during two-factor verification:',
+                        error,
+                    ); // Error log
+                    throw error;
                 }),
             );
     }

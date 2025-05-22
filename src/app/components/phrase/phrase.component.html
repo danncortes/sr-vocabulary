@@ -1,7 +1,7 @@
 <div class="py-2 px-4 rounded-md bg-white shadow-md border border-gray-300">
     <div class="flex justify-between items-center gap-6">
         <button
-            class="grow-1 text-left cursor-pointer basis-[min-content]"
+            class="grow-1 text-left cursor-pointer"
             (click)="revealTranslation()"
         >
             {{ translatedPhrase().original.text }}
@@ -65,7 +65,10 @@
                 </button>
             }
             @if (showMenu()) {
-                <button class="cursor-pointer">
+                <button
+                    class="cursor-pointer"
+                    [cdkMenuTriggerFor]="phraseOptionsMenu"
+                >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -81,6 +84,35 @@
                         />
                     </svg>
                 </button>
+
+                <ng-template #phraseOptionsMenu>
+                    <div
+                        class="example-menu menu bg-base-200 rounded-box w-56 shadow-xl"
+                        cdkMenu
+                    >
+                        <ul cdkMenuGroup>
+                            Delay
+
+                            @for (
+                                delayOption of delayOptions;
+                                track delayOption.label
+                            ) {
+                                <button
+                                    cdkMenuItemCheckbox
+                                    class="example-menu-item btn btn-sm cursor-pointer btn-ghost btn-wide justify-start border-none shadow-none font-normal"
+                                    (click)="
+                                        delayVocabulary(
+                                            translatedPhrase().id,
+                                            delayOption.value
+                                        )
+                                    "
+                                >
+                                    {{ delayOption.label }}
+                                </button>
+                            }
+                        </ul>
+                    </div>
+                </ng-template>
             }
         </div>
     </div>

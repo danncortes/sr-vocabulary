@@ -144,6 +144,30 @@ export const VocabularyStore = signalStore(
                 }),
             );
         },
+        delayVocabulary(ids: number[], days: number) {
+            return vocabularyService.delayVocabulary(ids, days).pipe(
+                tap({
+                    next: (resp) => {
+                        patchState(store, {
+                            vocabulary: store.vocabulary().map((v) => {
+                                const response = resp as TranslatedPhraseBase[];
+                                const newVocable = response.find(
+                                    (voc) => voc.id === v.id,
+                                );
+                                if (newVocable) {
+                                    return {
+                                        ...v,
+                                        review_date: newVocable.review_date,
+                                        modified_at: newVocable.modified_at,
+                                    };
+                                }
+                                return v;
+                            }),
+                        });
+                    },
+                }),
+            );
+        },
     })),
 );
 

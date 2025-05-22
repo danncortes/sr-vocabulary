@@ -1,7 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnDestroy, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
-import { Subscription } from 'rxjs';
+import { from, Observable, Subscription, switchMap } from 'rxjs';
 
 @Component({
     selector: 'app-login',
@@ -9,10 +9,12 @@ import { Subscription } from 'rxjs';
     templateUrl: './login.component.html',
     styleUrls: ['./login.component.css'],
 })
-export class LoginComponent {
+export class LoginComponent implements OnDestroy {
     isLoading = signal(false);
     errorMessage = signal('');
     subscriptions: Subscription[] = [];
+    qrCodeUrl = signal('');
+    twoFactorloginActive = signal(true);
 
     constructor(private authService: AuthService) {}
 
@@ -21,21 +23,48 @@ export class LoginComponent {
             this.errorMessage.set('');
             this.isLoading.set(true);
 
-            this.subscriptions.push(
-                this.authService
-                    .login(form.value.email, form.value.password)
-                    .subscribe({
-                        error: (error) => {
-                            this.isLoading.set(false);
-                            this.errorMessage.set(
-                                error.message || 'Login failed',
-                            );
-                        },
-                        complete: () => {
-                            this.isLoading.set(false);
-                        },
+            const loginSubscription = this.getTwoFactorCode()
+                .pipe(
+                    switchMap((code) => {
+                        return this.authService.login(
+                            form.value.email,
+                            form.value.password,
+                            code,
+                        );
                     }),
-            );
+                )
+                .subscribe({
+                    next: () => {
+                        this.isLoading.set(false);
+                        // Handle successful login
+                    },
+                    error: (error) => {
+                        this.isLoading.set(false);
+                        this.errorMessage.set(error.message || 'Login failed');
+                    },
+                    complete: () => {
+                        this.isLoading.set(false);
+                    },
+                });
+
+            this.subscriptions.push(loginSubscription);
         }
+    }
+
+    getTwoFactorCode(): Observable<string> {
+        return from(
+            new Promise<string>((resolve) => {
+                const code = prompt('Enter your 2FA code:');
+                resolve(code || '');
+            }),
+        );
+    }
+
+    setTwoFactorloginActive(value: boolean) {
+        this.twoFactorloginActive.set(value);
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach((sub) => sub.unsubscribe());
     }
 }

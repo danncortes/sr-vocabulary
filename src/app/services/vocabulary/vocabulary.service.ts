@@ -28,6 +28,13 @@ export class VocabularyService {
         });
     }
 
+    delayVocabulary(ids: number[], days: number) {
+        return this.http.post(`${this.apiUrl}/delay`, {
+            ids,
+            days,
+        });
+    }
+
     markAsLearned(id: string): Observable<TranslatedPhrase> {
         return this.http.patch<TranslatedPhrase>(
             `${this.apiUrl}/${id}/learned`,
