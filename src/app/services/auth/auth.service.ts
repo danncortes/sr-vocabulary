@@ -70,7 +70,7 @@ export class AuthService {
     > {
         return this.http
             .post<Partial<TwoFactorResponse>>(
-                `${environment.apiUrl}/user/login`,
+                `${environment.apiBaseUrl}/user/login`,
                 {
                     email,
                     password,
