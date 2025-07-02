@@ -9,11 +9,11 @@ import { TranslatedPhrase } from '../../types/types';
 })
 export class VocabularyService {
     private http = inject(HttpClient);
-    private apiUrl = `${environment.apiUrl}/vocabulary`;
-    private baseUrl = `${environment.apiUrl}`;
+    private apiBaseUrl = `${environment.apiBaseUrl}/vocabulary`;
+    private baseUrl = `${environment.apiBaseUrl}`;
 
     getAllVocabulary(): Observable<TranslatedPhrase[]> {
-        return this.http.get<TranslatedPhrase[]>(`${this.apiUrl}`);
+        return this.http.get<TranslatedPhrase[]>(`${this.apiBaseUrl}`);
     }
 
     getAudio(id: number) {
@@ -23,13 +23,13 @@ export class VocabularyService {
     }
 
     reviewVocabulary(id: number) {
-        return this.http.post(`${this.apiUrl}/review`, {
+        return this.http.post(`${this.apiBaseUrl}/review`, {
             id,
         });
     }
 
     delayVocabulary(ids: number[], days: number) {
-        return this.http.post(`${this.apiUrl}/delay`, {
+        return this.http.post(`${this.apiBaseUrl}/delay`, {
             ids,
             days,
         });
@@ -37,7 +37,7 @@ export class VocabularyService {
 
     markAsLearned(id: string): Observable<TranslatedPhrase> {
         return this.http.patch<TranslatedPhrase>(
-            `${this.apiUrl}/${id}/learned`,
+            `${this.apiBaseUrl}/${id}/learned`,
             {
                 learned: true,
             },
