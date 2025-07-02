@@ -9,6 +9,23 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18'
+
+            - name: Install dependencies
+              run: npm install
+
             - name: Replace environment variables in environment.prod.ts
               run: |
                   sed -i "s|__API_BASE_URL__|${{ secrets.API_BASE_URL }}|g" src/environments/environment.prod.ts
+
+            - name: Build Angular app
+              run: npm run build -- --configuration production --base-href=/sr-vocabulary/
+
+            - name: Deploy to GitHub Pages
+              run: npx angular-cli-ghpages --dir=dist/sr-vocabulary/browser
