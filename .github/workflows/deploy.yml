@@ -28,4 +28,12 @@ jobs:
               run: npm run build -- --configuration production --base-href=/sr-vocabulary/
 
             - name: Deploy to GitHub Pages
-              run: npx angular-cli-ghpages --dir=dist/sr-vocabulary/browser
+              run: |
+                  npx angular-cli-ghpages \
+                    --dir=dist/sr-vocabulary/browser \
+                    --name="github-actions[bot]" \
+                    --email="github-actions[bot]@users.noreply.github.com" \
+                    --no-silent \
+                    --message="Auto-deployed from GitHub Actions 🚀"
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
