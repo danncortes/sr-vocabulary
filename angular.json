@@ -25,12 +25,7 @@
                             }
                         ],
                         "styles": ["src/styles.css"],
-                        "scripts": [],
-                        "server": "src/main.server.ts",
-                        "outputMode": "server",
-                        "ssr": {
-                            "entry": "src/server.ts"
-                        }
+                        "scripts": []
                     },
                     "configurations": {
                         "production": {
@@ -99,6 +94,9 @@
                     "options": {
                         "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
                     }
+                },
+                "deploy": {
+                    "builder": "angular-cli-ghpages:deploy"
                 }
             }
         }

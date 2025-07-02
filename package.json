@@ -4,10 +4,9 @@
     "scripts": {
         "ng": "ng",
         "start": "ng serve",
-        "build": "ng build",
+        "build": "ng build --configuration production --base-href 'https://github.com/danncortes/sr-vocabulary'",
         "watch": "ng build --watch --configuration development",
         "test": "ng test",
-        "serve:ssr:sr-vocabulary": "node dist/sr-vocabulary/server/server.mjs",
         "lint": "ng lint"
     },
     "private": true,
@@ -35,6 +34,7 @@
         "@types/express": "^4.17.17",
         "@types/jasmine": "~5.1.0",
         "@types/node": "^18.18.0",
+        "angular-cli-ghpages": "^2.0.3",
         "angular-eslint": "19.3.0",
         "autoprefixer": "^10.4.21",
         "daisyui": "^4.12.24",
