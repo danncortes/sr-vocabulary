@@ -24,6 +24,9 @@ jobs:
               run: |
                   sed -i "s|__API_BASE_URL__|${{ secrets.API_BASE_URL }}|g" src/environments/environment.prod.ts
 
+            - name: Show environment.prod.ts content after sed
+              run: cat src/environments/environment.prod.ts
+
             - name: Build Angular app
               run: npm run build -- --configuration production --base-href=/sr-vocabulary/
 
