@@ -28,7 +28,7 @@ jobs:
               run: cat src/environments/environment.prod.ts
 
             - name: Build Angular app
-              run: npm run build -- --configuration production --base-href=/sr-vocabulary/
+              run: npm run build
 
             - name: Deploy to GitHub Pages
               uses: peaceiris/actions-gh-pages@v3
