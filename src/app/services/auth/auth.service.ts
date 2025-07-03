@@ -61,6 +61,7 @@ export class AuthService {
         }
     }
 
+    // TODO: add two-factor authentication
     login(
         email: string,
         password: string,
