@@ -20,6 +20,13 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
+            - name: Check for API_BASE_URL secret
+              run: |
+                  if [ -z "${{ secrets.API_BASE_URL }}" ]; then
+                    echo "API_BASE_URL secret is not set. Please set it in your repository settings."
+                    exit 1
+                  fi
+
             - name: Replace environment variable
               run: |
                   sed -i "s|__API_BASE_URL__|${{ secrets.API_BASE_URL }}|g" src/environments/environment.prod.ts
