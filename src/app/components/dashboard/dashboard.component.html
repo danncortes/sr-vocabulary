@@ -14,13 +14,21 @@
                 title="New to learn"
                 statusText="started today"
                 [status]="vocabularyStore.startedToday()"
+                [showSelectToggle]="false"
             >
-                <ng-template #phrase let-translatedPhrase="translatedPhrase">
+                <ng-template
+                    #phrase
+                    let-translatedPhrase="translatedPhrase"
+                    let-showSelectCheckbox="showSelectCheckbox"
+                    let-selectedChange="selectedChange"
+                >
                     <app-phrase
                         [showMenu]="false"
                         [showReviewDate]="false"
                         [showStage]="false"
                         [translatedPhrase]="translatedPhrase"
+                        [showSelectCheckbox]="showSelectCheckbox"
+                        (selectedChange)="selectedChange($event)"
                     />
                 </ng-template>
             </app-vocabulary-list>
@@ -32,8 +40,17 @@
                 statusText="reviewed today"
                 [status]="vocabularyStore.reviewedToday()"
             >
-                <ng-template #phrase let-translatedPhrase="translatedPhrase">
-                    <app-phrase [translatedPhrase]="translatedPhrase" />
+                <ng-template
+                    #phrase
+                    let-translatedPhrase="translatedPhrase"
+                    let-showSelectCheckbox="showSelectCheckbox"
+                    let-selectedChange="selectedChange"
+                >
+                    <app-phrase
+                        [translatedPhrase]="translatedPhrase"
+                        [showSelectCheckbox]="showSelectCheckbox"
+                        (selectedChange)="selectedChange($event)"
+                    />
                 </ng-template>
             </app-vocabulary-list>
             <div class="col-span-2">
@@ -45,8 +62,16 @@
                     <ng-template
                         #phrase
                         let-translatedPhrase="translatedPhrase"
+                        let-showSelectCheckbox="showSelectCheckbox"
+                        let-selectedChange="selectedChange"
+                        let-isSelected="isSelected"
                     >
-                        <app-phrase [translatedPhrase]="translatedPhrase" />
+                        <app-phrase
+                            [translatedPhrase]="translatedPhrase"
+                            [showSelectCheckbox]="showSelectCheckbox"
+                            [isSelected]="isSelected"
+                            (selectedChange)="selectedChange($event)"
+                        />
                     </ng-template>
                 </app-vocabulary-list>
             </div>

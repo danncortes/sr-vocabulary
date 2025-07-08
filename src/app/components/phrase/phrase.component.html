@@ -1,18 +1,26 @@
 <div class="py-2 px-4 rounded-md bg-white shadow-md border border-gray-300">
     <div class="flex justify-between items-center gap-6">
+        @if (showSelectCheckbox()) {
+            <input
+                type="checkbox"
+                class="checkbox checkbox-sm"
+                (click)="toggleSelect()"
+                [checked]="isSelected()"
+            />
+        }
         <button
-            class="grow-1 text-left cursor-pointer"
+            class="grow text-left cursor-pointer"
             (click)="revealTranslation()"
         >
             {{ translatedPhrase().original.text }}
         </button>
         @if (showReviewDate()) {
-            <div class="text-sm text-gray-500">
+            <div class="text-sm text-gray-500 text-nowrap">
                 {{ translatedPhrase().review_date | date: 'd MMM YY' }}
             </div>
         }
         @if (showStage()) {
-            <div class="text-xs text-gray-500">
+            <div class="text-xs text-gray-500 text-nowrap">
                 Stage {{ translatedPhrase().sr_stage_id }}
             </div>
         }
@@ -66,8 +74,10 @@
             }
             @if (showMenu()) {
                 <button
+                    #delayMenuTrigger
                     class="cursor-pointer"
                     [cdkMenuTriggerFor]="phraseOptionsMenu"
+                    cdkMenuTriggerCloseSource="click"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -86,31 +96,10 @@
                 </button>
 
                 <ng-template #phraseOptionsMenu>
-                    <div
-                        class="example-menu menu bg-base-200 rounded-box w-56 shadow-xl"
-                        cdkMenu
-                    >
-                        <ul cdkMenuGroup>
-                            Delay
-
-                            @for (
-                                delayOption of delayOptions;
-                                track delayOption.label
-                            ) {
-                                <button
-                                    cdkMenuItemCheckbox
-                                    class="example-menu-item btn btn-sm cursor-pointer btn-ghost btn-wide justify-start border-none shadow-none font-normal"
-                                    (click)="
-                                        delayVocabulary(
-                                            translatedPhrase().id,
-                                            delayOption.value
-                                        )
-                                    "
-                                >
-                                    {{ delayOption.label }}
-                                </button>
-                            }
-                        </ul>
+                    <div cdkMenu>
+                        <app-delay-menu
+                            (emitDelayDays)="selectDelayDays($event)"
+                        />
                     </div>
                 </ng-template>
             }

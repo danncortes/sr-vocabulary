@@ -1,36 +1,42 @@
 import { VocabularyStore } from './../../store/vocabulary.store';
-import { Component, inject, input, signal } from '@angular/core';
+import {
+    Component,
+    inject,
+    input,
+    output,
+    signal,
+    viewChild,
+} from '@angular/core';
 import { TranslatedPhrase } from '../../types/types';
 import { DatePipe } from '@angular/common';
-import {
-    CdkMenu,
-    CdkMenuGroup,
-    CdkMenuItemCheckbox,
-    CdkMenuTrigger,
-} from '@angular/cdk/menu';
+import { CdkMenu, CdkMenuTrigger } from '@angular/cdk/menu';
+import { DelayMenuComponent } from '../delay-menu/delay-menu.component';
 
 @Component({
     selector: 'app-phrase',
-    imports: [
-        DatePipe,
-        CdkMenuTrigger,
-        CdkMenu,
-        CdkMenuGroup,
-        CdkMenuItemCheckbox,
-    ],
+    imports: [DatePipe, CdkMenuTrigger, CdkMenu, DelayMenuComponent],
     templateUrl: './phrase.component.html',
     styleUrl: './phrase.component.css',
 })
 export class PhraseComponent {
     translatedPhrase = input.required<TranslatedPhrase>();
+    showSelectCheckbox = input<boolean>(false);
     showReviewDate = input<boolean>(true);
     showStage = input<boolean>(true);
     showMenu = input<boolean>(true);
+    isSelected = input<boolean>(false);
+    selectedChange = output<number>();
+    delayMenuTrigger = viewChild('delayMenuTrigger', { read: CdkMenuTrigger });
+
     vocabularyStore = inject(VocabularyStore);
     isTranlationVisible = signal(false);
     loadingAudioId = signal<number | null>(null);
     isReviewLoading = signal(false);
     delayOptions = [
+        {
+            label: '1 Day',
+            value: 1,
+        },
         {
             label: '1 Week',
             value: 7,
@@ -49,11 +55,15 @@ export class PhraseComponent {
         },
     ];
 
+    private audioPlayer: HTMLAudioElement | null = null;
+
+    toggleSelect() {
+        this.selectedChange.emit(this.translatedPhrase().id);
+    }
+
     revealTranslation() {
         this.isTranlationVisible.update((value) => !value);
     }
-
-    private audioPlayer: HTMLAudioElement | null = null;
 
     playAudio(id: number) {
         this.loadingAudioId.set(id);
@@ -94,6 +104,19 @@ export class PhraseComponent {
                 this.isReviewLoading.set(false);
             },
         });
+    }
+
+    selectDelayDays(days: number) {
+        this.vocabularyStore
+            .delayVocabulary([this.translatedPhrase().id], days)
+            .subscribe({
+                complete: () => {
+                    this.delayMenuTrigger()?.close();
+                },
+                error: (error) => {
+                    console.error('Error delaying vocabulary:', error);
+                },
+            });
     }
 
     delayVocabulary(id: number, days: number) {

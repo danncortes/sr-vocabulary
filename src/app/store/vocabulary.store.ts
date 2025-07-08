@@ -77,6 +77,7 @@ export const VocabularyStore = signalStore(
             vocabulary().filter((v) => v.learned === 1),
         ),
     })),
+
     withMethods((store, vocabularyService = inject(VocabularyService)) => ({
         getAllVocabulary() {
             patchState(store, { loading: true });
@@ -102,6 +103,7 @@ export const VocabularyStore = signalStore(
                 )
                 .subscribe();
         },
+
         setReviewedVocabulary(id: number) {
             return vocabularyService.reviewVocabulary(id).pipe(
                 tap({
@@ -124,6 +126,7 @@ export const VocabularyStore = signalStore(
                 }),
             );
         },
+
         getAudio(id: number) {
             const urlValidDuration = 60000;
             const currentTime = Date.now();
@@ -144,6 +147,7 @@ export const VocabularyStore = signalStore(
                 }),
             );
         },
+
         delayVocabulary(ids: number[], days: number) {
             return vocabularyService.delayVocabulary(ids, days).pipe(
                 tap({

@@ -3,20 +3,68 @@
         <span class="text-3xl">{{ title() }}</span>
         <span class="text-2xl">({{ vocabulary().length }})</span>
     </h2>
-    @if (statusText()) {
-        <div class="flex gap-2 items-end">
+    <div class="flex gap-2 items-center">
+        @if (showSelectToggle() && vocabulary().length > 0) {
+            @if (isSelectActive()) {
+                <button
+                    class="btn btn-xs"
+                    [cdkMenuTriggerFor]="delayOptionsMenu"
+                    [disabled]="selectedIds.length === 0"
+                    cdkMenuTriggerCloseSource="click"
+                    #delayMenuTrigger
+                >
+                    Delay
+                </button>
+
+                <ng-template #delayOptionsMenu>
+                    <div cdkMenu>
+                        <app-delay-menu
+                            (emitDelayDays)="selectDelayDays($event)"
+                        />
+                    </div>
+                </ng-template>
+                <span class="text-gray-500"
+                    >{{ selectedIds.length }} Selected</span
+                >
+                <button
+                    class="btn btn-xs"
+                    (click)="toggleSelectAllVocabulary()"
+                >
+                    @if (this.selectedIds.length !== vocabulary().length) {
+                        Select
+                    } @else {
+                        Deselect
+                    }
+                    All
+                </button>
+            } @else {
+                <span class="text-gray-500">Select</span>
+            }
+            <input
+                (click)="toggleSelect()"
+                type="checkbox"
+                class="toggle toggle-sm"
+                [checked]="isSelectActive()"
+            />
+        }
+        @if (statusText()) {
             <div [class]="`font-light text-${color()}-500 text-2xl`">
                 {{ status() }}
             </div>
             {{ statusText() }}
-        </div>
-    }
+        }
+    </div>
 </div>
 <div class="flex gap-4 flex-col max-h-96 overflow-auto">
     @for (translatedPhrase of vocabulary(); track translatedPhrase.id) {
         <ng-container
             [ngTemplateOutlet]="phrase"
-            [ngTemplateOutletContext]="{ translatedPhrase: translatedPhrase }"
+            [ngTemplateOutletContext]="{
+                translatedPhrase: translatedPhrase,
+                showSelectCheckbox: isSelectActive(),
+                isSelected: isSelected(translatedPhrase.id),
+                selectedChange: selectedChange.bind(this),
+            }"
         >
         </ng-container>
     } @empty {

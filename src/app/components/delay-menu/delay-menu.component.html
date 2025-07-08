@@ -1,0 +1,15 @@
+<div class="example-menu menu bg-base-200 rounded-box w-56 shadow-xl">
+    <ul cdkMenuGroup>
+        <p class="mx-3 my-1 text-gray-500">Delay</p>
+
+        @for (delayOption of delayOptions; track delayOption.label) {
+            <button
+                cdkMenuItem
+                class="example-menu-item btn btn-sm cursor-pointer btn-block justify-start border-none shadow-none font-normal"
+                (click)="delayVocabularyToDays(delayOption.value)"
+            >
+                {{ delayOption.label }}
+            </button>
+        }
+    </ul>
+</div>
