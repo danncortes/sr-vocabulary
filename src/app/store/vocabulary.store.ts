@@ -31,13 +31,13 @@ export const VocabularyStore = signalStore(
         totalCount: computed(() => vocabulary().length),
         // New computed signals for filtered vocabularies
         newVocabulary: computed(() =>
-            vocabulary().filter((v) => v.sr_stage_id === 0 && v.learned === 0),
+            vocabulary().filter((v) => v.sr_stage_id === 0),
         ),
         reviewVocabulary: computed(() =>
             vocabulary().filter((v) => {
                 const today = new Date();
                 const dateObj = new Date(v.review_date);
-                return dateObj <= today && v.sr_stage_id > 0;
+                return dateObj <= today && v.learned !== 1;
             }),
         ),
         restVocabulary: computed(() =>
@@ -45,7 +45,7 @@ export const VocabularyStore = signalStore(
                 .filter((v) => {
                     const today = new Date();
                     const dateObj = new Date(v.review_date);
-                    return dateObj > today;
+                    return dateObj > today && v.learned === 0;
                 })
                 .sort((a, b) => {
                     const dateA = new Date(a.review_date);
