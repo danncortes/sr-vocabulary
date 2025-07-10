@@ -5,7 +5,6 @@
         "ng": "ng",
         "start": "ng serve",
         "build": "ng build --configuration production",
-        "postbuild": "cp dist/sr-vocabulary/browser/index.html dist/sr-vocabulary/browser/404.html",
         "watch": "ng build --watch --configuration development",
         "test": "ng test",
         "lint": "ng lint"

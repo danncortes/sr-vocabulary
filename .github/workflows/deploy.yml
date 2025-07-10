@@ -41,6 +41,9 @@ jobs:
             - name: Build Angular app
               run: npm run build -- --base-href=/sr-vocabulary/
 
+            - name: Copy index.html to 404.html
+              run: cp dist/sr-vocabulary/browser/index.html dist/sr-vocabulary/browser/404.html
+
             - name: Deploy to GitHub Pages
               uses: peaceiris/actions-gh-pages@v4
               with:
