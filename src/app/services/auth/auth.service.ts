@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID, Inject } from '@angular/core';
 import { catchError, Observable, of, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
 
 type LoginResponse = TwoFARequiredResponse | UnverifiedTwoFAResponse;
@@ -39,6 +39,7 @@ interface TwoFactorResponse {
 export class AuthService {
     private http = inject(HttpClient);
     private router = inject(Router);
+    private baseUrl = `${environment.apiBaseUrl}`;
 
     constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
@@ -70,14 +71,11 @@ export class AuthService {
         Partial<LoginResponse | TwoFactorEnrollResponse | TwoFactorResponse>
     > {
         return this.http
-            .post<Partial<TwoFactorResponse>>(
-                `${environment.apiBaseUrl}/user/login`,
-                {
-                    email,
-                    password,
-                    code,
-                },
-            )
+            .post<Partial<TwoFactorResponse>>(`${this.baseUrl}/user/login`, {
+                email,
+                password,
+                code,
+            })
             .pipe(
                 tap((resp) => {
                     if (resp.access_token) {
