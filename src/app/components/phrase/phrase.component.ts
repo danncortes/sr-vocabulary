@@ -1,4 +1,3 @@
-import { VocabularyStore } from './../../store/vocabulary.store';
 import {
     Component,
     inject,
@@ -7,10 +6,11 @@ import {
     signal,
     viewChild,
 } from '@angular/core';
-import { TranslatedPhrase } from '../../types/types';
 import { DatePipe } from '@angular/common';
 import { CdkMenu, CdkMenuTrigger } from '@angular/cdk/menu';
 import { DelayMenuComponent } from '../delay-menu/delay-menu.component';
+import { TranslatedPhrase } from '../../types/types';
+import { VocabularyStore } from './../../store/vocabulary.store';
 
 @Component({
     selector: 'app-phrase',

@@ -108,8 +108,12 @@ export const VocabularyStore = signalStore(
             return vocabularyService.reviewVocabulary(id).pipe(
                 tap({
                     next: (resp) => {
-                        const { sr_stage_id, review_date, modified_at } =
-                            resp as TranslatedPhraseBase;
+                        const {
+                            sr_stage_id,
+                            review_date,
+                            modified_at,
+                            learned,
+                        } = resp as TranslatedPhraseBase;
                         patchState(store, {
                             vocabulary: store.vocabulary().map((v) =>
                                 v.id === id
@@ -118,6 +122,7 @@ export const VocabularyStore = signalStore(
                                           sr_stage_id,
                                           review_date,
                                           modified_at,
+                                          learned,
                                       }
                                     : v,
                             ),

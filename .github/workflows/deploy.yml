@@ -2,7 +2,11 @@ name: Deploy Angular App to GitHub Pages
 
 on:
     push:
-        branches: [master]
+        branches:
+            - master # or your default branch
+
+permissions:
+    contents: write # required for deploying to gh-pages
 
 jobs:
     build-and-deploy:
@@ -10,10 +14,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Use Node.js
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               with:
                   node-version: '20'
 
@@ -35,11 +39,10 @@ jobs:
               run: cat src/environments/environment.prod.ts
 
             - name: Build Angular app
-              run: npm run build -- --configuration production --base-href=/sr-vocabulary/
+              run: npm run build -- --base-href=/sr-vocabulary/
 
             - name: Deploy to GitHub Pages
-              uses: peaceiris/actions-gh-pages@v3
+              uses: peaceiris/actions-gh-pages@v4
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
                   publish_dir: ./dist/sr-vocabulary/browser
-                  force_orphan: true
