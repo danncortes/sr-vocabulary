@@ -9,11 +9,11 @@
         <div class="grid grid-cols-2 gap-14">
             <app-vocabulary-list
                 class="col-span-2 lg:col-span-1"
-                [vocabulary]="vocabularyStore.newVocabulary()"
+                [vocabulary]="vocabularyStore.vocabulary().new"
                 [color]="'blue'"
                 title="New to learn"
                 statusText="started today"
-                [status]="vocabularyStore.startedToday()"
+                [status]="vocabularyStore.vocabulary().startedToday.length"
                 [showSelectToggle]="false"
             >
                 <ng-template
@@ -34,11 +34,11 @@
             </app-vocabulary-list>
             <app-vocabulary-list
                 class="col-span-2 lg:col-span-1"
-                [vocabulary]="vocabularyStore.reviewVocabulary()"
+                [vocabulary]="vocabularyStore.vocabulary().review"
                 color="green"
                 title="To review today"
                 statusText="reviewed today"
-                [status]="vocabularyStore.reviewedToday()"
+                [status]="vocabularyStore.vocabulary().reviewedToday.length"
             >
                 <ng-template
                     #phrase
@@ -55,7 +55,7 @@
             </app-vocabulary-list>
             <div class="col-span-2">
                 <app-vocabulary-list
-                    [vocabulary]="vocabularyStore.restVocabulary()"
+                    [vocabulary]="vocabularyStore.vocabulary().rest"
                     color="gray"
                     title="What comes next"
                 >

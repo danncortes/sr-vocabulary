@@ -11,14 +11,14 @@ import { VocabularyService } from '../services/vocabulary/vocabulary.service';
 import { of, tap } from 'rxjs';
 
 interface VocabularyState {
-    vocabulary: TranslatedPhrase[];
+    sourceVocabulary: TranslatedPhrase[];
     loading: boolean;
     error: string | null;
     audioDictionary: Record<number, { url: string; timestamp: number }>;
 }
 
 const initialState: VocabularyState = {
-    vocabulary: [],
+    sourceVocabulary: [],
     loading: false,
     error: null,
     audioDictionary: {},
@@ -27,55 +27,55 @@ const initialState: VocabularyState = {
 export const VocabularyStore = signalStore(
     { providedIn: 'root' },
     withState(initialState),
-    withComputed(({ vocabulary }) => ({
-        totalCount: computed(() => vocabulary().length),
-        // New computed signals for filtered vocabularies
-        newVocabulary: computed(() =>
-            vocabulary().filter((v) => v.sr_stage_id === 0),
-        ),
-        reviewVocabulary: computed(() =>
-            vocabulary().filter((v) => {
-                const today = new Date();
+    withComputed(({ sourceVocabulary: vocabulary }) => ({
+        vocabulary: computed(() => {
+            const newVocabulary: TranslatedPhrase[] = [];
+            const review: TranslatedPhrase[] = [];
+            const rest: TranslatedPhrase[] = [];
+            const startedToday: TranslatedPhrase[] = [];
+            const reviewedToday: TranslatedPhrase[] = [];
+            const learned: TranslatedPhrase[] = [];
+            const today = new Date();
+
+            for (const v of vocabulary()) {
                 const dateObj = new Date(v.review_date);
-                return dateObj <= today && v.learned !== 1;
-            }),
-        ),
-        restVocabulary: computed(() =>
-            vocabulary()
-                .filter((v) => {
-                    const today = new Date();
-                    const dateObj = new Date(v.review_date);
-                    return dateObj > today && v.learned === 0;
-                })
-                .sort((a, b) => {
-                    const dateA = new Date(a.review_date);
-                    const dateB = new Date(b.review_date);
-                    return dateA.getTime() - dateB.getTime();
-                }),
-        ),
-        startedToday: computed(
-            () =>
-                vocabulary().filter((v) => {
-                    return (
-                        v.sr_stage_id === 1 &&
-                        new Date(v.modified_at).toISOString().split('T')[0] ===
-                            new Date().toISOString().split('T')[0]
-                    );
-                }).length,
-        ),
-        reviewedToday: computed(
-            () =>
-                vocabulary().filter((v) => {
-                    return (
-                        v.sr_stage_id > 1 &&
-                        new Date(v.modified_at).toISOString().split('T')[0] ===
-                            new Date().toISOString().split('T')[0]
-                    );
-                }).length,
-        ),
-        learnedVocabulary: computed(() =>
-            vocabulary().filter((v) => v.learned === 1),
-        ),
+
+                if (v.sr_stage_id === 0) {
+                    newVocabulary.push(v);
+                } else if (dateObj <= today && v.learned !== 1) {
+                    review.push(v);
+                } else if (dateObj > today && v.learned === 0) {
+                    rest.push(v);
+                } else if (v.learned === 1) {
+                    learned.push(v);
+                }
+
+                const isVocabularyReviewedToday =
+                    new Date(v.modified_at).toISOString().split('T')[0] ===
+                    new Date().toISOString().split('T')[0];
+
+                if (v.sr_stage_id === 1 && isVocabularyReviewedToday) {
+                    startedToday.push(v);
+                } else if (v.sr_stage_id > 1 && isVocabularyReviewedToday) {
+                    reviewedToday.push(v);
+                }
+            }
+
+            rest.sort((a, b) => {
+                const dateA = new Date(a.review_date);
+                const dateB = new Date(b.review_date);
+                return dateA.getTime() - dateB.getTime();
+            });
+
+            return {
+                new: newVocabulary,
+                review,
+                rest,
+                startedToday,
+                reviewedToday,
+                learned,
+            };
+        }),
     })),
 
     withMethods((store, vocabularyService = inject(VocabularyService)) => ({
@@ -88,7 +88,7 @@ export const VocabularyStore = signalStore(
                     tap({
                         next: (vocabulary) => {
                             patchState(store, {
-                                vocabulary,
+                                sourceVocabulary: vocabulary,
                                 loading: false,
                                 error: null,
                             });
@@ -115,17 +115,19 @@ export const VocabularyStore = signalStore(
                             learned,
                         } = resp as TranslatedPhraseBase;
                         patchState(store, {
-                            vocabulary: store.vocabulary().map((v) =>
-                                v.id === id
-                                    ? {
-                                          ...v,
-                                          sr_stage_id,
-                                          review_date,
-                                          modified_at,
-                                          learned,
-                                      }
-                                    : v,
-                            ),
+                            sourceVocabulary: store
+                                .sourceVocabulary()
+                                .map((v) =>
+                                    v.id === id
+                                        ? {
+                                              ...v,
+                                              sr_stage_id,
+                                              review_date,
+                                              modified_at,
+                                              learned,
+                                          }
+                                        : v,
+                                ),
                         });
                     },
                 }),
@@ -158,20 +160,23 @@ export const VocabularyStore = signalStore(
                 tap({
                     next: (resp) => {
                         patchState(store, {
-                            vocabulary: store.vocabulary().map((v) => {
-                                const response = resp as TranslatedPhraseBase[];
-                                const newVocable = response.find(
-                                    (voc) => voc.id === v.id,
-                                );
-                                if (newVocable) {
-                                    return {
-                                        ...v,
-                                        review_date: newVocable.review_date,
-                                        modified_at: newVocable.modified_at,
-                                    };
-                                }
-                                return v;
-                            }),
+                            sourceVocabulary: store
+                                .sourceVocabulary()
+                                .map((v) => {
+                                    const response =
+                                        resp as TranslatedPhraseBase[];
+                                    const newVocable = response.find(
+                                        (voc) => voc.id === v.id,
+                                    );
+                                    if (newVocable) {
+                                        return {
+                                            ...v,
+                                            review_date: newVocable.review_date,
+                                            modified_at: newVocable.modified_at,
+                                        };
+                                    }
+                                    return v;
+                                }),
                         });
                     },
                 }),
