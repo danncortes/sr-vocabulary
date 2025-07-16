@@ -1,4 +1,4 @@
-<div class="p-14">
+<div class="dashboard">
     <div class="flex justify-between mb-6">
         <h2>Dashboard</h2>
         <button class="cursor-pointer" (click)="logout()">Logout</button>
@@ -11,8 +11,8 @@
                 class="col-span-2 lg:col-span-1"
                 [vocabulary]="vocabularyStore.vocabulary().new"
                 [color]="'blue'"
-                title="New to learn"
-                statusText="started today"
+                title="New"
+                statusText="started"
                 [status]="vocabularyStore.vocabulary().startedToday.length"
                 [showSelectToggle]="false"
             >
@@ -36,8 +36,8 @@
                 class="col-span-2 lg:col-span-1"
                 [vocabulary]="vocabularyStore.vocabulary().review"
                 color="green"
-                title="To review today"
-                statusText="reviewed today"
+                title="To review"
+                statusText="reviewed"
                 [status]="vocabularyStore.vocabulary().reviewedToday.length"
             >
                 <ng-template
@@ -57,7 +57,7 @@
                 <app-vocabulary-list
                     [vocabulary]="vocabularyStore.vocabulary().rest"
                     color="gray"
-                    title="What comes next"
+                    title="Next"
                 >
                     <ng-template
                         #phrase

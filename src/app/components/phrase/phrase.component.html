@@ -1,26 +1,32 @@
-<div class="py-2 px-4 rounded-md bg-white shadow-md border border-gray-300">
+<div
+    class="py-2 px-4 rounded-md bg-white shadow-md border border-gray-300 phrase-component"
+>
     <div class="flex justify-between items-center gap-6">
         @if (showSelectCheckbox()) {
             <input
                 type="checkbox"
-                class="checkbox checkbox-sm"
+                class="checkbox checkbox-sm phrase-component__select-checkbox"
                 (click)="toggleSelect()"
                 [checked]="isSelected()"
             />
         }
         <button
-            class="grow text-left cursor-pointer"
+            class="grow text-left cursor-pointer phrase-component__original"
             (click)="revealTranslation()"
         >
             {{ translatedPhrase().original.text }}
         </button>
         @if (showReviewDate()) {
-            <div class="text-sm text-gray-500 text-nowrap">
+            <div
+                class="text-sm text-gray-500 text-nowrap phrase-component__review-date"
+            >
                 {{ translatedPhrase().review_date | date: 'd MMM YY' }}
             </div>
         }
         @if (showStage()) {
-            <div class="text-xs text-gray-500 text-nowrap">
+            <div
+                class="text-xs text-gray-500 text-nowrap phrase-component__stage"
+            >
                 Stage {{ translatedPhrase().sr_stage_id }}
             </div>
         }
@@ -29,7 +35,7 @@
                 <span class="loading loading-spinner loading-xs"></span>
             } @else {
                 <button
-                    class="cursor-pointer"
+                    class="cursor-pointer phrase-component__play-audio--original"
                     (click)="playAudio(translatedPhrase().original.id)"
                 >
                     <svg
@@ -53,7 +59,7 @@
                 <span class="loading loading-spinner loading-xs"></span>
             } @else {
                 <button
-                    class="cursor-pointer"
+                    class="cursor-pointer phrase-component__review-button"
                     (click)="setReviewedVocabulary(translatedPhrase().id)"
                 >
                     <svg
@@ -75,7 +81,7 @@
             @if (showMenu()) {
                 <button
                     #delayMenuTrigger
-                    class="cursor-pointer"
+                    class="cursor-pointer phrase-component__delay-button"
                     [cdkMenuTriggerFor]="phraseOptionsMenu"
                     cdkMenuTriggerCloseSource="click"
                 >
@@ -98,6 +104,7 @@
                 <ng-template #phraseOptionsMenu>
                     <div cdkMenu>
                         <app-delay-menu
+                            class="phrase-component__delay-menu-options"
                             (emitDelayDays)="selectDelayDays($event)"
                         />
                     </div>
@@ -108,7 +115,9 @@
     @if (isTranlationVisible()) {
         <div class="pl-6 pt-2 mt-2 border-t border-dotted border-gray-300">
             <div class="flex justify-between items-center">
-                <div class="flex gap-3 items-center">
+                <div
+                    class="flex gap-3 items-center phrase-component__translated"
+                >
                     {{ translatedPhrase().translated.text }}
                 </div>
                 <div>
@@ -118,7 +127,7 @@
                         <span class="loading loading-spinner loading-xs"></span>
                     } @else {
                         <button
-                            class="cursor-pointer"
+                            class="cursor-pointer phrase-component__play-audio--translated"
                             (click)="
                                 playAudio(translatedPhrase().translated.id)
                             "
