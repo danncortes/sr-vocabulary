@@ -3,10 +3,11 @@ import { AuthService } from '../../services/auth/auth.service';
 import { VocabularyStore } from '../../store/vocabulary.store';
 import { PhraseComponent } from '../phrase/phrase.component';
 import { VocabularyListComponent } from '../vocabulary-list/vocabulary-list.component';
+import { ToastComponent } from '../toast/toast.component';
 
 @Component({
     selector: 'app-dashboard',
-    imports: [PhraseComponent, VocabularyListComponent],
+    imports: [PhraseComponent, VocabularyListComponent, ToastComponent],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.css',
 })

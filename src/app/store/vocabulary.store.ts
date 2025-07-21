@@ -9,6 +9,7 @@ import { computed, inject } from '@angular/core';
 import { TranslatedPhrase, TranslatedPhraseBase } from '../types/types';
 import { VocabularyService } from '../services/vocabulary/vocabulary.service';
 import { of, tap } from 'rxjs';
+import { ToastService } from '../services/toast/toast.service';
 
 interface VocabularyState {
     sourceVocabulary: TranslatedPhrase[];
@@ -78,111 +79,124 @@ export const VocabularyStore = signalStore(
         }),
     })),
 
-    withMethods((store, vocabularyService = inject(VocabularyService)) => ({
-        getAllVocabulary() {
-            patchState(store, { loading: true });
+    withMethods(
+        (
+            store,
+            vocabularyService = inject(VocabularyService),
+            toastService = inject(ToastService),
+        ) => ({
+            getAllVocabulary() {
+                patchState(store, { loading: true });
 
-            vocabularyService
-                .getAllVocabulary()
-                .pipe(
+                vocabularyService
+                    .getAllVocabulary()
+                    .pipe(
+                        tap({
+                            next: (vocabulary) => {
+                                patchState(store, {
+                                    sourceVocabulary: vocabulary,
+                                    loading: false,
+                                    error: null,
+                                });
+                            },
+                            error: (error) => {
+                                patchState(store, {
+                                    loading: false,
+                                    error: error.message,
+                                });
+                            },
+                        }),
+                    )
+                    .subscribe();
+            },
+
+            setReviewedVocabulary(id: number) {
+                return vocabularyService.reviewVocabulary(id).pipe(
                     tap({
-                        next: (vocabulary) => {
+                        next: (resp) => {
+                            const {
+                                sr_stage_id,
+                                review_date,
+                                modified_at,
+                                learned,
+                            } = resp as TranslatedPhraseBase;
                             patchState(store, {
-                                sourceVocabulary: vocabulary,
-                                loading: false,
-                                error: null,
+                                sourceVocabulary: store
+                                    .sourceVocabulary()
+                                    .map((v) =>
+                                        v.id === id
+                                            ? {
+                                                  ...v,
+                                                  sr_stage_id,
+                                                  review_date,
+                                                  modified_at,
+                                                  learned,
+                                              }
+                                            : v,
+                                    ),
                             });
-                        },
-                        error: (error) => {
-                            patchState(store, {
-                                loading: false,
-                                error: error.message,
+
+                            toastService.toast({
+                                message: `Vocabulary ${id} marked as reviewed`,
+                                type: 'success',
                             });
                         },
                     }),
-                )
-                .subscribe();
-        },
+                );
+            },
 
-        setReviewedVocabulary(id: number) {
-            return vocabularyService.reviewVocabulary(id).pipe(
-                tap({
-                    next: (resp) => {
-                        const {
-                            sr_stage_id,
-                            review_date,
-                            modified_at,
-                            learned,
-                        } = resp as TranslatedPhraseBase;
+            getAudio(id: number) {
+                const urlValidDuration = 60000;
+                const currentTime = Date.now();
+                const { timestamp } = store.audioDictionary()[id] || {
+                    timestamp: 0,
+                };
+                if (timestamp && currentTime - timestamp < urlValidDuration) {
+                    return of(store.audioDictionary()[id].url);
+                }
+                return vocabularyService.getAudio(id).pipe(
+                    tap((url) => {
                         patchState(store, {
-                            sourceVocabulary: store
-                                .sourceVocabulary()
-                                .map((v) =>
-                                    v.id === id
-                                        ? {
-                                              ...v,
-                                              sr_stage_id,
-                                              review_date,
-                                              modified_at,
-                                              learned,
-                                          }
-                                        : v,
-                                ),
+                            audioDictionary: {
+                                ...store.audioDictionary(),
+                                [id]: { url, timestamp: currentTime },
+                            },
                         });
-                    },
-                }),
-            );
-        },
+                    }),
+                );
+            },
 
-        getAudio(id: number) {
-            const urlValidDuration = 60000;
-            const currentTime = Date.now();
-            const { timestamp } = store.audioDictionary()[id] || {
-                timestamp: 0,
-            };
-            if (timestamp && currentTime - timestamp < urlValidDuration) {
-                return of(store.audioDictionary()[id].url);
-            }
-            return vocabularyService.getAudio(id).pipe(
-                tap((url) => {
-                    patchState(store, {
-                        audioDictionary: {
-                            ...store.audioDictionary(),
-                            [id]: { url, timestamp: currentTime },
+            delayVocabulary(ids: number[], days: number) {
+                return vocabularyService.delayVocabulary(ids, days).pipe(
+                    tap({
+                        next: (resp) => {
+                            patchState(store, {
+                                sourceVocabulary: store
+                                    .sourceVocabulary()
+                                    .map((v) => {
+                                        const response =
+                                            resp as TranslatedPhraseBase[];
+                                        const newVocable = response.find(
+                                            (voc) => voc.id === v.id,
+                                        );
+                                        if (newVocable) {
+                                            return {
+                                                ...v,
+                                                review_date:
+                                                    newVocable.review_date,
+                                                modified_at:
+                                                    newVocable.modified_at,
+                                            };
+                                        }
+                                        return v;
+                                    }),
+                            });
                         },
-                    });
-                }),
-            );
-        },
-
-        delayVocabulary(ids: number[], days: number) {
-            return vocabularyService.delayVocabulary(ids, days).pipe(
-                tap({
-                    next: (resp) => {
-                        patchState(store, {
-                            sourceVocabulary: store
-                                .sourceVocabulary()
-                                .map((v) => {
-                                    const response =
-                                        resp as TranslatedPhraseBase[];
-                                    const newVocable = response.find(
-                                        (voc) => voc.id === v.id,
-                                    );
-                                    if (newVocable) {
-                                        return {
-                                            ...v,
-                                            review_date: newVocable.review_date,
-                                            modified_at: newVocable.modified_at,
-                                        };
-                                    }
-                                    return v;
-                                }),
-                        });
-                    },
-                }),
-            );
-        },
-    })),
+                    }),
+                );
+            },
+        }),
+    ),
 );
 
 export type VocabularyStore = InstanceType<typeof VocabularyStore>;
