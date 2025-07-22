@@ -29,6 +29,7 @@ describe('PhraseComponent', () => {
         fixture = TestBed.createComponent(PhraseComponent);
         component = fixture.componentInstance;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (component as any).translatedPhrase = signal<TranslatedPhrase>({
             id: 1,
             original: { id: 1, text: 'Hola', audio_url: '' },
@@ -114,6 +115,7 @@ describe('PhraseComponent', () => {
     });
 
     it('should not show review date', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (component as any).showReviewDate = signal<boolean>(false);
 
         fixture.detectChanges();
@@ -132,6 +134,7 @@ describe('PhraseComponent', () => {
     });
 
     it('should not show stage', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (component as any).showStage = signal<boolean>(false);
 
         fixture.detectChanges();
@@ -150,6 +153,7 @@ describe('PhraseComponent', () => {
     });
 
     it('should not show delay menu', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (component as any).showMenu = signal<boolean>(false);
 
         fixture.detectChanges();
@@ -174,7 +178,6 @@ describe('PhraseComponent', () => {
         );
 
         expect(delayMenu).toBeTruthy();
-        console.log('🚀 ~ it ~ delayMenu:', delayMenu);
 
         const delayOptions = delayMenu.nativeElement.querySelectorAll(
             '.delay-menu__option',
@@ -208,6 +211,7 @@ describe('PhraseComponent', () => {
     it('should emit selectedChange when checkbox is clicked', () => {
         spyOn(component.selectedChange, 'emit');
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (component as any).showSelectCheckbox = signal<boolean>(true);
 
         fixture.detectChanges();
