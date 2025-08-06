@@ -19,8 +19,19 @@ import { of } from 'rxjs';
             [statusText]="statusText()"
             [status]="status()"
         >
-            <ng-template #phrase let-translatedPhrase="translatedPhrase">
-                <app-phrase [translatedPhrase]="translatedPhrase"></app-phrase>
+            <ng-template
+                #phrase
+                let-translatedPhrase="translatedPhrase"
+                let-showSelectCheckbox="showSelectCheckbox"
+                let-selectedChange="selectedChange"
+                let-isSelected="isSelected"
+            >
+                <app-phrase
+                    [translatedPhrase]="translatedPhrase"
+                    [showSelectCheckbox]="true"
+                    [isSelected]="isSelected"
+                    (selectedChange)="selectedChange($event)"
+                ></app-phrase>
             </ng-template>
         </app-vocabulary-list>
     `,
@@ -243,13 +254,51 @@ describe('VocabularyListComponent within a host', () => {
 
         checkbox.nativeElement.click();
         hostFixture.detectChanges();
+        const delayButton = hostFixture.debugElement.query(
+            By.css('.vocabulary-list__delay-menu-button'),
+        );
+        hostFixture.detectChanges();
+        expect(delayButton).toBeTruthy();
+        expect(delayButton.nativeElement.disabled).toBeTruthy();
 
         vocabularyListComponent.selectedChange(mockVocabulary[0].id);
         hostFixture.detectChanges();
 
-        const delayButton = hostFixture.debugElement.query(
-            By.css('.vocabulary-list__delay-menu-button'),
+        expect(delayButton.nativeElement.disabled).toBeFalsy();
+    });
+
+    it('should select and deselect all elements', () => {
+        hostComponent.vocabulary.set(mockVocabulary);
+        hostFixture.detectChanges();
+
+        const checkbox = hostFixture.debugElement.query(
+            By.css('.vocabulary-list__select-toggle-checkbox'),
         );
-        expect(delayButton).toBeTruthy();
+
+        checkbox.nativeElement.click();
+        hostFixture.detectChanges();
+
+        const selectButton = hostFixture.debugElement.query(
+            By.css('.vocabulary-list__select-button'),
+        );
+
+        selectButton.nativeElement.click();
+        hostFixture.detectChanges();
+        const phraseComponents = hostFixture.debugElement.queryAll(
+            By.directive(PhraseComponent),
+        );
+
+        phraseComponents.forEach((phraseComponent) => {
+            const phraseComponentInstance = phraseComponent.componentInstance;
+            expect(phraseComponentInstance.isSelected()).toBeTruthy();
+        });
+
+        selectButton.nativeElement.click();
+        hostFixture.detectChanges();
+
+        phraseComponents.forEach((phraseComponent) => {
+            const phraseComponentInstance = phraseComponent.componentInstance;
+            expect(phraseComponentInstance.isSelected()).toBeFalsy();
+        });
     });
 });

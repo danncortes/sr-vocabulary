@@ -9,5 +9,10 @@ export default {
     daisyui: {
         themes: ['light'],
     },
-    safelist: ['text-blue-500', 'text-green-500'],
+    safelist: [
+        'text-blue-500',
+        'text-green-500',
+        'alert-success',
+        'alert-info',
+    ],
 };

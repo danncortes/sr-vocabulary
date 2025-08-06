@@ -1,9 +1,8 @@
 <div class="toast">
-    <div *ngFor="let notification of toastService.notifications() | keyvalue">
-        <div
-            [className]="`alert alert-${notification.value.type} shadow-lg rounded-lg`"
-        >
-            <span class="text-white">{{ notification.value.message }}</span>
-        </div>
+    <div
+        *ngFor="let notification of toastService.notifications() | keyvalue"
+        [className]="`alert alert-${notification.value.type} shadow-lg rounded-lg`"
+    >
+        <span class="text-white">{{ notification.value.message }}</span>
     </div>
 </div>

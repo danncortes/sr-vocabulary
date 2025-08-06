@@ -62,6 +62,8 @@ export const VocabularyStore = signalStore(
                 }
             }
 
+            newVocabulary.sort((a, b) => a.priority - b.priority);
+
             rest.sort((a, b) => {
                 const dateA = new Date(a.review_date);
                 const dateB = new Date(b.review_date);

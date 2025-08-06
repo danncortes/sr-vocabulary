@@ -9,7 +9,7 @@
     } @else {
         <div class="grid grid-cols-2 gap-14">
             <app-vocabulary-list
-                class="col-span-2 lg:col-span-1"
+                class="col-span-2 lg:col-span-1 dashboard__new-vocabulary"
                 [vocabulary]="vocabularyStore.vocabulary().new"
                 [color]="'blue'"
                 title="New"
@@ -46,10 +46,12 @@
                     let-translatedPhrase="translatedPhrase"
                     let-showSelectCheckbox="showSelectCheckbox"
                     let-selectedChange="selectedChange"
+                    let-isSelected="isSelected"
                 >
                     <app-phrase
                         [translatedPhrase]="translatedPhrase"
                         [showSelectCheckbox]="showSelectCheckbox"
+                        [isSelected]="isSelected"
                         (selectedChange)="selectedChange($event)"
                     />
                 </ng-template>

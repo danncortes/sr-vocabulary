@@ -47,11 +47,20 @@ describe('PhraseComponent', () => {
         expect(component).toBeTruthy();
     });
 
+    it('should render the phrase id as title attribute', () => {
+        const phraseComponent =
+            fixture.debugElement.nativeElement.querySelector(
+                '.phrase-component',
+            );
+        expect(phraseComponent.getAttribute('title')).toBe('1');
+    });
+
     it('should show original phrase', () => {
         const originalBtn = fixture.debugElement.nativeElement.querySelector(
             '.phrase-component__original',
         );
         expect(originalBtn.textContent.trim()).toEqual('Hola');
+        expect(originalBtn.getAttribute('title')).toBe('1');
     });
 
     it('should toggle translation visibility and show translation', () => {
@@ -69,6 +78,7 @@ describe('PhraseComponent', () => {
             '.phrase-component__translated',
         );
         expect(translatedDiv.textContent.trim()).toEqual('Hello');
+        expect(translatedDiv.getAttribute('title')).toBe('2');
     });
 
     it('should show play original phrase audio button', () => {

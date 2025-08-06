@@ -1,5 +1,7 @@
 <div class="flex justify-between items-center mb-6 vocabulary-list-header">
-    <h2 [class]="`font-light text-${color()}-500 flex gap-2 items-end`">
+    <h2
+        [class]="`font-light text-${color()}-500 flex gap-2 items-end vocabulary-list__title`"
+    >
         <span class="text-3xl">{{ title() }}</span>
         <span class="text-2xl">({{ vocabulary().length }})</span>
     </h2>
