@@ -8,13 +8,13 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { CdkMenu, CdkMenuTrigger } from '@angular/cdk/menu';
-import { DelayMenuComponent } from '../delay-menu/delay-menu.component';
+import { OptionsMenuComponent } from '../options-menu/options-menu.component';
 import { TranslatedPhrase } from '../../types/types';
 import { VocabularyStore } from './../../store/vocabulary.store';
 
 @Component({
     selector: 'app-phrase',
-    imports: [DatePipe, CdkMenuTrigger, CdkMenu, DelayMenuComponent],
+    imports: [DatePipe, CdkMenuTrigger, CdkMenu, OptionsMenuComponent],
     templateUrl: './phrase.component.html',
     styleUrl: './phrase.component.css',
 })
@@ -26,7 +26,9 @@ export class PhraseComponent {
     showMenu = input<boolean>(true);
     isSelected = input<boolean>(false);
     selectedChange = output<number>();
-    delayMenuTrigger = viewChild('delayMenuTrigger', { read: CdkMenuTrigger });
+    optionsMenuTrigger = viewChild('optionsMenuTrigger', {
+        read: CdkMenuTrigger,
+    });
 
     vocabularyStore = inject(VocabularyStore);
     isTranlationVisible = signal(false);
@@ -111,12 +113,34 @@ export class PhraseComponent {
             .delayVocabulary([this.translatedPhrase().id], days)
             .subscribe({
                 complete: () => {
-                    this.delayMenuTrigger()?.close();
+                    this.optionsMenuTrigger()?.close();
                 },
                 error: (error) => {
                     console.error('Error delaying vocabulary:', error);
                 },
             });
+    }
+
+    resetVocabulary(id: number) {
+        this.vocabularyStore.resetVocabulary([id]).subscribe({
+            complete: () => {
+                this.optionsMenuTrigger()?.close();
+            },
+            error: (error) => {
+                console.error('Error resetting vocabulary:', error);
+            },
+        });
+    }
+
+    restartVocabulary(id: number) {
+        this.vocabularyStore.restartVocabulary([id]).subscribe({
+            complete: () => {
+                this.optionsMenuTrigger()?.close();
+            },
+            error: (error) => {
+                console.error('Error resetting vocabulary:', error);
+            },
+        });
     }
 
     delayVocabulary(id: number, days: number) {

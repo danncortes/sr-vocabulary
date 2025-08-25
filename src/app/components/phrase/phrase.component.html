@@ -82,8 +82,8 @@
             }
             @if (showMenu()) {
                 <button
-                    #delayMenuTrigger
-                    class="cursor-pointer phrase-component__delay-button"
+                    #optionsMenuTrigger
+                    class="cursor-pointer phrase-component__options-button"
                     [cdkMenuTriggerFor]="phraseOptionsMenu"
                     cdkMenuTriggerCloseSource="click"
                 >
@@ -105,9 +105,13 @@
 
                 <ng-template #phraseOptionsMenu>
                     <div cdkMenu>
-                        <app-delay-menu
-                            class="phrase-component__delay-menu-options"
+                        <app-options-menu
+                            class="phrase-component__options-menu"
                             (emitDelayDays)="selectDelayDays($event)"
+                            (emitReset)="resetVocabulary(translatedPhrase().id)"
+                            (emitRestart)="
+                                restartVocabulary(translatedPhrase().id)
+                            "
                         />
                     </div>
                 </ng-template>

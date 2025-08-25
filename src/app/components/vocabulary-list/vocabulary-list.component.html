@@ -9,19 +9,21 @@
         @if (showSelectToggle() && vocabulary().length > 0) {
             @if (isSelectActive()) {
                 <button
-                    class="btn btn-xs vocabulary-list__delay-menu-button"
-                    [cdkMenuTriggerFor]="delayOptionsMenu"
+                    class="btn btn-xs vocabulary-options-menu-button"
+                    [cdkMenuTriggerFor]="optionsMenu"
                     [disabled]="selectedIds.length === 0"
                     cdkMenuTriggerCloseSource="click"
-                    #delayMenuTrigger
+                    #optionsMenuTrigger
                 >
-                    Delay
+                    Options
                 </button>
 
-                <ng-template #delayOptionsMenu>
+                <ng-template #optionsMenu>
                     <div cdkMenu>
-                        <app-delay-menu
+                        <app-options-menu
                             (emitDelayDays)="selectDelayDays($event)"
+                            (emitReset)="resetVocabulary()"
+                            (emitRestart)="restartVocabulary()"
                         />
                     </div>
                 </ng-template>

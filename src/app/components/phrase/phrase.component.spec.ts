@@ -5,7 +5,7 @@ import { signal } from '@angular/core';
 import { PhraseComponent } from './phrase.component';
 import { VocabularyStore } from './../../store/vocabulary.store';
 import { TranslatedPhrase } from '../../types/types';
-import { DelayMenuComponent } from '../delay-menu/delay-menu.component';
+import { OptionsMenuComponent } from '../options-menu/options-menu.component';
 
 describe('PhraseComponent', () => {
     let component: PhraseComponent;
@@ -17,6 +17,8 @@ describe('PhraseComponent', () => {
             getAudio: jasmine.createSpy().and.returnValue(of('audio-url')),
             setReviewedVocabulary: jasmine.createSpy().and.returnValue(of({})),
             delayVocabulary: jasmine.createSpy().and.returnValue(of({})),
+            resetVocabulary: jasmine.createSpy().and.returnValue(of({})),
+            restartVocabulary: jasmine.createSpy().and.returnValue(of({})),
         };
 
         await TestBed.configureTestingModule({
@@ -154,52 +156,98 @@ describe('PhraseComponent', () => {
         expect(stage).toBeFalsy();
     });
 
-    it('should show delay menu button', () => {
-        const delayMenuTrigger =
+    it('should show options menu button', () => {
+        const optionsMenuTrigger =
             fixture.debugElement.nativeElement.querySelector(
-                '.phrase-component__delay-button',
+                '.phrase-component__options-button',
             );
-        expect(delayMenuTrigger).toBeTruthy();
+        expect(optionsMenuTrigger).toBeTruthy();
     });
 
-    it('should not show delay menu', () => {
+    it('should not show options menu', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (component as any).showMenu = signal<boolean>(false);
 
         fixture.detectChanges();
-        const delayMenuTrigger =
+        const optionsMenuTrigger =
             fixture.debugElement.nativeElement.querySelector(
-                '.phrase-component__delay-button',
+                '.phrase-component__options-button',
             );
-        expect(delayMenuTrigger).toBeFalsy();
+        expect(optionsMenuTrigger).toBeFalsy();
     });
 
-    it('should show delay menu options and call delay on click', () => {
-        const delayMenuTrigger =
+    it('should show options menu options and call delay on click', () => {
+        const optionsMenuTrigger =
             fixture.debugElement.nativeElement.querySelector(
-                '.phrase-component__delay-button',
+                '.phrase-component__options-button',
             );
 
-        delayMenuTrigger.click();
+        optionsMenuTrigger.click();
         fixture.detectChanges();
 
-        const delayMenu = fixture.debugElement.query(
-            By.directive(DelayMenuComponent),
+        const optionsMenu = fixture.debugElement.query(
+            By.directive(OptionsMenuComponent),
         );
 
-        expect(delayMenu).toBeTruthy();
+        expect(optionsMenu).toBeTruthy();
 
-        const delayOptions = delayMenu.nativeElement.querySelectorAll(
-            '.delay-menu__option',
+        const menuOptions = optionsMenu.nativeElement.querySelectorAll(
+            '.options-menu__option',
         );
 
-        expect(delayOptions.length).toBe(5);
+        expect(menuOptions.length).toBe(7);
 
-        delayOptions[0].click();
+        menuOptions[2].click();
         expect(mockVocabularyStore.delayVocabulary).toHaveBeenCalledWith(
             [1],
             1,
         );
+    });
+
+    it('should call reset on click', () => {
+        const optionsMenuTrigger =
+            fixture.debugElement.nativeElement.querySelector(
+                '.phrase-component__options-button',
+            );
+
+        optionsMenuTrigger.click();
+        fixture.detectChanges();
+
+        const optionsMenu = fixture.debugElement.query(
+            By.directive(OptionsMenuComponent),
+        );
+
+        expect(optionsMenu).toBeTruthy();
+
+        const menuOptions = optionsMenu.nativeElement.querySelectorAll(
+            '.options-menu__option',
+        );
+
+        menuOptions[0].click();
+        expect(mockVocabularyStore.resetVocabulary).toHaveBeenCalledWith([1]);
+    });
+
+    it('should call restart on click', () => {
+        const optionsMenuTrigger =
+            fixture.debugElement.nativeElement.querySelector(
+                '.phrase-component__options-button',
+            );
+
+        optionsMenuTrigger.click();
+        fixture.detectChanges();
+
+        const optionsMenu = fixture.debugElement.query(
+            By.directive(OptionsMenuComponent),
+        );
+
+        expect(optionsMenu).toBeTruthy();
+
+        const menuOptions = optionsMenu.nativeElement.querySelectorAll(
+            '.options-menu__option',
+        );
+
+        menuOptions[1].click();
+        expect(mockVocabularyStore.restartVocabulary).toHaveBeenCalledWith([1]);
     });
 
     it('should call setReviewedVocabulary and set loading', () => {

@@ -241,7 +241,7 @@ describe('VocabularyListComponent within a host', () => {
         expect(statusContainer.nativeElement.textContent).toContain('reviewed');
     });
 
-    it('should render delay menu button', () => {
+    it('should render options menu button', () => {
         const vocabularyListComponent = hostFixture.debugElement.query(
             By.directive(VocabularyListComponent),
         ).componentInstance;
@@ -254,17 +254,17 @@ describe('VocabularyListComponent within a host', () => {
 
         checkbox.nativeElement.click();
         hostFixture.detectChanges();
-        const delayButton = hostFixture.debugElement.query(
-            By.css('.vocabulary-list__delay-menu-button'),
+        const optionsButton = hostFixture.debugElement.query(
+            By.css('.vocabulary-options-menu-button'),
         );
         hostFixture.detectChanges();
-        expect(delayButton).toBeTruthy();
-        expect(delayButton.nativeElement.disabled).toBeTruthy();
+        expect(optionsButton).toBeTruthy();
+        expect(optionsButton.nativeElement.disabled).toBeTruthy();
 
         vocabularyListComponent.selectedChange(mockVocabulary[0].id);
         hostFixture.detectChanges();
 
-        expect(delayButton.nativeElement.disabled).toBeFalsy();
+        expect(optionsButton.nativeElement.disabled).toBeFalsy();
     });
 
     it('should select and deselect all elements', () => {

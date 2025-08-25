@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DelayMenuComponent } from './delay-menu.component';
+import { OptionsMenuComponent } from './options-menu.component';
 import { of } from 'rxjs';
 import { VocabularyStore } from '../../store/vocabulary.store';
 
-describe('DelayMenuComponent', () => {
-    let component: DelayMenuComponent;
-    let fixture: ComponentFixture<DelayMenuComponent>;
+describe('OptionsMenuComponent', () => {
+    let component: OptionsMenuComponent;
+    let fixture: ComponentFixture<OptionsMenuComponent>;
     let mockVocabularyStore: Partial<VocabularyStore>;
 
     beforeEach(async () => {
@@ -17,13 +17,13 @@ describe('DelayMenuComponent', () => {
         };
 
         await TestBed.configureTestingModule({
-            imports: [DelayMenuComponent],
+            imports: [OptionsMenuComponent],
             providers: [
                 { provide: VocabularyStore, useValue: mockVocabularyStore },
             ],
         }).compileComponents();
 
-        fixture = TestBed.createComponent(DelayMenuComponent);
+        fixture = TestBed.createComponent(OptionsMenuComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

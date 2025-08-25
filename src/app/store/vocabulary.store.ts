@@ -178,16 +178,70 @@ export const VocabularyStore = signalStore(
                                     .map((v) => {
                                         const response =
                                             resp as TranslatedPhraseBase[];
-                                        const newVocable = response.find(
+                                        const newVocabulary = response.find(
                                             (voc) => voc.id === v.id,
                                         );
-                                        if (newVocable) {
+                                        if (newVocabulary) {
                                             return {
                                                 ...v,
                                                 review_date:
-                                                    newVocable.review_date,
+                                                    newVocabulary.review_date,
                                                 modified_at:
-                                                    newVocable.modified_at,
+                                                    newVocabulary.modified_at,
+                                            };
+                                        }
+                                        return v;
+                                    }),
+                            });
+                        },
+                    }),
+                );
+            },
+
+            resetVocabulary(ids: number[]) {
+                return vocabularyService.resetVocabulary(ids).pipe(
+                    tap({
+                        next: (resp) => {
+                            patchState(store, {
+                                sourceVocabulary: store
+                                    .sourceVocabulary()
+                                    .map((v) => {
+                                        const response =
+                                            resp as TranslatedPhraseBase[];
+                                        const newVocabulary = response.find(
+                                            (voc) => voc.id === v.id,
+                                        );
+                                        if (newVocabulary) {
+                                            return {
+                                                ...v,
+                                                ...newVocabulary,
+                                            };
+                                        }
+                                        return v;
+                                    }),
+                            });
+                        },
+                    }),
+                );
+            },
+
+            restartVocabulary(ids: number[]) {
+                return vocabularyService.restartVocabulary(ids).pipe(
+                    tap({
+                        next: (resp) => {
+                            patchState(store, {
+                                sourceVocabulary: store
+                                    .sourceVocabulary()
+                                    .map((v) => {
+                                        const response =
+                                            resp as TranslatedPhraseBase[];
+                                        const newVocabulary = response.find(
+                                            (voc) => voc.id === v.id,
+                                        );
+                                        if (newVocabulary) {
+                                            return {
+                                                ...v,
+                                                ...newVocabulary,
                                             };
                                         }
                                         return v;

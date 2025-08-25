@@ -11,13 +11,13 @@ import { NgTemplateOutlet } from '@angular/common';
 import { TranslatedPhrase } from '../../types/types';
 import { VocabularyStore } from '../../store/vocabulary.store';
 import { CdkMenu, CdkMenuTrigger } from '@angular/cdk/menu';
-import { DelayMenuComponent } from '../delay-menu/delay-menu.component';
+import { OptionsMenuComponent } from '../options-menu/options-menu.component';
 
 // Add this interface above your component class
 @Component({
     selector: 'app-vocabulary-list',
     standalone: true,
-    imports: [NgTemplateOutlet, CdkMenuTrigger, DelayMenuComponent, CdkMenu],
+    imports: [NgTemplateOutlet, CdkMenuTrigger, OptionsMenuComponent, CdkMenu],
     templateUrl: './vocabulary-list.component.html',
 })
 export class VocabularyListComponent {
@@ -30,7 +30,9 @@ export class VocabularyListComponent {
     showSelectToggle = input<boolean>(true);
     isSelectActive = signal(false);
     selectedIds: number[] = [];
-    delayMenuTrigger = viewChild('delayMenuTrigger', { read: CdkMenuTrigger });
+    optionsMenuTrigger = viewChild('optionsMenuTrigger', {
+        read: CdkMenuTrigger,
+    });
 
     @ContentChild('phrase') phrase!: TemplateRef<{
         translatedPhrase: TranslatedPhrase;
@@ -65,10 +67,34 @@ export class VocabularyListComponent {
         this.vocabularyStore.delayVocabulary(this.selectedIds, days).subscribe({
             next: () => {
                 this.selectedIds = [];
-                this.delayMenuTrigger()?.close();
+                this.optionsMenuTrigger()?.close();
             },
             error: (error) => {
                 console.error('Error delaying vocabulary:', error);
+            },
+        });
+    }
+
+    resetVocabulary() {
+        this.vocabularyStore.resetVocabulary(this.selectedIds).subscribe({
+            next: () => {
+                this.selectedIds = [];
+                this.optionsMenuTrigger()?.close();
+            },
+            error: (error) => {
+                console.error('Error resetting vocabulary:', error);
+            },
+        });
+    }
+
+    restartVocabulary() {
+        this.vocabularyStore.restartVocabulary(this.selectedIds).subscribe({
+            next: () => {
+                this.selectedIds = [];
+                this.optionsMenuTrigger()?.close();
+            },
+            error: (error) => {
+                console.error('Error restarting vocabulary:', error);
             },
         });
     }

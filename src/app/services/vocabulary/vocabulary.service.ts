@@ -35,6 +35,18 @@ export class VocabularyService {
         });
     }
 
+    resetVocabulary(ids: number[]) {
+        return this.http.post(`${this.apiBaseUrl}/reset`, {
+            ids,
+        });
+    }
+
+    restartVocabulary(ids: number[]) {
+        return this.http.post(`${this.apiBaseUrl}/restart`, {
+            ids,
+        });
+    }
+
     markAsLearned(id: string): Observable<TranslatedPhrase> {
         return this.http.patch<TranslatedPhrase>(
             `${this.apiBaseUrl}/${id}/learned`,

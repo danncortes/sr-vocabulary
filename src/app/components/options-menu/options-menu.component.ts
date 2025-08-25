@@ -2,15 +2,17 @@ import { Component, inject, output } from '@angular/core';
 import { VocabularyStore } from '../../store/vocabulary.store';
 
 @Component({
-    selector: 'app-delay-menu',
+    selector: 'app-options-menu',
     imports: [],
-    templateUrl: './delay-menu.component.html',
-    styleUrl: './delay-menu.component.css',
+    templateUrl: './options-menu.component.html',
+    styleUrl: './options-menu.component.css',
 })
-export class DelayMenuComponent {
+export class OptionsMenuComponent {
+    emitReset = output<void>();
+    emitRestart = output<void>();
     emitDelayDays = output<number>();
     vocabularyStore = inject(VocabularyStore);
-    delayOptions = [
+    menuOptions = [
         {
             label: '1 Day',
             value: 1,
@@ -35,5 +37,13 @@ export class DelayMenuComponent {
 
     delayVocabularyToDays(days: number) {
         this.emitDelayDays.emit(days);
+    }
+
+    resetVocabulary() {
+        this.emitReset.emit();
+    }
+
+    restartVocabulary() {
+        this.emitRestart.emit();
     }
 }
