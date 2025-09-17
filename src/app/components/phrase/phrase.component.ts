@@ -11,10 +11,17 @@ import { CdkMenu, CdkMenuTrigger } from '@angular/cdk/menu';
 import { OptionsMenuComponent } from '../options-menu/options-menu.component';
 import { TranslatedPhrase } from '../../types/types';
 import { VocabularyStore } from './../../store/vocabulary.store';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
     selector: 'app-phrase',
-    imports: [DatePipe, CdkMenuTrigger, CdkMenu, OptionsMenuComponent],
+    imports: [
+        CdkMenuTrigger,
+        CdkMenu,
+        OptionsMenuComponent,
+        DatePipe,
+        IconComponent, // Add this import
+    ],
     templateUrl: './phrase.component.html',
     styleUrl: './phrase.component.css',
 })
