@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 
 import { OptionsMenuComponent } from './options-menu.component';
-import { of } from 'rxjs';
 import { VocabularyStore } from '../../store/vocabulary.store';
 
 describe('OptionsMenuComponent', () => {
