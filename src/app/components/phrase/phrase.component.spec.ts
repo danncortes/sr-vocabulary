@@ -18,6 +18,35 @@ interface ComponentWithMenuTrigger {
     optionsMenuTrigger: () => CdkMenuTrigger | undefined;
 }
 
+// Alias for common store method spy casts
+type StoreMethodSpy = jasmine.Spy;
+
+// Minimal audio-like shape used in tests
+interface HTMLAudioLike {
+    play: jasmine.Spy;
+    pause: jasmine.Spy;
+}
+
+// Test helpers
+const createTriggerSpy = (): CdkMenuTrigger =>
+    jasmine.createSpyObj('CdkMenuTrigger', [
+        'close',
+    ]) as unknown as CdkMenuTrigger;
+
+const setOptionsMenuTrigger = (
+    cmp: PhraseComponent,
+    trigger: CdkMenuTrigger | null,
+): void => {
+    (cmp as ComponentWithMenuTrigger).optionsMenuTrigger = jasmine
+        .createSpy('optionsMenuTrigger')
+        .and.returnValue(trigger ?? null);
+};
+
+const createAudioStub = (): HTMLAudioLike => ({
+    play: jasmine.createSpy('play').and.returnValue(Promise.resolve()),
+    pause: jasmine.createSpy('pause'),
+});
+
 describe('PhraseComponent', () => {
     let component: PhraseComponent;
     let fixture: ComponentFixture<PhraseComponent>;
@@ -56,16 +85,13 @@ describe('PhraseComponent', () => {
         });
 
         // Global mock: optionsMenuTrigger must be a function returning a trigger with close()
-        const mockTrigger = jasmine.createSpyObj('CdkMenuTrigger', ['close']);
-        (component as ComponentWithMenuTrigger).optionsMenuTrigger = jasmine
-            .createSpy('optionsMenuTrigger')
-            .and.returnValue(mockTrigger);
+        const globalTrigger = createTriggerSpy();
+        setOptionsMenuTrigger(component, globalTrigger);
 
         // Global Audio stub to avoid DOMException errors
-        audioSpy = spyOn(window, 'Audio').and.returnValue({
-            play: jasmine.createSpy('play').and.returnValue(Promise.resolve()),
-            pause: jasmine.createSpy('pause'),
-        } as unknown as HTMLAudioElement);
+        audioSpy = spyOn(window, 'Audio').and.returnValue(
+            createAudioStub() as unknown as HTMLAudioElement,
+        );
 
         fixture.detectChanges();
     });
@@ -275,14 +301,6 @@ describe('PhraseComponent', () => {
         expect(mockVocabularyStore.restartVocabulary).toHaveBeenCalledWith([1]);
     });
 
-    it('should call setReviewedVocabulary and set loading', () => {
-        component.setReviewedVocabulary(1);
-        expect(mockVocabularyStore.setReviewedVocabulary).toHaveBeenCalledWith(
-            1,
-        );
-        expect(component.isReviewLoading()).toBeFalse();
-    });
-
     it('should not show select checkbox by default', () => {
         const checkbox = fixture.debugElement.nativeElement.querySelector(
             '.phrase-component__select-checkbox',
@@ -317,7 +335,6 @@ describe('PhraseComponent', () => {
 
         fixture.detectChanges();
 
-        // Test that the component handles the isSelected state
         expect(component.isSelected()).toBeTrue();
     });
 
@@ -331,73 +348,15 @@ describe('PhraseComponent', () => {
         ]);
     });
 
-    it('should test toggleSelect method', () => {
-        spyOn(component.selectedChange, 'emit');
-
-        component.toggleSelect();
-
-        expect(component.selectedChange.emit).toHaveBeenCalledWith(1);
-    });
-
-    it('should test revealTranslation method', () => {
-        expect(component.isTranlationVisible()).toBeFalse();
-
-        component.revealTranslation();
-        expect(component.isTranlationVisible()).toBeTrue();
-
-        component.revealTranslation();
-        expect(component.isTranlationVisible()).toBeFalse();
-    });
-
-    it('should test selectDelayDays method', fakeAsync(() => {
-        const mockTrigger = jasmine.createSpyObj('CdkMenuTrigger', ['close']);
-
-        // Correctly mock optionsMenuTrigger as a function that returns the trigger
-        (component as ComponentWithMenuTrigger).optionsMenuTrigger = jasmine
-            .createSpy('optionsMenuTrigger')
-            .and.returnValue(mockTrigger);
-
-        const delaySubject = new Subject<void>();
-        (mockVocabularyStore.delayVocabulary as jasmine.Spy).and.returnValue(
-            delaySubject.asObservable(),
-        );
-
-        component.selectDelayDays(14);
-
-        expect(mockVocabularyStore.delayVocabulary).toHaveBeenCalledWith(
-            [1],
-            14,
-        );
-
-        // Complete the observable to trigger the callback
-        delaySubject.complete();
-        tick();
-
-        expect(mockTrigger.close).toHaveBeenCalled();
-    }));
-
-    it('should test delayVocabulary method directly', () => {
-        component.delayVocabulary(1, 21);
-
-        expect(mockVocabularyStore.delayVocabulary).toHaveBeenCalledWith(
-            [1],
-            21,
-        );
-    });
-
     // For tests that need specific trigger behavior, you can override the global mock:
     it('should close options menu after reset completion', fakeAsync(() => {
-        const specificMockTrigger = {
-            close: jasmine.createSpy('close'),
-        };
+        const specificMockTrigger = createTriggerSpy();
 
         // Override the global mock for this specific test
-        (component as ComponentWithMenuTrigger).optionsMenuTrigger = jasmine
-            .createSpy('optionsMenuTrigger')
-            .and.returnValue(specificMockTrigger);
+        setOptionsMenuTrigger(component, specificMockTrigger);
 
         const resetSubject = new Subject<void>();
-        (mockVocabularyStore.resetVocabulary as jasmine.Spy).and.returnValue(
+        (mockVocabularyStore.resetVocabulary as StoreMethodSpy).and.returnValue(
             resetSubject.asObservable(),
         );
 
@@ -412,67 +371,32 @@ describe('PhraseComponent', () => {
         expect(specificMockTrigger.close).toHaveBeenCalled();
     }));
 
-    it('should close options menu after restart completion', () => {
-        const mockTrigger = {
-            close: jasmine.createSpy('close'),
-        };
+    it('should close options menu after restart completion', fakeAsync(() => {
+        const localTrigger = createTriggerSpy();
+        setOptionsMenuTrigger(component, localTrigger);
 
-        // Mock the viewChild signal as a function that returns the mock trigger
-        (component as ComponentWithMenuTrigger).optionsMenuTrigger = jasmine
-            .createSpy('optionsMenuTrigger')
-            .and.returnValue(mockTrigger);
+        const restartSubject = new Subject<void>();
+        (
+            mockVocabularyStore.restartVocabulary as StoreMethodSpy
+        ).and.returnValue(restartSubject.asObservable());
 
         component.restartVocabulary(1);
 
-        // Test completion callback
-        setTimeout(() => {
-            expect(mockTrigger.close).toHaveBeenCalled();
-        });
-    });
-
-    it('should call delayVocabulary with correct parameters in selectDelayDays', () => {
-        component.selectDelayDays(14);
-        expect(mockVocabularyStore.delayVocabulary).toHaveBeenCalledWith(
-            [1],
-            14,
-        );
-    });
-
-    it('should call delayVocabulary method directly', () => {
-        component.delayVocabulary(1, 21);
-        expect(mockVocabularyStore.delayVocabulary).toHaveBeenCalledWith(
-            [1],
-            21,
-        );
-    });
-
-    it('should call resetVocabulary with correct parameters', () => {
-        component.resetVocabulary(1);
-        expect(mockVocabularyStore.resetVocabulary).toHaveBeenCalledWith([1]);
-    });
-
-    it('should call restartVocabulary with correct parameters', () => {
-        component.restartVocabulary(1);
         expect(mockVocabularyStore.restartVocabulary).toHaveBeenCalledWith([1]);
-    });
+        expect(localTrigger.close).not.toHaveBeenCalled();
 
-    it('should call selectDelayDays with correct parameters', () => {
-        component.selectDelayDays(14);
-        expect(mockVocabularyStore.delayVocabulary).toHaveBeenCalledWith(
-            [1],
-            14,
-        );
-    });
+        restartSubject.complete();
+        tick();
 
-    // If you want to test menu closing behavior, use these:
+        expect(localTrigger.close).toHaveBeenCalled();
+    }));
+
     it('should call delayVocabulary and close menu on completion', fakeAsync(() => {
-        const localTrigger = jasmine.createSpyObj('CdkMenuTrigger', ['close']);
-        (component as ComponentWithMenuTrigger).optionsMenuTrigger = jasmine
-            .createSpy('optionsMenuTrigger')
-            .and.returnValue(localTrigger);
+        const localTrigger = createTriggerSpy();
+        setOptionsMenuTrigger(component, localTrigger);
 
         const delaySubject = new Subject<void>();
-        (mockVocabularyStore.delayVocabulary as jasmine.Spy).and.returnValue(
+        (mockVocabularyStore.delayVocabulary as StoreMethodSpy).and.returnValue(
             delaySubject.asObservable(),
         );
 
@@ -490,57 +414,11 @@ describe('PhraseComponent', () => {
         expect(localTrigger.close).toHaveBeenCalled();
     }));
 
-    // Fix reset completion test (remove setTimeout and assign optionsMenuTrigger as a function)
-    it('should close options menu after reset completion', fakeAsync(() => {
-        const localTrigger = jasmine.createSpyObj('CdkMenuTrigger', ['close']);
-        (component as ComponentWithMenuTrigger).optionsMenuTrigger = jasmine
-            .createSpy('optionsMenuTrigger')
-            .and.returnValue(localTrigger);
-
-        const resetSubject = new Subject<void>();
-        (mockVocabularyStore.resetVocabulary as jasmine.Spy).and.returnValue(
-            resetSubject.asObservable(),
-        );
-
-        component.resetVocabulary(1);
-
-        expect(mockVocabularyStore.resetVocabulary).toHaveBeenCalledWith([1]);
-        expect(localTrigger.close).not.toHaveBeenCalled();
-
-        resetSubject.complete();
-        tick();
-
-        expect(localTrigger.close).toHaveBeenCalled();
-    }));
-
-    // Fix restart completion test similarly
-    it('should close options menu after restart completion', fakeAsync(() => {
-        const localTrigger = jasmine.createSpyObj('CdkMenuTrigger', ['close']);
-        (component as ComponentWithMenuTrigger).optionsMenuTrigger = jasmine
-            .createSpy('optionsMenuTrigger')
-            .and.returnValue(localTrigger);
-
-        const restartSubject = new Subject<void>();
-        (mockVocabularyStore.restartVocabulary as jasmine.Spy).and.returnValue(
-            restartSubject.asObservable(),
-        );
-
-        component.restartVocabulary(1);
-
-        expect(mockVocabularyStore.restartVocabulary).toHaveBeenCalledWith([1]);
-        expect(localTrigger.close).not.toHaveBeenCalled();
-
-        restartSubject.complete();
-        tick();
-
-        expect(localTrigger.close).toHaveBeenCalled();
-    }));
-
     // Stabilized review loading test (no setTimeout)
     it('should set review loading state', () => {
         const reviewSubject = new Subject<void>();
         (
-            mockVocabularyStore.setReviewedVocabulary as jasmine.Spy
+            mockVocabularyStore.setReviewedVocabulary as StoreMethodSpy
         ).and.returnValue(reviewSubject.asObservable());
 
         expect(component.isReviewLoading()).toBeFalse();
@@ -554,29 +432,22 @@ describe('PhraseComponent', () => {
 
     // Fix audio test: avoid casting window.Audio as jasmine.Spy; use audioSpy
     it('should stop previous audio when playing new audio', () => {
-        const existingAudio = {
+        const existingAudio: HTMLAudioLike = {
             pause: jasmine.createSpy('pause'),
             play: jasmine.createSpy('play').and.returnValue(Promise.resolve()),
         };
 
-        const newAudio = {
+        const newAudio: HTMLAudioLike = {
             pause: jasmine.createSpy('pause'),
             play: jasmine.createSpy('play').and.returnValue(Promise.resolve()),
         };
-
-        interface NewAudio {
-            pause: jasmine.Spy<jasmine.Func>;
-            play: jasmine.Spy<jasmine.Func>;
-        }
 
         // Override the global Audio stub for this test
-        audioSpy.and.returnValue(newAudio as NewAudio);
+        audioSpy.and.returnValue(newAudio as unknown as HTMLAudioElement);
 
         (
-            component as unknown as {
-                audioPlayer: { pause: jasmine.Spy } | null;
-            }
-        ).audioPlayer = existingAudio as NewAudio;
+            component as unknown as { audioPlayer: HTMLAudioElement | null }
+        ).audioPlayer = existingAudio as unknown as HTMLAudioElement;
 
         component.playAudio(1);
 
@@ -595,7 +466,7 @@ describe('PhraseComponent', () => {
             .and.returnValue(null);
 
         const delaySubject = new Subject<void>();
-        (mockVocabularyStore.delayVocabulary as jasmine.Spy).and.returnValue(
+        (mockVocabularyStore.delayVocabulary as StoreMethodSpy).and.returnValue(
             delaySubject.asObservable(),
         );
 
@@ -603,8 +474,6 @@ describe('PhraseComponent', () => {
 
         delaySubject.complete(); // completion callback should not call close on null
     });
-
-    // Add these tests to increase coverage
 
     it('should handle error when playing audio', () => {
         mockVocabularyStore.getAudio = jasmine
