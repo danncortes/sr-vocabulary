@@ -14,5 +14,6 @@ export default {
         'text-green-500',
         'alert-success',
         'alert-info',
+        'alert-error',
     ],
 };

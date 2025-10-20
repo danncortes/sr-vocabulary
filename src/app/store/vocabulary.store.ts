@@ -6,6 +6,7 @@ import {
     withState,
 } from '@ngrx/signals';
 import { computed, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TranslatedPhrase, TranslatedPhraseBase } from '../types/types';
 import { VocabularyService } from '../services/vocabulary/vocabulary.service';
 import { of, tap } from 'rxjs';
@@ -143,6 +144,16 @@ export const VocabularyStore = signalStore(
                                 type: 'success',
                             });
                         },
+                        error: (error) => {
+                            toastService.toast({
+                                message: `Error reviewing vocabulary ${id}: ${
+                                    error instanceof HttpErrorResponse
+                                        ? error.message
+                                        : String(error)
+                                }`,
+                                type: 'error',
+                            });
+                        },
                     }),
                 );
             },
@@ -194,6 +205,18 @@ export const VocabularyStore = signalStore(
                                     }),
                             });
                         },
+                        error: (error) => {
+                            toastService.toast({
+                                message: `Error delaying vocabulary ${ids.join(
+                                    ', ',
+                                )} by ${days} day(s): ${
+                                    error instanceof HttpErrorResponse
+                                        ? error.message
+                                        : String(error)
+                                }`,
+                                type: 'error',
+                            });
+                        },
                     }),
                 );
             },
@@ -221,6 +244,16 @@ export const VocabularyStore = signalStore(
                                     }),
                             });
                         },
+                        error: (error) => {
+                            toastService.toast({
+                                message: `Error resetting vocabulary ${ids.join(', ')}: ${
+                                    error instanceof HttpErrorResponse
+                                        ? error.message
+                                        : String(error)
+                                }`,
+                                type: 'error',
+                            });
+                        },
                     }),
                 );
             },
@@ -246,6 +279,18 @@ export const VocabularyStore = signalStore(
                                         }
                                         return v;
                                     }),
+                            });
+                        },
+                        error: (error) => {
+                            toastService.toast({
+                                message: `Error restarting vocabulary ${ids.join(
+                                    ', ',
+                                )}: ${
+                                    error instanceof HttpErrorResponse
+                                        ? error.message
+                                        : String(error)
+                                }`,
+                                type: 'error',
                             });
                         },
                     }),

@@ -104,10 +104,10 @@ export class PhraseComponent {
 
     setReviewedVocabulary(id: number) {
         this.isReviewLoading.set(true);
-        // TODO: Implement this method in the store
         this.vocabularyStore.setReviewedVocabulary(id).subscribe({
             error: (error) => {
                 console.error('Error setting reviewed vocabulary:', error);
+                this.isReviewLoading.set(false);
             },
             complete: () => {
                 this.isReviewLoading.set(false);
