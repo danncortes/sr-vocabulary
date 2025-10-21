@@ -1,4 +1,4 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { VocabularyStore } from '../../store/vocabulary.store';
 
 @Component({
@@ -8,6 +8,7 @@ import { VocabularyStore } from '../../store/vocabulary.store';
     styleUrl: './options-menu.component.css',
 })
 export class OptionsMenuComponent {
+    disabled = input<boolean>(false);
     emitReset = output<void>();
     emitRestart = output<void>();
     emitDelayDays = output<number>();

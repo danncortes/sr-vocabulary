@@ -3,6 +3,7 @@
         <button
             class="options-menu__option btn btn-sm cursor-pointer btn-block justify-start border-none shadow-none font-normal"
             cdkMenuItem
+            [disabled]="disabled()"
             (click)="resetVocabulary()"
         >
             Reset
@@ -10,6 +11,7 @@
         <button
             class="options-menu__option btn btn-sm cursor-pointer btn-block justify-start border-none shadow-none font-normal"
             cdkMenuItem
+            [disabled]="disabled()"
             (click)="restartVocabulary()"
         >
             Restart
@@ -19,6 +21,7 @@
             <button
                 cdkMenuItem
                 class="options-menu__option btn btn-sm cursor-pointer btn-block justify-start border-none shadow-none font-normal"
+                [disabled]="disabled()"
                 (click)="delayVocabularyToDays(delayOption.value)"
             >
                 {{ delayOption.label }}

@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
+import { By } from '@angular/platform-browser';
 
 import { OptionsMenuComponent } from './options-menu.component';
 import { VocabularyStore } from '../../store/vocabulary.store';
@@ -30,5 +31,31 @@ describe('OptionsMenuComponent', () => {
 
     it('should create', () => {
         expect(component).toBeTruthy();
+    });
+
+    it('disables all menu buttons when disabled input is true', () => {
+        fixture.componentRef.setInput('disabled', true);
+        fixture.detectChanges();
+
+        const buttons = fixture.debugElement.queryAll(
+            By.css('.options-menu__option'),
+        );
+        expect(buttons.length).toBeGreaterThan(0);
+        buttons.forEach((btn) => {
+            expect(btn.nativeElement.disabled).toBeTrue();
+        });
+    });
+
+    it('enables all menu buttons when disabled input is false', () => {
+        fixture.componentRef.setInput('disabled', false);
+        fixture.detectChanges();
+
+        const buttons = fixture.debugElement.queryAll(
+            By.css('.options-menu__option'),
+        );
+        expect(buttons.length).toBeGreaterThan(0);
+        buttons.forEach((btn) => {
+            expect(btn.nativeElement.disabled).toBeFalse();
+        });
     });
 });

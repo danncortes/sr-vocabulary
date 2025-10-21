@@ -12,6 +12,7 @@ import { OptionsMenuComponent } from '../options-menu/options-menu.component';
 import { TranslatedPhrase } from '../../types/types';
 import { VocabularyStore } from './../../store/vocabulary.store';
 import { IconComponent } from '../icon/icon.component';
+import { finalize } from 'rxjs';
 
 @Component({
     selector: 'app-phrase',
@@ -41,6 +42,8 @@ export class PhraseComponent {
     isTranlationVisible = signal(false);
     loadingAudioId = signal<number | null>(null);
     isReviewLoading = signal(false);
+    // Add busy status for options actions
+    isOptionsBusy = signal(false);
     delayOptions = [
         {
             label: '1 Day',
@@ -104,24 +107,27 @@ export class PhraseComponent {
 
     setReviewedVocabulary(id: number) {
         this.isReviewLoading.set(true);
-        this.vocabularyStore.setReviewedVocabulary(id).subscribe({
-            error: (error) => {
-                console.error('Error setting reviewed vocabulary:', error);
-                this.isReviewLoading.set(false);
-            },
-            complete: () => {
-                this.isReviewLoading.set(false);
-            },
-        });
+        this.vocabularyStore
+            .setReviewedVocabulary(id)
+            .pipe(finalize(() => this.isReviewLoading.set(false)))
+            .subscribe({
+                error: (error) => {
+                    console.error('Error setting reviewed vocabulary:', error);
+                },
+            });
     }
 
     selectDelayDays(days: number) {
+        this.isOptionsBusy.set(true);
         this.vocabularyStore
             .delayVocabulary([this.translatedPhrase().id], days)
-            .subscribe({
-                complete: () => {
+            .pipe(
+                finalize(() => {
+                    this.isOptionsBusy.set(false);
                     this.optionsMenuTrigger()?.close();
-                },
+                }),
+            )
+            .subscribe({
                 error: (error) => {
                     console.error('Error delaying vocabulary:', error);
                 },
@@ -129,25 +135,37 @@ export class PhraseComponent {
     }
 
     resetVocabulary(id: number) {
-        this.vocabularyStore.resetVocabulary([id]).subscribe({
-            complete: () => {
-                this.optionsMenuTrigger()?.close();
-            },
-            error: (error) => {
-                console.error('Error resetting vocabulary:', error);
-            },
-        });
+        this.isOptionsBusy.set(true);
+        this.vocabularyStore
+            .resetVocabulary([id])
+            .pipe(
+                finalize(() => {
+                    this.isOptionsBusy.set(false);
+                    this.optionsMenuTrigger()?.close();
+                }),
+            )
+            .subscribe({
+                error: (error) => {
+                    console.error('Error resetting vocabulary:', error);
+                },
+            });
     }
 
     restartVocabulary(id: number) {
-        this.vocabularyStore.restartVocabulary([id]).subscribe({
-            complete: () => {
-                this.optionsMenuTrigger()?.close();
-            },
-            error: (error) => {
-                console.error('Error resetting vocabulary:', error);
-            },
-        });
+        this.isOptionsBusy.set(true);
+        this.vocabularyStore
+            .restartVocabulary([id])
+            .pipe(
+                finalize(() => {
+                    this.isOptionsBusy.set(false);
+                    this.optionsMenuTrigger()?.close();
+                }),
+            )
+            .subscribe({
+                error: (error) => {
+                    console.error('Error resetting vocabulary:', error);
+                },
+            });
     }
 
     delayVocabulary(id: number, days: number) {

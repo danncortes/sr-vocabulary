@@ -566,4 +566,57 @@ describe('PhraseComponent', () => {
             jasmine.any(Error),
         );
     });
+
+    it('shows spinner instead of options icon while busy and disables menu', () => {
+        // Ensure a fresh trigger for this test
+        const localTrigger = jasmine.createSpyObj('CdkMenuTrigger', ['close']);
+        (component as unknown as {
+            optionsMenuTrigger: () => CdkMenuTrigger | null;
+        }).optionsMenuTrigger = jasmine
+            .createSpy('optionsMenuTrigger')
+            .and.returnValue(localTrigger as unknown as CdkMenuTrigger);
+
+        fixture.detectChanges();
+
+        // Open the menu to render app-options-menu
+        const optionsButton = fixture.debugElement.query(
+            By.css('.phrase-component__options-button'),
+        ).nativeElement;
+        optionsButton.click();
+        fixture.detectChanges();
+
+        // Make delayVocabulary return a controllable observable
+        const delaySubject = new Subject<void>();
+        (mockVocabularyStore.delayVocabulary as jasmine.Spy).and.returnValue(
+            delaySubject.asObservable(),
+        );
+
+        // Trigger delay to set busy and show spinner
+        component.selectDelayDays(7);
+        fixture.detectChanges();
+
+        // Spinner replaces the ellipsis icon
+        const spinnerEl = optionsButton.querySelector('.loading-spinner');
+        expect(spinnerEl).toBeTruthy();
+        const ellipsisIcon = optionsButton.querySelector('app-icon');
+        expect(ellipsisIcon).toBeFalsy();
+
+        // app-options-menu receives disabled=true
+        const optionsMenuDE = fixture.debugElement.query(
+            By.directive(OptionsMenuComponent),
+        );
+        expect(optionsMenuDE).toBeTruthy();
+        expect(optionsMenuDE.componentInstance.disabled()).toBeTrue();
+
+        // Complete to clear busy state
+        delaySubject.complete();
+        fixture.detectChanges();
+
+        // Spinner removed, icon visible again
+        const spinnerAfter = optionsButton.querySelector('.loading-spinner');
+        expect(spinnerAfter).toBeFalsy();
+        const ellipsisIconAfter = optionsButton.querySelector('app-icon');
+        expect(ellipsisIconAfter).toBeTruthy();
+        expect(optionsMenuDE.componentInstance.disabled()).toBeFalse();
+    });
 });

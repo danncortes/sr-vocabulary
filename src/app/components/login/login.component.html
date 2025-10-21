@@ -53,6 +53,9 @@
                     [disabled]="!loginForm.valid || isLoading()"
                 >
                     {{ isLoading() ? 'Logging in...' : 'Login with 2FA' }}
+                    @if (isLoading()) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                    }
                 </button>
             } @else {
                 <button

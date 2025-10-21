@@ -1,11 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, signal, TemplateRef, ViewChild } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { of } from 'rxjs';
+import { Subject } from 'rxjs';
 import { VocabularyListComponent } from './vocabulary-list.component';
 import { PhraseComponent } from '../phrase/phrase.component';
 import { TranslatedPhrase } from '../../types/types';
 import { VocabularyStore } from '../../store/vocabulary.store';
-import { of } from 'rxjs';
+import { OptionsMenuComponent } from '../options-menu/options-menu.component';
 
 // Test Host Component
 @Component({
@@ -300,5 +302,75 @@ describe('VocabularyListComponent within a host', () => {
             const phraseComponentInstance = phraseComponent.componentInstance;
             expect(phraseComponentInstance.isSelected()).toBeFalsy();
         });
+    });
+
+    it('shows spinner and disables options menu while busy, and re-enables after completion', () => {
+        hostComponent.vocabulary.set([
+            {
+                id: 1,
+                original: { id: 1, text: 'Hello', audio_url: '' },
+                translated: { id: 2, text: 'Hola', audio_url: '' },
+                sr_stage_id: 1,
+                review_date: '',
+                modified_at: '',
+                priority: 1,
+                learned: 0,
+            },
+        ]);
+        hostFixture.detectChanges();
+
+        const listCmp = hostFixture.debugElement.query(
+            By.directive(VocabularyListComponent),
+        ).componentInstance;
+
+        // Activate selection UI
+        const selectToggle = hostFixture.debugElement.query(
+            By.css('.vocabulary-list__select-toggle-checkbox'),
+        );
+        selectToggle.nativeElement.click();
+        hostFixture.detectChanges();
+
+        // Select one id
+        listCmp.selectedChange(1);
+        hostFixture.detectChanges();
+
+        // Open the menu to render app-options-menu
+        const optionsBtn = hostFixture.debugElement.query(
+            By.css('.vocabulary-options-menu-button'),
+        );
+        optionsBtn.nativeElement.click();
+        hostFixture.detectChanges();
+
+        // Make delayVocabulary return a controllable observable
+        const delaySubject = new Subject<void>();
+        (mockVocabularyStore.delayVocabulary as jasmine.Spy).and.returnValue(
+            delaySubject.asObservable(),
+        );
+
+        // Trigger delay action — should set busy
+        listCmp.selectDelayDays(7);
+        hostFixture.detectChanges();
+
+        // Spinner is visible next to "Options"
+        const spinner =
+            optionsBtn.nativeElement.querySelector('.loading-spinner');
+        expect(spinner).toBeTruthy();
+
+        // app-options-menu receives disabled=true
+        const optionsMenuDE = hostFixture.debugElement.query(
+            By.directive(OptionsMenuComponent),
+        );
+        expect(optionsMenuDE).toBeTruthy();
+        expect(optionsMenuDE.componentInstance.disabled()).toBeTrue();
+
+        // Complete the action to clear busy state
+        delaySubject.complete();
+        hostFixture.detectChanges();
+
+        // Spinner hidden and disabled=false
+        const spinnerAfter =
+            optionsBtn.nativeElement.querySelector('.loading-spinner');
+        expect(spinnerAfter).toBeFalsy();
+        expect(optionsMenuDE.componentInstance.disabled()).toBeFalse();
     });
 });

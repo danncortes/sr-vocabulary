@@ -84,6 +84,8 @@ describe('LoginComponent', () => {
         const loginButton: HTMLButtonElement =
             fixture.nativeElement.querySelector('button[type="submit"]');
         expect(loginButton.innerText).toContain('Logging in...');
+        const spinner = loginButton.querySelector('.loading-spinner');
+        expect(spinner).toBeTruthy();
     });
 
     it('should show error message on login failure', (done) => {

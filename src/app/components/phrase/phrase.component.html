@@ -61,7 +61,12 @@
                     [cdkMenuTriggerFor]="phraseOptionsMenu"
                     cdkMenuTriggerCloseSource="click"
                 >
-                    <app-icon type="ellipsis-horizontal" />
+                    @if (isOptionsBusy()) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                    } @else {
+                        <!-- Replace the icon completely for spinner when busy -->
+                        <app-icon type="ellipsis-horizontal" />
+                    }
                 </button>
 
                 <ng-template #phraseOptionsMenu>
@@ -73,6 +78,7 @@
                             (emitRestart)="
                                 restartVocabulary(translatedPhrase().id)
                             "
+                            [disabled]="isOptionsBusy()"
                         />
                     </div>
                 </ng-template>

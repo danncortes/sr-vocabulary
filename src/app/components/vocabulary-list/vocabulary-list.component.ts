@@ -12,6 +12,7 @@ import { TranslatedPhrase } from '../../types/types';
 import { VocabularyStore } from '../../store/vocabulary.store';
 import { CdkMenu, CdkMenuTrigger } from '@angular/cdk/menu';
 import { OptionsMenuComponent } from '../options-menu/options-menu.component';
+import { finalize } from 'rxjs';
 
 // Add this interface above your component class
 @Component({
@@ -33,6 +34,8 @@ export class VocabularyListComponent {
     optionsMenuTrigger = viewChild('optionsMenuTrigger', {
         read: CdkMenuTrigger,
     });
+    // Add busy status for options actions
+    isOptionsBusy = signal(false);
 
     @ContentChild('phrase') phrase!: TemplateRef<{
         translatedPhrase: TranslatedPhrase;
@@ -64,39 +67,51 @@ export class VocabularyListComponent {
         }
     }
     selectDelayDays(days: number) {
-        this.vocabularyStore.delayVocabulary(this.selectedIds, days).subscribe({
-            next: () => {
-                this.selectedIds = [];
-                this.optionsMenuTrigger()?.close();
-            },
-            error: (error) => {
-                console.error('Error delaying vocabulary:', error);
-            },
-        });
+        this.isOptionsBusy.set(true);
+        this.vocabularyStore
+            .delayVocabulary(this.selectedIds, days)
+            .pipe(finalize(() => this.isOptionsBusy.set(false)))
+            .subscribe({
+                next: () => {
+                    this.selectedIds = [];
+                    this.optionsMenuTrigger()?.close();
+                },
+                error: (error) => {
+                    console.error('Error delaying vocabulary:', error);
+                },
+            });
     }
 
     resetVocabulary() {
-        this.vocabularyStore.resetVocabulary(this.selectedIds).subscribe({
-            next: () => {
-                this.selectedIds = [];
-                this.optionsMenuTrigger()?.close();
-            },
-            error: (error) => {
-                console.error('Error resetting vocabulary:', error);
-            },
-        });
+        this.isOptionsBusy.set(true);
+        this.vocabularyStore
+            .resetVocabulary(this.selectedIds)
+            .pipe(finalize(() => this.isOptionsBusy.set(false)))
+            .subscribe({
+                next: () => {
+                    this.selectedIds = [];
+                    this.optionsMenuTrigger()?.close();
+                },
+                error: (error) => {
+                    console.error('Error resetting vocabulary:', error);
+                },
+            });
     }
 
     restartVocabulary() {
-        this.vocabularyStore.restartVocabulary(this.selectedIds).subscribe({
-            next: () => {
-                this.selectedIds = [];
-                this.optionsMenuTrigger()?.close();
-            },
-            error: (error) => {
-                console.error('Error restarting vocabulary:', error);
-            },
-        });
+        this.isOptionsBusy.set(true);
+        this.vocabularyStore
+            .restartVocabulary(this.selectedIds)
+            .pipe(finalize(() => this.isOptionsBusy.set(false)))
+            .subscribe({
+                next: () => {
+                    this.selectedIds = [];
+                    this.optionsMenuTrigger()?.close();
+                },
+                error: (error) => {
+                    console.error('Error restarting vocabulary:', error);
+                },
+            });
     }
 
     toggleSelectAllVocabulary() {
