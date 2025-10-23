@@ -296,6 +296,34 @@ export const VocabularyStore = signalStore(
                     }),
                 );
             },
+            // Delete vocabulary ids (bulk or single), follow reset/restart pattern
+            deleteVocabulary(ids: number[]) {
+                return vocabularyService.deleteVocabulary(ids).pipe(
+                    tap({
+                        next: () => {
+                            patchState(store, {
+                                sourceVocabulary: store
+                                    .sourceVocabulary()
+                                    .filter((v) => !ids.includes(v.id)),
+                            });
+                            toastService.toast({
+                                message: `Deleted ${ids.length} vocab item(s)`,
+                                type: 'success',
+                            });
+                        },
+                        error: (error) => {
+                            toastService.toast({
+                                message: `Error deleting vocabulary ${ids.join(', ')}: ${
+                                    error instanceof HttpErrorResponse
+                                        ? error.message
+                                        : String(error)
+                                }`,
+                                type: 'error',
+                            });
+                        },
+                    }),
+                );
+            },
         }),
     ),
 );

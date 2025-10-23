@@ -1,5 +1,6 @@
 <div class="options-menu menu bg-base-200 rounded-box w-56 shadow-xl">
     <ul cdkMenuGroup>
+        <!-- Reset -->
         <button
             class="options-menu__option btn btn-sm cursor-pointer btn-block justify-start border-none shadow-none font-normal"
             cdkMenuItem
@@ -8,6 +9,7 @@
         >
             Reset
         </button>
+        <!-- Restart -->
         <button
             class="options-menu__option btn btn-sm cursor-pointer btn-block justify-start border-none shadow-none font-normal"
             cdkMenuItem
@@ -16,16 +18,26 @@
         >
             Restart
         </button>
-        <p class="mx-3 my-1 text-gray-500">Delay</p>
+        <!-- Delay options -->
+        <p class="mx-3 my-1 text-gray-500 border-t-2 pt-1">Delay</p>
         @for (delayOption of menuOptions; track delayOption.label) {
             <button
                 cdkMenuItem
-                class="options-menu__option btn btn-sm cursor-pointer btn-block justify-start border-none shadow-none font-normal"
+                class="options-menu__option btn btn-sm cursor-pointer btn-block justify-start border-none shadow-none font-normal last:border-b-2"
                 [disabled]="disabled()"
                 (click)="delayVocabularyToDays(delayOption.value)"
             >
                 {{ delayOption.label }}
             </button>
         }
+        <!-- Delete action (after menu options) -->
+        <button
+            cdkMenuItem
+            class="options-menu__option btn btn-sm cursor-pointer btn-block justify-start border-none shadow-none font-normal text-red-600"
+            [disabled]="disabled()"
+            (click)="deleteVocabulary()"
+        >
+            Delete
+        </button>
     </ul>
 </div>

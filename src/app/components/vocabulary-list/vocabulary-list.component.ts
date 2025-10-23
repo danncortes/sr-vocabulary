@@ -12,17 +12,23 @@ import { TranslatedPhrase } from '../../types/types';
 import { VocabularyStore } from '../../store/vocabulary.store';
 import { CdkMenu, CdkMenuTrigger } from '@angular/cdk/menu';
 import { OptionsMenuComponent } from '../options-menu/options-menu.component';
-import { finalize } from 'rxjs';
+import { OptionsActionsBase } from '../shared/options-actions.base';
+import { DeleteConfirmModalComponent } from '../delete-confirm-modal/delete-confirm-modal.component';
 
 // Add this interface above your component class
 @Component({
     selector: 'app-vocabulary-list',
     standalone: true,
-    imports: [NgTemplateOutlet, CdkMenuTrigger, OptionsMenuComponent, CdkMenu],
+    imports: [
+        NgTemplateOutlet,
+        CdkMenuTrigger,
+        OptionsMenuComponent,
+        CdkMenu,
+        DeleteConfirmModalComponent,
+    ],
     templateUrl: './vocabulary-list.component.html',
 })
-export class VocabularyListComponent {
-    vocabularyStore = inject(VocabularyStore);
+export class VocabularyListComponent extends OptionsActionsBase {
     vocabulary = input.required<TranslatedPhrase[]>();
     status = input<number>(0);
     title = input<string>('');
@@ -34,8 +40,16 @@ export class VocabularyListComponent {
     optionsMenuTrigger = viewChild('optionsMenuTrigger', {
         read: CdkMenuTrigger,
     });
-    // Add busy status for options actions
-    isOptionsBusy = signal(false);
+
+    constructor() {
+        super();
+        this.configureOptionsActions({
+            vocabularyStore: inject(VocabularyStore),
+            busy: signal(false),
+            getTrigger: () => this.optionsMenuTrigger() ?? null,
+            isDeleteConfirmOpen: signal(false),
+        });
+    }
 
     @ContentChild('phrase') phrase!: TemplateRef<{
         translatedPhrase: TranslatedPhrase;
@@ -66,52 +80,41 @@ export class VocabularyListComponent {
             );
         }
     }
-    selectDelayDays(days: number) {
-        this.isOptionsBusy.set(true);
-        this.vocabularyStore
-            .delayVocabulary(this.selectedIds, days)
-            .pipe(finalize(() => this.isOptionsBusy.set(false)))
-            .subscribe({
-                next: () => {
-                    this.selectedIds = [];
-                    this.optionsMenuTrigger()?.close();
-                },
-                error: (error) => {
-                    console.error('Error delaying vocabulary:', error);
-                },
-            });
+
+    delayVocabulary(days: number) {
+        if (this.selectedIds.length === 0) {
+            return;
+        }
+        super.delay(this.selectedIds, days, () => {
+            this.selectedIds = [];
+        });
     }
 
     resetVocabulary() {
-        this.isOptionsBusy.set(true);
-        this.vocabularyStore
-            .resetVocabulary(this.selectedIds)
-            .pipe(finalize(() => this.isOptionsBusy.set(false)))
-            .subscribe({
-                next: () => {
-                    this.selectedIds = [];
-                    this.optionsMenuTrigger()?.close();
-                },
-                error: (error) => {
-                    console.error('Error resetting vocabulary:', error);
-                },
-            });
+        if (this.selectedIds.length === 0) {
+            return;
+        }
+        super.reset(this.selectedIds, () => {
+            this.selectedIds = [];
+        });
     }
 
     restartVocabulary() {
-        this.isOptionsBusy.set(true);
-        this.vocabularyStore
-            .restartVocabulary(this.selectedIds)
-            .pipe(finalize(() => this.isOptionsBusy.set(false)))
-            .subscribe({
-                next: () => {
-                    this.selectedIds = [];
-                    this.optionsMenuTrigger()?.close();
-                },
-                error: (error) => {
-                    console.error('Error restarting vocabulary:', error);
-                },
-            });
+        if (this.selectedIds.length === 0) {
+            return;
+        }
+        super.restart(this.selectedIds, () => {
+            this.selectedIds = [];
+        });
+    }
+
+    deleteVocabulary() {
+        if (this.selectedIds.length === 0) {
+            return;
+        }
+        super.confirmDelete(this.selectedIds, () => {
+            this.selectedIds = [];
+        });
     }
 
     toggleSelectAllVocabulary() {

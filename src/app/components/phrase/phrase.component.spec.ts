@@ -60,6 +60,7 @@ describe('PhraseComponent', () => {
             delayVocabulary: jasmine.createSpy().and.returnValue(of({})),
             resetVocabulary: jasmine.createSpy().and.returnValue(of({})),
             restartVocabulary: jasmine.createSpy().and.returnValue(of({})),
+            deleteVocabulary: jasmine.createSpy().and.returnValue(of({})),
         };
 
         await TestBed.configureTestingModule({
@@ -246,7 +247,7 @@ describe('PhraseComponent', () => {
             '.options-menu__option',
         );
 
-        expect(menuOptions.length).toBe(7);
+        expect(menuOptions.length).toBe(8);
 
         menuOptions[2].click();
         expect(mockVocabularyStore.delayVocabulary).toHaveBeenCalledWith(
@@ -360,7 +361,7 @@ describe('PhraseComponent', () => {
             resetSubject.asObservable(),
         );
 
-        component.resetVocabulary(1);
+        component.reset([1]);
 
         expect(mockVocabularyStore.resetVocabulary).toHaveBeenCalledWith([1]);
         expect(specificMockTrigger.close).not.toHaveBeenCalled();
@@ -380,7 +381,7 @@ describe('PhraseComponent', () => {
             mockVocabularyStore.restartVocabulary as StoreMethodSpy
         ).and.returnValue(restartSubject.asObservable());
 
-        component.restartVocabulary(1);
+        component.restart([1]);
 
         expect(mockVocabularyStore.restartVocabulary).toHaveBeenCalledWith([1]);
         expect(localTrigger.close).not.toHaveBeenCalled();
@@ -400,7 +401,7 @@ describe('PhraseComponent', () => {
             delaySubject.asObservable(),
         );
 
-        component.selectDelayDays(14);
+        component.delay([1], 14);
 
         expect(mockVocabularyStore.delayVocabulary).toHaveBeenCalledWith(
             [1],
@@ -470,7 +471,7 @@ describe('PhraseComponent', () => {
             delaySubject.asObservable(),
         );
 
-        expect(() => component.selectDelayDays(7)).not.toThrow();
+        expect(() => component.delay([1], 7)).not.toThrow();
 
         delaySubject.complete(); // completion callback should not call close on null
     });
@@ -514,7 +515,7 @@ describe('PhraseComponent', () => {
 
         spyOn(console, 'error');
 
-        component.selectDelayDays(7);
+        component.delay([1], 7);
 
         expect(console.error).toHaveBeenCalledWith(
             'Error delaying vocabulary:',
@@ -529,7 +530,7 @@ describe('PhraseComponent', () => {
 
         spyOn(console, 'error');
 
-        component.resetVocabulary(1);
+        component.reset([1]);
 
         expect(console.error).toHaveBeenCalledWith(
             'Error resetting vocabulary:',
@@ -544,7 +545,7 @@ describe('PhraseComponent', () => {
 
         spyOn(console, 'error');
 
-        component.restartVocabulary(1);
+        component.restart([1]);
 
         expect(console.error).toHaveBeenCalledWith(
             'Error resetting vocabulary:',
@@ -552,27 +553,14 @@ describe('PhraseComponent', () => {
         );
     });
 
-    it('should handle error when delaying vocabulary', () => {
-        mockVocabularyStore.delayVocabulary = jasmine
-            .createSpy()
-            .and.returnValue(throwError(() => new Error('Delay failed')));
-
-        spyOn(console, 'error');
-
-        component.delayVocabulary(1, 7);
-
-        expect(console.error).toHaveBeenCalledWith(
-            'Error delaying vocabulary:',
-            jasmine.any(Error),
-        );
-    });
-
     it('shows spinner instead of options icon while busy and disables menu', () => {
         // Ensure a fresh trigger for this test
         const localTrigger = jasmine.createSpyObj('CdkMenuTrigger', ['close']);
-        (component as unknown as {
-            optionsMenuTrigger: () => CdkMenuTrigger | null;
-        }).optionsMenuTrigger = jasmine
+        (
+            component as unknown as {
+                optionsMenuTrigger: () => CdkMenuTrigger | null;
+            }
+        ).optionsMenuTrigger = jasmine
             .createSpy('optionsMenuTrigger')
             .and.returnValue(localTrigger as unknown as CdkMenuTrigger);
 
@@ -592,7 +580,7 @@ describe('PhraseComponent', () => {
         );
 
         // Trigger delay to set busy and show spinner
-        component.selectDelayDays(7);
+        component.delay([1], 7);
         fixture.detectChanges();
 
         // Spinner replaces the ellipsis icon
@@ -618,5 +606,89 @@ describe('PhraseComponent', () => {
         const ellipsisIconAfter = optionsButton.querySelector('app-icon');
         expect(ellipsisIconAfter).toBeTruthy();
         expect(optionsMenuDE.componentInstance.disabled()).toBeFalse();
+    });
+
+    it('opens delete modal from options menu and confirms single deletion', () => {
+        const optionsBtn = fixture.debugElement.query(
+            By.css('.phrase-component__options-button'),
+        ).nativeElement;
+        optionsBtn.click();
+        fixture.detectChanges();
+
+        const optionsMenuDE = fixture.debugElement.query(
+            By.directive(OptionsMenuComponent),
+        );
+        expect(optionsMenuDE).toBeTruthy();
+
+        // Click Delete option (last)
+        const optionsEls = optionsMenuDE.nativeElement.querySelectorAll(
+            '.options-menu__option',
+        );
+        const deleteBtnEl = optionsEls[optionsEls.length - 1];
+        deleteBtnEl.click();
+        fixture.detectChanges();
+
+        // Modal shows with count=1
+        const modalDE = fixture.debugElement.query(
+            By.css('app-delete-confirm-modal'),
+        );
+        expect(modalDE).toBeTruthy();
+        const confirmBtn = fixture.debugElement.nativeElement.querySelector(
+            'app-delete-confirm-modal .btn-error',
+        );
+
+        // Control delete flow
+        const deleteSubject = new Subject<void>();
+        (mockVocabularyStore.deleteVocabulary as jasmine.Spy).and.returnValue(
+            deleteSubject.asObservable(),
+        );
+
+        // Confirm deletion
+        confirmBtn.click();
+        fixture.detectChanges();
+
+        expect(mockVocabularyStore.deleteVocabulary).toHaveBeenCalledWith([1]);
+        expect(confirmBtn.disabled).toBeTrue();
+
+        // Emit success then complete to trigger onSuccess + finalize
+        deleteSubject.next();
+        fixture.detectChanges();
+        deleteSubject.complete();
+        fixture.detectChanges();
+
+        // Modal gone
+        const modalAfterDE = fixture.debugElement.query(
+            By.css('app-delete-confirm-modal'),
+        );
+        expect(modalAfterDE).toBeFalsy();
+    });
+
+    it('cancels delete modal without store call', () => {
+        const optionsBtn = fixture.debugElement.query(
+            By.css('.phrase-component__options-button'),
+        ).nativeElement;
+        optionsBtn.click();
+        fixture.detectChanges();
+
+        const optionsMenuDE = fixture.debugElement.query(
+            By.directive(OptionsMenuComponent),
+        );
+        const optionsEls = optionsMenuDE.nativeElement.querySelectorAll(
+            '.options-menu__option',
+        );
+        optionsEls[optionsEls.length - 1].click();
+        fixture.detectChanges();
+
+        const cancelBtn = fixture.debugElement.nativeElement.querySelector(
+            'app-delete-confirm-modal .btn.btn-sm:not(.btn-error)',
+        );
+        cancelBtn.click();
+        fixture.detectChanges();
+
+        expect(mockVocabularyStore.deleteVocabulary).not.toHaveBeenCalled();
+        const modalAfterDE = fixture.debugElement.query(
+            By.css('app-delete-confirm-modal'),
+        );
+        expect(modalAfterDE).toBeFalsy();
     });
 });

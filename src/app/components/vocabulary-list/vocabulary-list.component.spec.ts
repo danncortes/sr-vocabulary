@@ -80,6 +80,7 @@ describe('VocabularyListComponent within a host', () => {
             getAudio: jasmine.createSpy().and.returnValue(of('audio-url')),
             setReviewedVocabulary: jasmine.createSpy().and.returnValue(of({})),
             delayVocabulary: jasmine.createSpy().and.returnValue(of({})),
+            deleteVocabulary: jasmine.createSpy().and.returnValue(of({})),
         };
 
         await TestBed.configureTestingModule({
@@ -348,7 +349,7 @@ describe('VocabularyListComponent within a host', () => {
         );
 
         // Trigger delay action — should set busy
-        listCmp.selectDelayDays(7);
+        listCmp.delayVocabulary(7);
         hostFixture.detectChanges();
 
         // Spinner is visible next to "Options"
@@ -367,10 +368,180 @@ describe('VocabularyListComponent within a host', () => {
         delaySubject.complete();
         hostFixture.detectChanges();
 
-        // Spinner hidden and disabled=false
+        // Spinner hidden and menu closed by trigger.close()
         const spinnerAfter =
             optionsBtn.nativeElement.querySelector('.loading-spinner');
         expect(spinnerAfter).toBeFalsy();
-        expect(optionsMenuDE.componentInstance.disabled()).toBeFalse();
+
+        const optionsMenuAfterDE = hostFixture.debugElement.query(
+            By.directive(OptionsMenuComponent),
+        );
+        expect(optionsMenuAfterDE).toBeFalsy();
+    });
+
+    it('opens delete modal from options menu and confirms bulk deletion', () => {
+        hostComponent.vocabulary.set([
+            {
+                id: 1,
+                original: { id: 1, text: 'Hello', audio_url: '' },
+                translated: { id: 2, text: 'Hola', audio_url: '' },
+                sr_stage_id: 1,
+                review_date: '',
+                modified_at: '',
+                priority: 1,
+                learned: 0,
+            },
+            {
+                id: 2,
+                original: { id: 3, text: 'World', audio_url: '' },
+                translated: { id: 4, text: 'Mundo', audio_url: '' },
+                sr_stage_id: 1,
+                review_date: '',
+                modified_at: '',
+                priority: 1,
+                learned: 0,
+            },
+        ]);
+        hostFixture.detectChanges();
+
+        const listCmp = hostFixture.debugElement.query(
+            By.directive(VocabularyListComponent),
+        ).componentInstance;
+
+        // Activate selection and select two items
+        const selectToggle = hostFixture.debugElement.query(
+            By.css('.vocabulary-list__select-toggle-checkbox'),
+        );
+        selectToggle.nativeElement.click();
+        hostFixture.detectChanges();
+
+        listCmp.toggleSelectAllVocabulary();
+        hostFixture.detectChanges();
+
+        // Open options menu
+        const optionsBtn = hostFixture.debugElement.query(
+            By.css('.vocabulary-options-menu-button'),
+        );
+        optionsBtn.nativeElement.click();
+        hostFixture.detectChanges();
+
+        const optionsMenuDE = hostFixture.debugElement.query(
+            By.directive(OptionsMenuComponent),
+        );
+        expect(optionsMenuDE).toBeTruthy();
+
+        // Click Delete option (last button)
+        const optionsEls = optionsMenuDE.nativeElement.querySelectorAll(
+            '.options-menu__option',
+        );
+        const deleteBtnEl = optionsEls[optionsEls.length - 1];
+        deleteBtnEl.click();
+        hostFixture.detectChanges();
+
+        // Modal shows with count=2
+        const modalDE = hostFixture.debugElement.query(
+            By.css('app-delete-confirm-modal'),
+        );
+        expect(modalDE).toBeTruthy();
+        const modalText =
+            hostFixture.debugElement.nativeElement.querySelector(
+                '.bg-white .text-sm',
+            );
+        expect(modalText.textContent.trim()).toContain(
+            'Delete 2 selected item(s)?',
+        );
+
+        // Make deleteVocabulary controllable
+        const deleteSubject = new Subject<void>();
+        (mockVocabularyStore.deleteVocabulary as jasmine.Spy).and.returnValue(
+            deleteSubject.asObservable(),
+        );
+
+        // Click confirm
+        const modalConfirmBtn =
+            hostFixture.debugElement.nativeElement.querySelector('.btn-error');
+        modalConfirmBtn.click();
+        hostFixture.detectChanges();
+
+        expect(mockVocabularyStore.deleteVocabulary).toHaveBeenCalledWith([
+            1, 2,
+        ]);
+        expect(modalConfirmBtn.disabled).toBeTrue();
+
+        // Emit success then complete to trigger onSuccess + finalize
+        deleteSubject.next();
+        hostFixture.detectChanges();
+        deleteSubject.complete();
+        hostFixture.detectChanges();
+
+        // Modal closed and options button disabled again (no selection)
+        const modalAfterDE = hostFixture.debugElement.query(
+            By.css('app-delete-confirm-modal'),
+        );
+        expect(modalAfterDE).toBeFalsy();
+        expect(optionsBtn.nativeElement.disabled).toBeTrue();
+    });
+
+    it('cancels delete modal without calling store', () => {
+        hostComponent.vocabulary.set([
+            {
+                id: 1,
+                original: { id: 1, text: 'Hello', audio_url: '' },
+                translated: { id: 2, text: 'Hola', audio_url: '' },
+                sr_stage_id: 1,
+                review_date: '',
+                modified_at: '',
+                priority: 1,
+                learned: 0,
+            },
+        ]);
+        hostFixture.detectChanges();
+
+        const listCmp = hostFixture.debugElement.query(
+            By.directive(VocabularyListComponent),
+        ).componentInstance;
+
+        // Activate and select one
+        const selectToggle = hostFixture.debugElement.query(
+            By.css('.vocabulary-list__select-toggle-checkbox'),
+        );
+        selectToggle.nativeElement.click();
+        hostFixture.detectChanges();
+
+        listCmp.selectedChange(1);
+        hostFixture.detectChanges();
+
+        // Open options menu
+        const optionsBtn = hostFixture.debugElement.query(
+            By.css('.vocabulary-options-menu-button'),
+        );
+        optionsBtn.nativeElement.click();
+        hostFixture.detectChanges();
+
+        // Click Delete option (last)
+        const optionsMenuDE = hostFixture.debugElement.query(
+            By.directive(OptionsMenuComponent),
+        );
+        const optionsEls = optionsMenuDE.nativeElement.querySelectorAll(
+            '.options-menu__option',
+        );
+        optionsEls[optionsEls.length - 1].click();
+        hostFixture.detectChanges();
+
+        // Click cancel
+        const modalCancelBtn =
+            hostFixture.debugElement.nativeElement.querySelector(
+                '.bg-white .btn.btn-sm:not(.btn-error)',
+            );
+        modalCancelBtn.click();
+        hostFixture.detectChanges();
+
+        expect(mockVocabularyStore.deleteVocabulary).not.toHaveBeenCalled();
+
+        // Modal disappears
+        const modalAfterDE = hostFixture.debugElement.query(
+            By.css('app-delete-confirm-modal'),
+        );
+        expect(modalAfterDE).toBeFalsy();
     });
 });

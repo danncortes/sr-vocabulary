@@ -12,6 +12,7 @@ export class OptionsMenuComponent {
     emitReset = output<void>();
     emitRestart = output<void>();
     emitDelayDays = output<number>();
+    emitDelete = output<void>();
     vocabularyStore = inject(VocabularyStore);
     menuOptions = [
         {
@@ -46,5 +47,10 @@ export class OptionsMenuComponent {
 
     restartVocabulary() {
         this.emitRestart.emit();
+    }
+
+    // Add delete handler that emits to parent
+    deleteVocabulary() {
+        this.emitDelete.emit();
     }
 }

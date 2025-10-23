@@ -47,6 +47,13 @@ export class VocabularyService {
         });
     }
 
+    // Add delete API call
+    deleteVocabulary(ids: number[]) {
+        return this.http.post(`${this.apiBaseUrl}/delete`, {
+            ids,
+        });
+    }
+
     markAsLearned(id: string): Observable<TranslatedPhrase> {
         return this.http.patch<TranslatedPhrase>(
             `${this.apiBaseUrl}/${id}/learned`,

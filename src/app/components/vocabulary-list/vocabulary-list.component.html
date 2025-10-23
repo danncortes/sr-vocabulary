@@ -11,12 +11,12 @@
                 <button
                     class="btn btn-xs vocabulary-options-menu-button"
                     [cdkMenuTriggerFor]="optionsMenu"
-                    [disabled]="selectedIds.length === 0 || isOptionsBusy()"
+                    [disabled]="selectedIds.length === 0 || busy()"
                     cdkMenuTriggerCloseSource="click"
                     #optionsMenuTrigger
                 >
                     Options
-                    @if (isOptionsBusy()) {
+                    @if (busy()) {
                         <span class="loading loading-spinner loading-xs"></span>
                     }
                 </button>
@@ -24,13 +24,23 @@
                 <ng-template #optionsMenu>
                     <div cdkMenu>
                         <app-options-menu
-                            (emitDelayDays)="selectDelayDays($event)"
+                            (emitDelayDays)="delayVocabulary($event)"
                             (emitReset)="resetVocabulary()"
                             (emitRestart)="restartVocabulary()"
-                            [disabled]="isOptionsBusy()"
+                            (emitDelete)="requestDelete()"
+                            [disabled]="busy()"
                         />
                     </div>
                 </ng-template>
+
+                @if (isDeleteConfirmOpen()) {
+                    <app-delete-confirm-modal
+                        [count]="selectedIds.length"
+                        [busy]="busy()"
+                        (cancelModal)="cancelDelete()"
+                        (confirm)="deleteVocabulary()"
+                    />
+                }
                 <span class="text-gray-500 vocabulary-list__select-toggle-label"
                     >{{ selectedIds.length }} Selected</span
                 >

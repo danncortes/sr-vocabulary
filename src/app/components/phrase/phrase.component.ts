@@ -13,20 +13,24 @@ import { TranslatedPhrase } from '../../types/types';
 import { VocabularyStore } from './../../store/vocabulary.store';
 import { IconComponent } from '../icon/icon.component';
 import { finalize } from 'rxjs';
+import { OptionsActionsBase } from '../shared/options-actions.base';
+import { DeleteConfirmModalComponent } from '../delete-confirm-modal/delete-confirm-modal.component';
 
 @Component({
     selector: 'app-phrase',
+    standalone: true,
     imports: [
         CdkMenuTrigger,
         CdkMenu,
         OptionsMenuComponent,
         DatePipe,
         IconComponent, // Add this import
+        DeleteConfirmModalComponent,
     ],
     templateUrl: './phrase.component.html',
     styleUrl: './phrase.component.css',
 })
-export class PhraseComponent {
+export class PhraseComponent extends OptionsActionsBase {
     translatedPhrase = input.required<TranslatedPhrase>();
     showSelectCheckbox = input<boolean>(false);
     showReviewDate = input<boolean>(true);
@@ -38,12 +42,10 @@ export class PhraseComponent {
         read: CdkMenuTrigger,
     });
 
-    vocabularyStore = inject(VocabularyStore);
     isTranlationVisible = signal(false);
     loadingAudioId = signal<number | null>(null);
     isReviewLoading = signal(false);
-    // Add busy status for options actions
-    isOptionsBusy = signal(false);
+    // Add delete confirm modal state
     delayOptions = [
         {
             label: '1 Day',
@@ -117,62 +119,13 @@ export class PhraseComponent {
             });
     }
 
-    selectDelayDays(days: number) {
-        this.isOptionsBusy.set(true);
-        this.vocabularyStore
-            .delayVocabulary([this.translatedPhrase().id], days)
-            .pipe(
-                finalize(() => {
-                    this.isOptionsBusy.set(false);
-                    this.optionsMenuTrigger()?.close();
-                }),
-            )
-            .subscribe({
-                error: (error) => {
-                    console.error('Error delaying vocabulary:', error);
-                },
-            });
-    }
-
-    resetVocabulary(id: number) {
-        this.isOptionsBusy.set(true);
-        this.vocabularyStore
-            .resetVocabulary([id])
-            .pipe(
-                finalize(() => {
-                    this.isOptionsBusy.set(false);
-                    this.optionsMenuTrigger()?.close();
-                }),
-            )
-            .subscribe({
-                error: (error) => {
-                    console.error('Error resetting vocabulary:', error);
-                },
-            });
-    }
-
-    restartVocabulary(id: number) {
-        this.isOptionsBusy.set(true);
-        this.vocabularyStore
-            .restartVocabulary([id])
-            .pipe(
-                finalize(() => {
-                    this.isOptionsBusy.set(false);
-                    this.optionsMenuTrigger()?.close();
-                }),
-            )
-            .subscribe({
-                error: (error) => {
-                    console.error('Error resetting vocabulary:', error);
-                },
-            });
-    }
-
-    delayVocabulary(id: number, days: number) {
-        this.vocabularyStore.delayVocabulary([id], days).subscribe({
-            error: (error) => {
-                console.error('Error delaying vocabulary:', error);
-            },
+    constructor() {
+        super();
+        this.configureOptionsActions({
+            vocabularyStore: inject(VocabularyStore),
+            busy: signal(false),
+            getTrigger: () => this.optionsMenuTrigger() ?? null,
+            isDeleteConfirmOpen: signal(false),
         });
     }
 }
