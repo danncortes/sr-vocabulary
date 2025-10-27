@@ -6,7 +6,7 @@
     </div>
     @if (vocabularyStore.loading()) {
         <span class="loading loading-spinner loading-xl"></span>
-    } @else {
+    } @else if (vocabularyStore.sourceVocabulary().length) {
         <div class="grid grid-cols-2 gap-14">
             <app-vocabulary-list
                 class="col-span-2 lg:col-span-1 dashboard__new-vocabulary"

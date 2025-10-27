@@ -1,7 +1,7 @@
 import { Component, OnDestroy, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
-import { from, Observable, Subscription, switchMap } from 'rxjs';
+import { finalize, from, Observable, Subscription, switchMap } from 'rxjs';
 
 @Component({
     selector: 'app-login',
@@ -32,18 +32,13 @@ export class LoginComponent implements OnDestroy {
                             code,
                         );
                     }),
+                    finalize(() => {
+                        this.isLoading.set(false);
+                    }),
                 )
                 .subscribe({
-                    next: () => {
-                        this.isLoading.set(false);
-                        // Handle successful login
-                    },
                     error: (error) => {
-                        this.isLoading.set(false);
                         this.errorMessage.set(error.message || 'Login failed');
-                    },
-                    complete: () => {
-                        this.isLoading.set(false);
                     },
                 });
 
