@@ -36,6 +36,7 @@ export class PhraseComponent extends OptionsActionsBase {
     showReviewDate = input<boolean>(true);
     showStage = input<boolean>(true);
     showMenu = input<boolean>(true);
+    showDeleteButton = input<boolean>(false);
     isSelected = input<boolean>(false);
     selectedChange = output<number>();
     optionsMenuTrigger = viewChild('optionsMenuTrigger', {

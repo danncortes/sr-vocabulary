@@ -54,6 +54,18 @@
                     <app-icon type="check-circle" />
                 </button>
             }
+            @if (showDeleteButton()) {
+                @if (busy()) {
+                    <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                    <button
+                        class="cursor-pointer phrase-component__delete-button text-red-600 hover:text-red-800"
+                        (click)="requestDelete()"
+                    >
+                        <app-icon type="trash" />
+                    </button>
+                }
+            }
             @if (showMenu()) {
                 <button
                     #optionsMenuTrigger

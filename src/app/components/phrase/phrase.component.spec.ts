@@ -691,4 +691,123 @@ describe('PhraseComponent', () => {
         );
         expect(modalAfterDE).toBeFalsy();
     });
+
+    it('should not show delete button by default', () => {
+        const deleteButton = fixture.debugElement.nativeElement.querySelector(
+            '.phrase-component__delete-button',
+        );
+
+        expect(deleteButton).toBeFalsy();
+    });
+
+    it('should show delete button when showDeleteButton is true', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (component as any).showDeleteButton = signal<boolean>(true);
+
+        fixture.detectChanges();
+
+        const deleteButton = fixture.debugElement.nativeElement.querySelector(
+            '.phrase-component__delete-button',
+        );
+
+        expect(deleteButton).toBeTruthy();
+    });
+
+    it('should open delete modal when delete button is clicked', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (component as any).showDeleteButton = signal<boolean>(true);
+
+        fixture.detectChanges();
+
+        const deleteButton = fixture.debugElement.nativeElement.querySelector(
+            '.phrase-component__delete-button',
+        );
+
+        deleteButton.click();
+        fixture.detectChanges();
+
+        const modalDE = fixture.debugElement.query(
+            By.css('app-delete-confirm-modal'),
+        );
+        expect(modalDE).toBeTruthy();
+    });
+
+    it('should show loading spinner on delete button when busy', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (component as any).showDeleteButton = signal<boolean>(true);
+
+        fixture.detectChanges();
+
+        // Make deleteVocabulary return a controllable observable
+        const deleteSubject = new Subject<void>();
+        (mockVocabularyStore.deleteVocabulary as jasmine.Spy).and.returnValue(
+            deleteSubject.asObservable(),
+        );
+
+        // Click delete button to open modal
+        const deleteButton = fixture.debugElement.nativeElement.querySelector(
+            '.phrase-component__delete-button',
+        );
+        deleteButton.click();
+        fixture.detectChanges();
+
+        // Confirm deletion
+        const confirmBtn = fixture.debugElement.nativeElement.querySelector(
+            'app-delete-confirm-modal .btn-error',
+        );
+        confirmBtn.click();
+        fixture.detectChanges();
+
+        // While busy, the delete button should show spinner instead of icon
+        const deleteButtonContainer =
+            fixture.debugElement.nativeElement.querySelector(
+                '.phrase-component .flex.gap-1',
+            );
+        const spinner = deleteButtonContainer.querySelector('.loading-spinner');
+        expect(spinner).toBeTruthy();
+
+        const trashIcon = deleteButtonContainer.querySelector(
+            '.phrase-component__delete-button',
+        );
+        expect(trashIcon).toBeFalsy();
+
+        // Complete to clear busy state
+        deleteSubject.complete();
+        fixture.detectChanges();
+    });
+
+    it('should confirm delete from delete button and call store', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (component as any).showDeleteButton = signal<boolean>(true);
+
+        fixture.detectChanges();
+
+        const deleteButton = fixture.debugElement.nativeElement.querySelector(
+            '.phrase-component__delete-button',
+        );
+        deleteButton.click();
+        fixture.detectChanges();
+
+        const deleteSubject = new Subject<void>();
+        (mockVocabularyStore.deleteVocabulary as jasmine.Spy).and.returnValue(
+            deleteSubject.asObservable(),
+        );
+
+        const confirmBtn = fixture.debugElement.nativeElement.querySelector(
+            'app-delete-confirm-modal .btn-error',
+        );
+        confirmBtn.click();
+        fixture.detectChanges();
+
+        expect(mockVocabularyStore.deleteVocabulary).toHaveBeenCalledWith([1]);
+
+        deleteSubject.next();
+        deleteSubject.complete();
+        fixture.detectChanges();
+
+        const modalAfterDE = fixture.debugElement.query(
+            By.css('app-delete-confirm-modal'),
+        );
+        expect(modalAfterDE).toBeFalsy();
+    });
 });

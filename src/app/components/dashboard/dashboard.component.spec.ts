@@ -57,6 +57,43 @@ describe('DashboardComponent', () => {
             learned: [],
         });
 
+        // Mock sourceVocabulary signal
+        spyOn(component.vocabularyStore, 'sourceVocabulary').and.returnValue([
+            {
+                id: 1,
+                original: { id: 1, text: 'Hello', audio_url: '' },
+                translated: { id: 2, text: 'Hola', audio_url: '' },
+                sr_stage_id: 1,
+                review_date: '',
+                modified_at: '',
+                priority: 1,
+                learned: 0,
+            },
+            {
+                id: 2,
+                original: { id: 3, text: 'World', audio_url: '' },
+                translated: { id: 4, text: 'Mundo', audio_url: '' },
+                sr_stage_id: 1,
+                review_date: '',
+                modified_at: '',
+                priority: 1,
+                learned: 0,
+            },
+            {
+                id: 3,
+                original: { id: 5, text: 'Casa', audio_url: '' },
+                translated: { id: 6, text: 'House', audio_url: '' },
+                sr_stage_id: 1,
+                review_date: '',
+                modified_at: '',
+                priority: 1,
+                learned: 0,
+            },
+        ]);
+
+        // Mock loading signal
+        spyOn(component.vocabularyStore, 'loading').and.returnValue(false);
+
         fixture.detectChanges();
     });
 
