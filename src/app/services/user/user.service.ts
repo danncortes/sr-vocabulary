@@ -1,5 +1,8 @@
-import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { UserSettings } from '../../types/types';
 
 interface User {
     id: string;
@@ -11,6 +14,8 @@ interface User {
     providedIn: 'root',
 })
 export class UserService {
+    private http = inject(HttpClient);
+    private baseUrl = `${environment.apiBaseUrl}`;
     private currentUser: User | null = null;
 
     getCurrentUser(): User | null {
@@ -27,5 +32,9 @@ export class UserService {
                 observer.complete();
             }, 1000);
         });
+    }
+
+    getUserSettings(): Observable<UserSettings> {
+        return this.http.get<UserSettings>(`${this.baseUrl}/user/settings`);
     }
 }

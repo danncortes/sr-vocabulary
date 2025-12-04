@@ -28,3 +28,18 @@ export interface Phrase {
     text: string;
     audio_url: string;
 }
+
+export interface LanguageTranslation {
+    id: number;
+    language_id: number;
+    locale_code: string;
+    language_name: string;
+}
+
+export interface UserSettings {
+    id: number;
+    user_id: string;
+    system_lang_id: number;
+    origin_lang_id: number;
+    learning_lang_id: number;
+}

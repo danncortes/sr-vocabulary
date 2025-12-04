@@ -33,6 +33,9 @@
             </div>
         }
         <div class="flex gap-1">
+            @if (showEdit()) {
+                <div class="btn btn-xs" (click)="editVocabulary()">Edit</div>
+            }
             @if (loadingAudioId() === translatedPhrase().original.id) {
                 <span class="loading loading-spinner loading-xs"></span>
             } @else {

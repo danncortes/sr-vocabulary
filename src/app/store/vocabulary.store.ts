@@ -7,9 +7,16 @@ import {
 } from '@ngrx/signals';
 import { computed, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { TranslatedPhrase, TranslatedPhraseBase } from '../types/types';
+import {
+    TranslatedPhrase,
+    TranslatedPhraseBase,
+    LanguageTranslation,
+    UserSettings,
+} from '../types/types';
 import { VocabularyService } from '../services/vocabulary/vocabulary.service';
-import { of, tap } from 'rxjs';
+import { LanguageService } from '../services/language/language.service';
+import { UserService } from '../services/user/user.service';
+import { forkJoin, of, tap } from 'rxjs';
 import { ToastService } from '../services/toast/toast.service';
 
 interface VocabularyState {
@@ -17,6 +24,10 @@ interface VocabularyState {
     loading: boolean;
     error: string | null;
     audioDictionary: Record<number, { url: string; timestamp: number }>;
+    languageTranslations: LanguageTranslation[];
+    userSettings: UserSettings | null;
+    isVocabularyFormOpen: boolean;
+    vocabularyToEdit: TranslatedPhrase | null;
 }
 
 const initialState: VocabularyState = {
@@ -24,6 +35,10 @@ const initialState: VocabularyState = {
     loading: false,
     error: null,
     audioDictionary: {},
+    languageTranslations: [],
+    userSettings: null,
+    isVocabularyFormOpen: false,
+    vocabularyToEdit: null,
 };
 
 export const VocabularyStore = signalStore(
@@ -86,8 +101,45 @@ export const VocabularyStore = signalStore(
         (
             store,
             vocabularyService = inject(VocabularyService),
+            languageService = inject(LanguageService),
+            userService = inject(UserService),
             toastService = inject(ToastService),
         ) => ({
+            // Initialize all app data after login
+            initializeAppData() {
+                forkJoin({
+                    languageTranslations:
+                        languageService.getLanguageTranslations(),
+                    userSettings: userService.getUserSettings(),
+                })
+                    .pipe(
+                        tap({
+                            next: (data) => {
+                                patchState(store, {
+                                    languageTranslations:
+                                        data.languageTranslations,
+                                    userSettings: data.userSettings,
+                                    error: null,
+                                });
+                            },
+                            error: (error) => {
+                                toastService.toast({
+                                    message: `Error loading app data: ${
+                                        error instanceof HttpErrorResponse
+                                            ? error.message
+                                            : String(error)
+                                    }`,
+                                    type: 'error',
+                                });
+                            },
+                        }),
+                    )
+                    .subscribe();
+
+                // Call getAllVocabulary separately as it doesn't depend on the others
+                this.getAllVocabulary();
+            },
+
             getAllVocabulary() {
                 patchState(store, { loading: true });
 
@@ -323,6 +375,23 @@ export const VocabularyStore = signalStore(
                         },
                     }),
                 );
+            },
+            openVocabularyForm() {
+                patchState(store, { isVocabularyFormOpen: true }); // Placeholder for actual form opening logic
+            },
+            closeVocabularyForm() {
+                patchState(store, {
+                    isVocabularyFormOpen: false,
+                    vocabularyToEdit: null,
+                });
+            },
+            editVocabulary(vocabularyId: TranslatedPhrase['id']) {
+                patchState(store, {
+                    vocabularyToEdit: store
+                        .sourceVocabulary()
+                        .find((v) => v.id === vocabularyId),
+                    isVocabularyFormOpen: true,
+                });
             },
         }),
     ),

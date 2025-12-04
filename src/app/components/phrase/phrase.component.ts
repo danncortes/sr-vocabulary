@@ -36,6 +36,7 @@ export class PhraseComponent extends OptionsActionsBase {
     showReviewDate = input<boolean>(true);
     showStage = input<boolean>(true);
     showMenu = input<boolean>(true);
+    showEdit = input<boolean>(true);
     showDeleteButton = input<boolean>(false);
     isSelected = input<boolean>(false);
     selectedChange = output<number>();
@@ -106,6 +107,10 @@ export class PhraseComponent extends OptionsActionsBase {
                 this.loadingAudioId.set(null);
             },
         });
+    }
+
+    editVocabulary() {
+        this.vocabularyStore.editVocabulary(this.translatedPhrase().id);
     }
 
     setReviewedVocabulary(id: number) {
