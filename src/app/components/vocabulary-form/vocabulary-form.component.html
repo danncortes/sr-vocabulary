@@ -1,0 +1,87 @@
+<h2 class="text-lg font-bold">
+    {{ isEditMode() ? 'Edit Vocabulary' : 'Create Vocabulary' }}
+</h2>
+<form
+    action=""
+    [formGroup]="vocabularyForm"
+    (ngSubmit)="submitForm()"
+    class="space-y-3"
+>
+    <app-new-phrase-input
+        formControlName="originalPhrase"
+        type="text"
+        classNames="input input-bordered"
+        [placeholder]="
+            translatingTarget() === 'original'
+                ? 'Generating...'
+                : 'Type a phrase in your original language'
+        "
+        id="original-phrase-input"
+        label="Original Phrase"
+        [locale]="originalLocale()"
+        [audioFilename]="originalAudioFilename()"
+        [loadingAudio]="loadingAudio() === 'original'"
+        (audioGenerated)="onAudioGenerated($event, 'original')"
+        (playAudio)="onPlayAudio($event, 'original')"
+        (clearAudio)="onClearAudio('original')"
+    />
+    <app-new-phrase-input
+        formControlName="translatedPhrase"
+        type="text"
+        classNames="input input-bordered"
+        [placeholder]="
+            translatingTarget() === 'translated'
+                ? 'Generating...'
+                : 'Type a phrase in your translated language'
+        "
+        id="translated-phrase-input"
+        label="Translated Phrase"
+        [locale]="translatedLocale()"
+        [audioFilename]="translatedAudioFilename()"
+        [loadingAudio]="loadingAudio() === 'translated'"
+        (audioGenerated)="onAudioGenerated($event, 'translated')"
+        (playAudio)="onPlayAudio($event, 'translated')"
+        (clearAudio)="onClearAudio('translated')"
+    />
+
+    <div class="flex gap-2">
+        <div class="form-control flex-1">
+            <label class="label" for="review-date-input">
+                <span class="label-text">Review Date</span>
+            </label>
+            <input
+                id="review-date-input"
+                type="date"
+                class="input input-bordered"
+                placeholder="Type a date for review (e.g., 2024-12-31)"
+                formControlName="reviewDate"
+            />
+        </div>
+        <div class="form-control flex-1">
+            <label class="label" for="priority-input">
+                <span class="label-text">Priority</span>
+            </label>
+            <select class="select select-ghost" formControlName="priority">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-control flex flex-row gap-2 !mt-6">
+        <button type="button" class="btn" (click)="cancelForm()">Cancel</button>
+        <button type="button" class="btn" (click)="resetForm()">Reset</button>
+        <button
+            type="submit"
+            class="btn btn-primary grow"
+            [disabled]="vocabularyForm.invalid || saving()"
+        >
+            @if (saving()) {
+                Saving...
+                <span class="loading loading-spinner loading-xs"></span>
+            } @else {
+                {{ isEditMode() ? 'Save Changes' : 'Save' }}
+            }
+        </button>
+    </div>
+</form>

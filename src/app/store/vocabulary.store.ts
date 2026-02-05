@@ -7,23 +7,37 @@ import {
 } from '@ngrx/signals';
 import { computed, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { TranslatedPhrase, TranslatedPhraseBase } from '../types/types';
+import {
+    TranslatedPhrase,
+    TranslatedPhraseBase,
+    LanguageTranslation,
+    UserSettings,
+    NewVocabulary,
+} from '../types/types';
 import { VocabularyService } from '../services/vocabulary/vocabulary.service';
-import { of, tap } from 'rxjs';
+import { LanguageService } from '../services/language/language.service';
+import { UserService } from '../services/user/user.service';
+import { forkJoin, tap } from 'rxjs';
 import { ToastService } from '../services/toast/toast.service';
 
 interface VocabularyState {
     sourceVocabulary: TranslatedPhrase[];
     loading: boolean;
     error: string | null;
-    audioDictionary: Record<number, { url: string; timestamp: number }>;
+    languageTranslations: LanguageTranslation[];
+    userSettings: UserSettings | null;
+    isVocabularyFormOpen: boolean;
+    vocabularyToEdit: TranslatedPhrase | null;
 }
 
 const initialState: VocabularyState = {
     sourceVocabulary: [],
     loading: false,
     error: null,
-    audioDictionary: {},
+    languageTranslations: [],
+    userSettings: null,
+    isVocabularyFormOpen: false,
+    vocabularyToEdit: null,
 };
 
 export const VocabularyStore = signalStore(
@@ -86,8 +100,45 @@ export const VocabularyStore = signalStore(
         (
             store,
             vocabularyService = inject(VocabularyService),
+            languageService = inject(LanguageService),
+            userService = inject(UserService),
             toastService = inject(ToastService),
         ) => ({
+            // Initialize all app data after login
+            initializeAppData() {
+                forkJoin({
+                    languageTranslations:
+                        languageService.getLanguageTranslations(),
+                    userSettings: userService.getUserSettings(),
+                })
+                    .pipe(
+                        tap({
+                            next: (data) => {
+                                patchState(store, {
+                                    languageTranslations:
+                                        data.languageTranslations,
+                                    userSettings: data.userSettings,
+                                    error: null,
+                                });
+                            },
+                            error: (error) => {
+                                toastService.toast({
+                                    message: `Error loading app data: ${
+                                        error instanceof HttpErrorResponse
+                                            ? error.message
+                                            : String(error)
+                                    }`,
+                                    type: 'error',
+                                });
+                            },
+                        }),
+                    )
+                    .subscribe();
+
+                // Call getAllVocabulary separately as it doesn't depend on the others
+                this.getAllVocabulary();
+            },
+
             getAllVocabulary() {
                 patchState(store, { loading: true });
 
@@ -154,27 +205,6 @@ export const VocabularyStore = signalStore(
                                 type: 'error',
                             });
                         },
-                    }),
-                );
-            },
-
-            getAudio(id: number) {
-                const urlValidDuration = 60000;
-                const currentTime = Date.now();
-                const { timestamp } = store.audioDictionary()[id] || {
-                    timestamp: 0,
-                };
-                if (timestamp && currentTime - timestamp < urlValidDuration) {
-                    return of(store.audioDictionary()[id].url);
-                }
-                return vocabularyService.getAudio(id).pipe(
-                    tap((url) => {
-                        patchState(store, {
-                            audioDictionary: {
-                                ...store.audioDictionary(),
-                                [id]: { url, timestamp: currentTime },
-                            },
-                        });
                     }),
                 );
             },
@@ -314,6 +344,90 @@ export const VocabularyStore = signalStore(
                         error: (error) => {
                             toastService.toast({
                                 message: `Error deleting vocabulary ${ids.join(', ')}: ${
+                                    error instanceof HttpErrorResponse
+                                        ? error.message
+                                        : String(error)
+                                }`,
+                                type: 'error',
+                            });
+                        },
+                    }),
+                );
+            },
+            openVocabularyForm() {
+                patchState(store, { isVocabularyFormOpen: true }); // Placeholder for actual form opening logic
+            },
+            closeVocabularyForm() {
+                patchState(store, {
+                    isVocabularyFormOpen: false,
+                    vocabularyToEdit: null,
+                });
+            },
+            editVocabulary(vocabularyId: TranslatedPhrase['id']) {
+                patchState(store, {
+                    vocabularyToEdit: store
+                        .sourceVocabulary()
+                        .find((v) => v.id === vocabularyId),
+                    isVocabularyFormOpen: true,
+                });
+            },
+            createVocabulary(vocabulary: NewVocabulary) {
+                return vocabularyService.saveVocabulary(vocabulary).pipe(
+                    tap({
+                        next: (resp) => {
+                            const createdVocabulary = resp as TranslatedPhrase;
+                            patchState(store, {
+                                sourceVocabulary: [
+                                    ...store.sourceVocabulary(),
+                                    createdVocabulary,
+                                ],
+                            });
+                            toastService.toast({
+                                message: 'Vocabulary created successfully',
+                                type: 'success',
+                            });
+                        },
+                        error: (error) => {
+                            toastService.toast({
+                                message: `Error creating vocabulary: ${
+                                    error instanceof HttpErrorResponse
+                                        ? error.message
+                                        : String(error)
+                                }`,
+                                type: 'error',
+                            });
+                        },
+                    }),
+                );
+            },
+            updateVocabulary(vocabulary: {
+                vocabularyId: number;
+                originalPhrase: { text: string; audioUrl: string };
+                translatedPhrase: { text: string; audioUrl: string };
+                reviewDate: string | null;
+                priority: number;
+            }) {
+                return vocabularyService.updateVocabulary(vocabulary).pipe(
+                    tap({
+                        next: (resp) => {
+                            const updatedVocabulary = resp as TranslatedPhrase;
+                            patchState(store, {
+                                sourceVocabulary: store
+                                    .sourceVocabulary()
+                                    .map((v) =>
+                                        v.id === updatedVocabulary.id
+                                            ? updatedVocabulary
+                                            : v,
+                                    ),
+                            });
+                            toastService.toast({
+                                message: 'Vocabulary updated successfully',
+                                type: 'success',
+                            });
+                        },
+                        error: (error) => {
+                            toastService.toast({
+                                message: `Error updating vocabulary: ${
                                     error instanceof HttpErrorResponse
                                         ? error.message
                                         : String(error)

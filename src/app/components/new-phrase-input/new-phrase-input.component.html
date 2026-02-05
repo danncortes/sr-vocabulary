@@ -1,0 +1,52 @@
+<div class="flex gap-4 items-end">
+    <div class="form-control grow">
+        <label class="label" [for]="id()">
+            <span class="label-text">{{ label() }}</span>
+        </label>
+        <input
+            [id]="id()"
+            [type]="type()"
+            [(ngModel)]="phrase"
+            (ngModelChange)="onPhraseChange()"
+            [class]="classNames()"
+            [placeholder]="placeholder()"
+        />
+    </div>
+    <div class="flex gap-4">
+        <button type="button">{{ locale() }}</button>
+        <ul class="flex gap-2">
+            <button
+                type="button"
+                class="btn"
+                [disabled]="!audioFilename() || clearingAudio()"
+                (click)="onClearAudio()"
+            >
+                <app-icon type="speaker-x-mark" />
+            </button>
+            <button
+                type="button"
+                class="btn"
+                [disabled]="!phrase || generatingAudio()"
+                (click)="onGenerateAudio()"
+            >
+                @if (generatingAudio()) {
+                    <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                    <app-icon type="speaker-wave" />
+                }
+            </button>
+            <button
+                type="button"
+                class="btn"
+                [disabled]="!audioFilename() || loadingAudio()"
+                (click)="onPlayAudio()"
+            >
+                @if (loadingAudio()) {
+                    <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                    <app-icon type="play" />
+                }
+            </button>
+        </ul>
+    </div>
+</div>

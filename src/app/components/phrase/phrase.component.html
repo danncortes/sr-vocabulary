@@ -33,6 +33,11 @@
             </div>
         }
         <div class="flex gap-1">
+            @if (showEdit()) {
+                <button class="cursor-pointer" (click)="editVocabulary()">
+                    <app-icon type="pencil" customClass="size-4" />
+                </button>
+            }
             @if (loadingAudioId() === translatedPhrase().original.id) {
                 <span class="loading loading-spinner loading-xs"></span>
             } @else {

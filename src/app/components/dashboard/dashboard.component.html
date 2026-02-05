@@ -1,7 +1,14 @@
 <div class="dashboard">
     <app-toast></app-toast>
     <div class="flex justify-between mb-6">
-        <h2>Dashboard</h2>
+        <div class="flex gap-4">
+            <button
+                (click)="openVocabularyForm()"
+                class="btn btn-primary btn-sm"
+            >
+                + Create vocabulary
+            </button>
+        </div>
         <button class="cursor-pointer" (click)="logout()">Logout</button>
     </div>
     @if (vocabularyStore.loading()) {
@@ -81,4 +88,20 @@
             </div>
         </div>
     }
+
+    <dialog
+        #vocabularyFormModal
+        id="vocabularyFormModal"
+        class="modal"
+        (close)="onModalClose()"
+    >
+        <div class="modal-box max-w-3xl">
+            @if (vocabularyStore.isVocabularyFormOpen()) {
+                <app-vocabulary-form></app-vocabulary-form>
+            }
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
 </div>

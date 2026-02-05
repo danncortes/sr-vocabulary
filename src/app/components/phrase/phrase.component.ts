@@ -15,6 +15,7 @@ import { IconComponent } from '../icon/icon.component';
 import { finalize } from 'rxjs';
 import { OptionsActionsBase } from '../shared/options-actions.base';
 import { DeleteConfirmModalComponent } from '../delete-confirm-modal/delete-confirm-modal.component';
+import { AudioService } from '../../services/audio/audio.service';
 
 @Component({
     selector: 'app-phrase',
@@ -36,6 +37,7 @@ export class PhraseComponent extends OptionsActionsBase {
     showReviewDate = input<boolean>(true);
     showStage = input<boolean>(true);
     showMenu = input<boolean>(true);
+    showEdit = input<boolean>(true);
     showDeleteButton = input<boolean>(false);
     isSelected = input<boolean>(false);
     selectedChange = output<number>();
@@ -70,7 +72,7 @@ export class PhraseComponent extends OptionsActionsBase {
         },
     ];
 
-    private audioPlayer: HTMLAudioElement | null = null;
+    private audioService = inject(AudioService);
 
     toggleSelect() {
         this.selectedChange.emit(this.translatedPhrase().id);
@@ -82,30 +84,18 @@ export class PhraseComponent extends OptionsActionsBase {
 
     playAudio(id: number) {
         this.loadingAudioId.set(id);
-        // Fetch the audio fil
-        this.vocabularyStore.getAudio(id).subscribe({
-            next: (audioUrl: string) => {
-                this.loadingAudioId.set(null);
-                // Stop any currently playing audio
-                if (this.audioPlayer) {
-                    this.audioPlayer.pause();
-                    this.audioPlayer = null;
-                }
-
-                // Create and play the audio
-                this.audioPlayer = new Audio(audioUrl);
-                this.audioPlayer.play().catch((error) => {
-                    console.error('Error playing audio:', error);
-                });
-            },
-            error: (error) => {
-                console.error('Error fetching audio:', error);
+        this.audioService.playAudio(`${id}.mp3`).subscribe({
+            next: () => {
                 this.loadingAudioId.set(null);
             },
-            complete: () => {
+            error: () => {
                 this.loadingAudioId.set(null);
             },
         });
+    }
+
+    editVocabulary() {
+        this.vocabularyStore.editVocabulary(this.translatedPhrase().id);
     }
 
     setReviewedVocabulary(id: number) {
