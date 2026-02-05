@@ -25,6 +25,10 @@ export interface TranslatedPhrase
 
 export interface Phrase {
     id: number;
+    locale: {
+        id: number;
+        locale_code: string;
+    };
     text: string;
     audio_url: string;
 }
@@ -35,11 +39,35 @@ export interface LanguageTranslation {
     locale_code: string;
     language_name: string;
 }
-
+export interface Language {
+    id: number;
+    locale_code: string;
+}
 export interface UserSettings {
     id: number;
     user_id: string;
-    system_lang_id: number;
-    origin_lang_id: number;
-    learning_lang_id: number;
+    system_lang: Language;
+    origin_lang: Language;
+    learning_lang: Language;
+}
+
+export interface VocabularyFormValue {
+    originalPhrase: string;
+    translatedPhrase: string;
+    reviewDate: string | null;
+    priority: string;
+}
+
+export interface AudioPhrase {
+    phrase: string;
+    localeCode: string;
+}
+
+type NewPhrase = Pick<Phrase, 'text' | 'audio_url'> & { localeId: number };
+
+export interface NewVocabulary {
+    originalPhrase: NewPhrase;
+    translatedPhrase: NewPhrase;
+    reviewDate: Date;
+    priority: number;
 }

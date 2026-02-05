@@ -5,32 +5,44 @@
     action=""
     [formGroup]="vocabularyForm"
     (ngSubmit)="submitForm()"
-    class="space-y-2"
+    class="space-y-3"
 >
-    <div class="form-control">
-        <label class="label" for="original-phrase-input">
-            <span class="label-text">Original Phrase</span>
-        </label>
-        <input
-            id="original-phrase-input"
-            type="text"
-            class="input input-bordered"
-            placeholder="Type a phrase in your original language"
-            formControlName="originalPhrase"
-        />
-    </div>
-    <div class="form-control">
-        <label class="label" for="translated-phrase-input">
-            <span class="label-text">Translated Phrase</span>
-        </label>
-        <input
-            id="translated-phrase-input"
-            type="text"
-            class="input input-bordered"
-            placeholder="Type a phrase in your translated language"
-            formControlName="translatedPhrase"
-        />
-    </div>
+    <app-new-phrase-input
+        formControlName="originalPhrase"
+        type="text"
+        classNames="input input-bordered"
+        [placeholder]="
+            translatingTarget() === 'original'
+                ? 'Generating...'
+                : 'Type a phrase in your original language'
+        "
+        id="original-phrase-input"
+        label="Original Phrase"
+        [locale]="originalLocale()"
+        [audioFilename]="originalAudioFilename()"
+        [loadingAudio]="loadingAudio() === 'original'"
+        (audioGenerated)="onAudioGenerated($event, 'original')"
+        (playAudio)="onPlayAudio($event, 'original')"
+        (clearAudio)="onClearAudio('original')"
+    />
+    <app-new-phrase-input
+        formControlName="translatedPhrase"
+        type="text"
+        classNames="input input-bordered"
+        [placeholder]="
+            translatingTarget() === 'translated'
+                ? 'Generating...'
+                : 'Type a phrase in your translated language'
+        "
+        id="translated-phrase-input"
+        label="Translated Phrase"
+        [locale]="translatedLocale()"
+        [audioFilename]="translatedAudioFilename()"
+        [loadingAudio]="loadingAudio() === 'translated'"
+        (audioGenerated)="onAudioGenerated($event, 'translated')"
+        (playAudio)="onPlayAudio($event, 'translated')"
+        (clearAudio)="onClearAudio('translated')"
+    />
 
     <div class="flex gap-2">
         <div class="form-control flex-1">
@@ -56,10 +68,20 @@
             </select>
         </div>
     </div>
-    <div class="form-control flex flex-col gap-2">
-        <button type="submit" class="btn btn-primary">
-            {{ isEditMode() ? 'Save Changes' : 'Save Vocabulary' }}
+    <div class="form-control flex flex-row gap-2 !mt-6">
+        <button type="button" class="btn" (click)="cancelForm()">Cancel</button>
+        <button type="button" class="btn" (click)="resetForm()">Reset</button>
+        <button
+            type="submit"
+            class="btn btn-primary grow"
+            [disabled]="vocabularyForm.invalid || saving()"
+        >
+            @if (saving()) {
+                Saving...
+                <span class="loading loading-spinner loading-xs"></span>
+            } @else {
+                {{ isEditMode() ? 'Save Changes' : 'Save' }}
+            }
         </button>
-        <button class="btn" (click)="cancelForm()">Cancel</button>
     </div>
 </form>

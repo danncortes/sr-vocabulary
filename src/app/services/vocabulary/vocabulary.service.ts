@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { TranslatedPhrase } from '../../types/types';
+import { NewVocabulary, TranslatedPhrase } from '../../types/types';
 
 @Injectable({
     providedIn: 'root',
@@ -14,12 +14,6 @@ export class VocabularyService {
 
     getAllVocabulary(): Observable<TranslatedPhrase[]> {
         return this.http.get<TranslatedPhrase[]>(`${this.apiBaseUrl}`);
-    }
-
-    getAudio(id: number) {
-        return this.http.get(`${this.baseUrl}/audio/${id}.mp3`, {
-            responseType: 'text',
-        });
     }
 
     reviewVocabulary(id: number) {
@@ -59,6 +53,39 @@ export class VocabularyService {
             `${this.apiBaseUrl}/${id}/learned`,
             {
                 learned: true,
+            },
+        );
+    }
+
+    saveVocabulary(vocabulary: NewVocabulary) {
+        return this.http.post(`${this.apiBaseUrl}/create`, {
+            vocabulary,
+        });
+    }
+
+    updateVocabulary(vocabulary: {
+        vocabularyId: number;
+        originalPhrase: { text: string; audioUrl: string };
+        translatedPhrase: { text: string; audioUrl: string };
+        reviewDate: string | null;
+        priority: number;
+    }) {
+        return this.http.post(`${this.apiBaseUrl}/update`, {
+            vocabulary,
+        });
+    }
+
+    translatePhrase(
+        phrase: string,
+        sourceLanguage: string,
+        targetLanguage: string,
+    ): Observable<{ translatedPhrase: string }> {
+        return this.http.post<{ translatedPhrase: string }>(
+            `${this.baseUrl}/translate`,
+            {
+                phrase,
+                sourceLanguage,
+                targetLanguage,
             },
         );
     }

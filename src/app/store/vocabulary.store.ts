@@ -12,18 +12,18 @@ import {
     TranslatedPhraseBase,
     LanguageTranslation,
     UserSettings,
+    NewVocabulary,
 } from '../types/types';
 import { VocabularyService } from '../services/vocabulary/vocabulary.service';
 import { LanguageService } from '../services/language/language.service';
 import { UserService } from '../services/user/user.service';
-import { forkJoin, of, tap } from 'rxjs';
+import { forkJoin, tap } from 'rxjs';
 import { ToastService } from '../services/toast/toast.service';
 
 interface VocabularyState {
     sourceVocabulary: TranslatedPhrase[];
     loading: boolean;
     error: string | null;
-    audioDictionary: Record<number, { url: string; timestamp: number }>;
     languageTranslations: LanguageTranslation[];
     userSettings: UserSettings | null;
     isVocabularyFormOpen: boolean;
@@ -34,7 +34,6 @@ const initialState: VocabularyState = {
     sourceVocabulary: [],
     loading: false,
     error: null,
-    audioDictionary: {},
     languageTranslations: [],
     userSettings: null,
     isVocabularyFormOpen: false,
@@ -210,27 +209,6 @@ export const VocabularyStore = signalStore(
                 );
             },
 
-            getAudio(id: number) {
-                const urlValidDuration = 60000;
-                const currentTime = Date.now();
-                const { timestamp } = store.audioDictionary()[id] || {
-                    timestamp: 0,
-                };
-                if (timestamp && currentTime - timestamp < urlValidDuration) {
-                    return of(store.audioDictionary()[id].url);
-                }
-                return vocabularyService.getAudio(id).pipe(
-                    tap((url) => {
-                        patchState(store, {
-                            audioDictionary: {
-                                ...store.audioDictionary(),
-                                [id]: { url, timestamp: currentTime },
-                            },
-                        });
-                    }),
-                );
-            },
-
             delayVocabulary(ids: number[], days: number) {
                 return vocabularyService.delayVocabulary(ids, days).pipe(
                     tap({
@@ -392,6 +370,73 @@ export const VocabularyStore = signalStore(
                         .find((v) => v.id === vocabularyId),
                     isVocabularyFormOpen: true,
                 });
+            },
+            createVocabulary(vocabulary: NewVocabulary) {
+                return vocabularyService.saveVocabulary(vocabulary).pipe(
+                    tap({
+                        next: (resp) => {
+                            const createdVocabulary = resp as TranslatedPhrase;
+                            patchState(store, {
+                                sourceVocabulary: [
+                                    ...store.sourceVocabulary(),
+                                    createdVocabulary,
+                                ],
+                            });
+                            toastService.toast({
+                                message: 'Vocabulary created successfully',
+                                type: 'success',
+                            });
+                        },
+                        error: (error) => {
+                            toastService.toast({
+                                message: `Error creating vocabulary: ${
+                                    error instanceof HttpErrorResponse
+                                        ? error.message
+                                        : String(error)
+                                }`,
+                                type: 'error',
+                            });
+                        },
+                    }),
+                );
+            },
+            updateVocabulary(vocabulary: {
+                vocabularyId: number;
+                originalPhrase: { text: string; audioUrl: string };
+                translatedPhrase: { text: string; audioUrl: string };
+                reviewDate: string | null;
+                priority: number;
+            }) {
+                return vocabularyService.updateVocabulary(vocabulary).pipe(
+                    tap({
+                        next: (resp) => {
+                            const updatedVocabulary = resp as TranslatedPhrase;
+                            patchState(store, {
+                                sourceVocabulary: store
+                                    .sourceVocabulary()
+                                    .map((v) =>
+                                        v.id === updatedVocabulary.id
+                                            ? updatedVocabulary
+                                            : v,
+                                    ),
+                            });
+                            toastService.toast({
+                                message: 'Vocabulary updated successfully',
+                                type: 'success',
+                            });
+                        },
+                        error: (error) => {
+                            toastService.toast({
+                                message: `Error updating vocabulary: ${
+                                    error instanceof HttpErrorResponse
+                                        ? error.message
+                                        : String(error)
+                                }`,
+                                type: 'error',
+                            });
+                        },
+                    }),
+                );
             },
         }),
     ),
