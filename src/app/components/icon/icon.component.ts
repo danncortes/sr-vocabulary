@@ -19,7 +19,7 @@ export type IconType =
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            [class]="'size-5 ' + customClass()"
+            [class]="'size-6 ' + customClass()"
         >
             @switch (type()) {
                 @case ('play') {
