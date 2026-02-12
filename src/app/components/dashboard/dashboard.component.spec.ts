@@ -7,6 +7,8 @@ describe('DashboardComponent', () => {
     let component: DashboardComponent;
     let fixture: ComponentFixture<DashboardComponent>;
 
+    const mockLocale = { id: 1, locale_code: 'en-US' };
+
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [DashboardComponent],
@@ -21,8 +23,8 @@ describe('DashboardComponent', () => {
             new: [
                 {
                     id: 1,
-                    original: { id: 1, text: 'Hello', audio_url: '' },
-                    translated: { id: 2, text: 'Hola', audio_url: '' },
+                    original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
+                    translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
                     sr_stage_id: 1,
                     review_date: '',
                     modified_at: '',
@@ -31,8 +33,8 @@ describe('DashboardComponent', () => {
                 },
                 {
                     id: 2,
-                    original: { id: 3, text: 'World', audio_url: '' },
-                    translated: { id: 4, text: 'Mundo', audio_url: '' },
+                    original: { id: 3, text: 'World', audio_url: '', locale: mockLocale },
+                    translated: { id: 4, text: 'Mundo', audio_url: '', locale: mockLocale },
                     sr_stage_id: 1,
                     review_date: '',
                     modified_at: '',
@@ -41,8 +43,8 @@ describe('DashboardComponent', () => {
                 },
                 {
                     id: 3,
-                    original: { id: 5, text: 'Casa', audio_url: '' },
-                    translated: { id: 6, text: 'House', audio_url: '' },
+                    original: { id: 5, text: 'Casa', audio_url: '', locale: mockLocale },
+                    translated: { id: 6, text: 'House', audio_url: '', locale: mockLocale },
                     sr_stage_id: 1,
                     review_date: '',
                     modified_at: '',
@@ -61,8 +63,8 @@ describe('DashboardComponent', () => {
         spyOn(component.vocabularyStore, 'sourceVocabulary').and.returnValue([
             {
                 id: 1,
-                original: { id: 1, text: 'Hello', audio_url: '' },
-                translated: { id: 2, text: 'Hola', audio_url: '' },
+                original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
+                translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',
@@ -71,8 +73,8 @@ describe('DashboardComponent', () => {
             },
             {
                 id: 2,
-                original: { id: 3, text: 'World', audio_url: '' },
-                translated: { id: 4, text: 'Mundo', audio_url: '' },
+                original: { id: 3, text: 'World', audio_url: '', locale: mockLocale },
+                translated: { id: 4, text: 'Mundo', audio_url: '', locale: mockLocale },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',
@@ -81,8 +83,8 @@ describe('DashboardComponent', () => {
             },
             {
                 id: 3,
-                original: { id: 5, text: 'Casa', audio_url: '' },
-                translated: { id: 6, text: 'House', audio_url: '' },
+                original: { id: 5, text: 'Casa', audio_url: '', locale: mockLocale },
+                translated: { id: 6, text: 'House', audio_url: '', locale: mockLocale },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',

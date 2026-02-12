@@ -12,6 +12,7 @@ import { VocabularyStore } from './../../store/vocabulary.store';
 import { TranslatedPhrase } from '../../types/types';
 import { OptionsMenuComponent } from '../options-menu/options-menu.component';
 import { CdkMenuTrigger } from '@angular/cdk/menu';
+import { AudioService } from '../../services/audio/audio.service';
 
 // Interface for component with optionsMenuTrigger
 interface ComponentWithMenuTrigger {
@@ -51,22 +52,29 @@ describe('PhraseComponent', () => {
     let component: PhraseComponent;
     let fixture: ComponentFixture<PhraseComponent>;
     let mockVocabularyStore: Partial<VocabularyStore>;
+    let mockAudioService: jasmine.SpyObj<AudioService>;
     let audioSpy: jasmine.Spy;
+
+    const mockLocale = { id: 1, locale_code: 'en-US' };
 
     beforeEach(async () => {
         mockVocabularyStore = {
-            getAudio: jasmine.createSpy().and.returnValue(of('audio-url')),
             setReviewedVocabulary: jasmine.createSpy().and.returnValue(of({})),
             delayVocabulary: jasmine.createSpy().and.returnValue(of({})),
             resetVocabulary: jasmine.createSpy().and.returnValue(of({})),
             restartVocabulary: jasmine.createSpy().and.returnValue(of({})),
             deleteVocabulary: jasmine.createSpy().and.returnValue(of({})),
+            editVocabulary: jasmine.createSpy(),
         };
+
+        mockAudioService = jasmine.createSpyObj('AudioService', ['playAudio']);
+        mockAudioService.playAudio.and.returnValue(of(undefined));
 
         await TestBed.configureTestingModule({
             imports: [PhraseComponent],
             providers: [
                 { provide: VocabularyStore, useValue: mockVocabularyStore },
+                { provide: AudioService, useValue: mockAudioService },
             ],
         }).compileComponents();
 
@@ -76,8 +84,8 @@ describe('PhraseComponent', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (component as any).translatedPhrase = signal<TranslatedPhrase>({
             id: 1,
-            original: { id: 1, text: 'Hola', audio_url: '' },
-            translated: { id: 2, text: 'Hello', audio_url: '' },
+            original: { id: 1, text: 'Hola', audio_url: '', locale: mockLocale },
+            translated: { id: 2, text: 'Hello', audio_url: '', locale: mockLocale },
             review_date: '2025-07-16',
             sr_stage_id: 1,
             modified_at: '',
@@ -141,7 +149,7 @@ describe('PhraseComponent', () => {
         );
         expect(audioButton).toBeTruthy();
         audioButton.click();
-        expect(mockVocabularyStore.getAudio).toHaveBeenCalledWith(1);
+        expect(mockAudioService.playAudio).toHaveBeenCalledWith('1.mp3');
     });
 
     it('should show play translated phrase audio button', () => {
@@ -156,7 +164,7 @@ describe('PhraseComponent', () => {
         );
         expect(audioButton).toBeTruthy();
         audioButton.click();
-        expect(mockVocabularyStore.getAudio).toHaveBeenCalledWith(2);
+        expect(mockAudioService.playAudio).toHaveBeenCalledWith('2.mp3');
     });
 
     it('should show review vocabulary button', () => {
@@ -431,33 +439,10 @@ describe('PhraseComponent', () => {
         expect(component.isReviewLoading()).toBeFalse();
     });
 
-    // Fix audio test: avoid casting window.Audio as jasmine.Spy; use audioSpy
-    it('should stop previous audio when playing new audio', () => {
-        const existingAudio: HTMLAudioLike = {
-            pause: jasmine.createSpy('pause'),
-            play: jasmine.createSpy('play').and.returnValue(Promise.resolve()),
-        };
-
-        const newAudio: HTMLAudioLike = {
-            pause: jasmine.createSpy('pause'),
-            play: jasmine.createSpy('play').and.returnValue(Promise.resolve()),
-        };
-
-        // Override the global Audio stub for this test
-        audioSpy.and.returnValue(newAudio as unknown as HTMLAudioElement);
-
-        (
-            component as unknown as { audioPlayer: HTMLAudioElement | null }
-        ).audioPlayer = existingAudio as unknown as HTMLAudioElement;
-
+    // Audio playback is delegated to AudioService
+    it('should call audioService.playAudio when playing audio', () => {
         component.playAudio(1);
-
-        expect(existingAudio.pause).toHaveBeenCalled();
-        expect(
-            (component as unknown as { audioPlayer: HTMLAudioElement | null })
-                .audioPlayer,
-        ).toBe(newAudio as unknown as HTMLAudioElement | null);
-        expect(newAudio.play).toHaveBeenCalled();
+        expect(mockAudioService.playAudio).toHaveBeenCalledWith('1.mp3');
     });
 
     // Null-safety for optionsMenuTrigger
@@ -477,19 +462,13 @@ describe('PhraseComponent', () => {
     });
 
     it('should handle error when playing audio', () => {
-        mockVocabularyStore.getAudio = jasmine
-            .createSpy()
-            .and.returnValue(throwError(() => new Error('Audio fetch failed')));
-
-        spyOn(console, 'error');
+        mockAudioService.playAudio.and.returnValue(
+            throwError(() => new Error('Audio fetch failed'))
+        );
 
         component.playAudio(1);
 
-        expect(mockVocabularyStore.getAudio).toHaveBeenCalledWith(1);
-        expect(console.error).toHaveBeenCalledWith(
-            'Error fetching audio:',
-            jasmine.any(Error),
-        );
+        expect(mockAudioService.playAudio).toHaveBeenCalledWith('1.mp3');
         expect(component.loadingAudioId()).toBeNull();
     });
 

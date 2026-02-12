@@ -31,6 +31,7 @@ export interface TwoFactorEnrollResponse {
 
 interface TwoFactorResponse {
     access_token: string;
+    refresh_token: string;
 }
 
 @Injectable({
@@ -45,20 +46,20 @@ export class AuthService {
 
     private getStorage(key: string): string | null {
         if (isPlatformBrowser(this.platformId)) {
-            return sessionStorage.getItem(key);
+            return localStorage.getItem(key);
         }
         return null;
     }
 
     private setStorage(key: string, value: string): void {
         if (isPlatformBrowser(this.platformId)) {
-            sessionStorage.setItem(key, value);
+            localStorage.setItem(key, value);
         }
     }
 
     private removeStorage(key: string): void {
         if (isPlatformBrowser(this.platformId)) {
-            sessionStorage.removeItem(key);
+            localStorage.removeItem(key);
         }
     }
 
@@ -80,6 +81,9 @@ export class AuthService {
                 tap((resp) => {
                     if (resp.access_token) {
                         this.setStorage('token', resp.access_token);
+                        if (resp.refresh_token) {
+                            this.setStorage('refresh_token', resp.refresh_token);
+                        }
                         this.router.navigate(['/dashboard']);
                     }
                     return of(resp);
@@ -96,7 +100,39 @@ export class AuthService {
 
     logout(): void {
         this.removeStorage('token');
+        this.removeStorage('refresh_token');
         this.router.navigate(['/login']);
+    }
+
+    getRefreshToken(): string | null {
+        return this.getStorage('refresh_token');
+    }
+
+    refreshToken(): Observable<{ access_token: string; refresh_token: string } | null> {
+        const refreshToken = this.getRefreshToken();
+        if (!refreshToken) {
+            return of(null);
+        }
+
+        return this.http
+            .post<{ access_token: string; refresh_token: string }>(
+                `${this.baseUrl}/user/refresh`,
+                { refresh_token: refreshToken }
+            )
+            .pipe(
+                tap((resp) => {
+                    if (resp.access_token) {
+                        this.setStorage('token', resp.access_token);
+                    }
+                    if (resp.refresh_token) {
+                        this.setStorage('refresh_token', resp.refresh_token);
+                    }
+                }),
+                catchError(() => {
+                    this.logout();
+                    return of(null);
+                })
+            );
     }
 
     isAuthenticated(): boolean {

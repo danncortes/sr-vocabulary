@@ -8,6 +8,7 @@ import { PhraseComponent } from '../phrase/phrase.component';
 import { TranslatedPhrase } from '../../types/types';
 import { VocabularyStore } from '../../store/vocabulary.store';
 import { OptionsMenuComponent } from '../options-menu/options-menu.component';
+import { AudioService } from '../../services/audio/audio.service';
 
 // Test Host Component
 @Component({
@@ -52,11 +53,12 @@ describe('VocabularyListComponent within a host', () => {
     let hostFixture: ComponentFixture<TestHostComponent>;
     let hostComponent: TestHostComponent;
     let mockVocabularyStore: Partial<VocabularyStore>;
+    const mockLocale = { id: 1, locale_code: 'en-US' };
     const mockVocabulary: TranslatedPhrase[] = [
         {
             id: 1,
-            original: { id: 1, text: 'Hello', audio_url: '' },
-            translated: { id: 2, text: 'Hola', audio_url: '' },
+            original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
+            translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
             sr_stage_id: 1,
             review_date: '',
             modified_at: '',
@@ -65,8 +67,8 @@ describe('VocabularyListComponent within a host', () => {
         },
         {
             id: 2,
-            original: { id: 3, text: 'World', audio_url: '' },
-            translated: { id: 4, text: 'Mundo', audio_url: '' },
+            original: { id: 3, text: 'World', audio_url: '', locale: mockLocale },
+            translated: { id: 4, text: 'Mundo', audio_url: '', locale: mockLocale },
             sr_stage_id: 1,
             review_date: '',
             modified_at: '',
@@ -75,18 +77,24 @@ describe('VocabularyListComponent within a host', () => {
         },
     ];
 
+    let mockAudioService: jasmine.SpyObj<AudioService>;
+
     beforeEach(async () => {
         mockVocabularyStore = {
-            getAudio: jasmine.createSpy().and.returnValue(of('audio-url')),
             setReviewedVocabulary: jasmine.createSpy().and.returnValue(of({})),
             delayVocabulary: jasmine.createSpy().and.returnValue(of({})),
             deleteVocabulary: jasmine.createSpy().and.returnValue(of({})),
+            editVocabulary: jasmine.createSpy(),
         };
+
+        mockAudioService = jasmine.createSpyObj('AudioService', ['playAudio']);
+        mockAudioService.playAudio.and.returnValue(of(undefined));
 
         await TestBed.configureTestingModule({
             imports: [TestHostComponent],
             providers: [
                 { provide: VocabularyStore, useValue: mockVocabularyStore },
+                { provide: AudioService, useValue: mockAudioService },
             ],
         }).compileComponents();
 
@@ -309,8 +317,8 @@ describe('VocabularyListComponent within a host', () => {
         hostComponent.vocabulary.set([
             {
                 id: 1,
-                original: { id: 1, text: 'Hello', audio_url: '' },
-                translated: { id: 2, text: 'Hola', audio_url: '' },
+                original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
+                translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',
@@ -383,8 +391,8 @@ describe('VocabularyListComponent within a host', () => {
         hostComponent.vocabulary.set([
             {
                 id: 1,
-                original: { id: 1, text: 'Hello', audio_url: '' },
-                translated: { id: 2, text: 'Hola', audio_url: '' },
+                original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
+                translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',
@@ -393,8 +401,8 @@ describe('VocabularyListComponent within a host', () => {
             },
             {
                 id: 2,
-                original: { id: 3, text: 'World', audio_url: '' },
-                translated: { id: 4, text: 'Mundo', audio_url: '' },
+                original: { id: 3, text: 'World', audio_url: '', locale: mockLocale },
+                translated: { id: 4, text: 'Mundo', audio_url: '', locale: mockLocale },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',
@@ -486,8 +494,8 @@ describe('VocabularyListComponent within a host', () => {
         hostComponent.vocabulary.set([
             {
                 id: 1,
-                original: { id: 1, text: 'Hello', audio_url: '' },
-                translated: { id: 2, text: 'Hola', audio_url: '' },
+                original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
+                translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',

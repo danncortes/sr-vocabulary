@@ -12,7 +12,6 @@ describe('OptionsMenuComponent', () => {
 
     beforeEach(async () => {
         mockVocabularyStore = {
-            getAudio: jasmine.createSpy().and.returnValue(of('audio-url')),
             setReviewedVocabulary: jasmine.createSpy().and.returnValue(of({})),
             delayVocabulary: jasmine.createSpy().and.returnValue(of({})),
         };
