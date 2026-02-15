@@ -1,98 +1,104 @@
-<div class="flex justify-between items-center mb-6 vocabulary-list-header">
-    <h2
-        [class]="`font-light text-${color()}-500 flex gap-2 items-end vocabulary-list__title`"
-    >
-        <span class="text-3xl">{{ title() }}</span>
-        <span class="text-2xl">({{ vocabulary().length }})</span>
-    </h2>
-    <div class="flex gap-2 items-center">
-        @if (showSelectToggle() && vocabulary().length > 0) {
-            @if (isSelectActive()) {
-                <button
-                    class="btn btn-xs vocabulary-options-menu-button"
-                    [cdkMenuTriggerFor]="optionsMenu"
-                    [disabled]="selectedIds.length === 0 || busy()"
-                    cdkMenuTriggerCloseSource="click"
-                    #optionsMenuTrigger
-                >
-                    Options
-                    @if (busy()) {
-                        <span class="loading loading-spinner loading-xs"></span>
-                    }
-                </button>
+<div class="grid gap-5 h-full">
+    <div class="flex justify-between items-center vocabulary-list-header">
+        <h2
+            [class]="`font-light text-${color()}-500 flex gap-2 items-end vocabulary-list__title`"
+        >
+            <span class="text-3xl">{{ title() }}</span>
+            <span class="text-2xl">({{ vocabulary().length }})</span>
+        </h2>
+        <div class="flex gap-2 items-center">
+            @if (showSelectToggle() && vocabulary().length > 0) {
+                @if (isSelectActive()) {
+                    <button
+                        class="btn btn-xs vocabulary-options-menu-button"
+                        [cdkMenuTriggerFor]="optionsMenu"
+                        [disabled]="selectedIds.length === 0 || busy()"
+                        cdkMenuTriggerCloseSource="click"
+                        #optionsMenuTrigger
+                    >
+                        Options
+                        @if (busy()) {
+                            <span
+                                class="loading loading-spinner loading-xs"
+                            ></span>
+                        }
+                    </button>
 
-                <ng-template #optionsMenu>
-                    <div cdkMenu>
-                        <app-options-menu
-                            (emitDelayDays)="delayVocabulary($event)"
-                            (emitReset)="resetVocabulary()"
-                            (emitRestart)="restartVocabulary()"
-                            (emitDelete)="requestDelete()"
-                            [disabled]="busy()"
+                    <ng-template #optionsMenu>
+                        <div cdkMenu>
+                            <app-options-menu
+                                (emitDelayDays)="delayVocabulary($event)"
+                                (emitReset)="resetVocabulary()"
+                                (emitRestart)="restartVocabulary()"
+                                (emitDelete)="requestDelete()"
+                                [disabled]="busy()"
+                            />
+                        </div>
+                    </ng-template>
+
+                    @if (isDeleteConfirmOpen()) {
+                        <app-delete-confirm-modal
+                            [count]="selectedIds.length"
+                            [busy]="busy()"
+                            (cancelModal)="cancelDelete()"
+                            (confirm)="deleteVocabulary()"
                         />
-                    </div>
-                </ng-template>
-
-                @if (isDeleteConfirmOpen()) {
-                    <app-delete-confirm-modal
-                        [count]="selectedIds.length"
-                        [busy]="busy()"
-                        (cancelModal)="cancelDelete()"
-                        (confirm)="deleteVocabulary()"
-                    />
-                }
-                <span class="text-gray-500 vocabulary-list__select-toggle-label"
-                    >{{ selectedIds.length }} Selected</span
-                >
-                <button
-                    class="btn btn-xs vocabulary-list__select-button"
-                    (click)="toggleSelectAllVocabulary()"
-                >
-                    @if (this.selectedIds.length !== vocabulary().length) {
-                        Select all
-                    } @else {
-                        Deselect all
                     }
-                </button>
-            } @else {
-                <span class="text-gray-500 vocabulary-list__select-toggle-label"
-                    >Select</span
-                >
+                    <span
+                        class="text-gray-500 vocabulary-list__select-toggle-label"
+                        >{{ selectedIds.length }} Selected</span
+                    >
+                    <button
+                        class="btn btn-xs vocabulary-list__select-button"
+                        (click)="toggleSelectAllVocabulary()"
+                    >
+                        @if (this.selectedIds.length !== vocabulary().length) {
+                            Select all
+                        } @else {
+                            Deselect all
+                        }
+                    </button>
+                } @else {
+                    <span
+                        class="text-gray-500 vocabulary-list__select-toggle-label"
+                        >Select</span
+                    >
+                }
+                <input
+                    (click)="toggleSelect()"
+                    type="checkbox"
+                    class="toggle toggle-sm vocabulary-list__select-toggle-checkbox"
+                    [checked]="isSelectActive()"
+                />
             }
-            <input
-                (click)="toggleSelect()"
-                type="checkbox"
-                class="toggle toggle-sm vocabulary-list__select-toggle-checkbox"
-                [checked]="isSelectActive()"
-            />
-        }
-        @if (statusText()) {
-            <div class="vocabulary-list__status">
-                <span [class]="`font-light text-${color()}-500 text-2xl`">
-                    {{ status() }}
-                </span>
-                {{ statusText() }}
+            @if (statusText()) {
+                <div class="vocabulary-list__status">
+                    <span [class]="`font-light text-${color()}-500 text-2xl`">
+                        {{ status() }}
+                    </span>
+                    {{ statusText() }}
+                </div>
+            }
+        </div>
+    </div>
+    <div class="flex gap-4 flex-col overflow-auto vocabulary-list">
+        @for (translatedPhrase of vocabulary(); track translatedPhrase.id) {
+            <ng-container
+                [ngTemplateOutlet]="phrase"
+                [ngTemplateOutletContext]="{
+                    translatedPhrase: translatedPhrase,
+                    showSelectCheckbox: isSelectActive(),
+                    isSelected: isSelected(translatedPhrase.id),
+                    selectedChange: selectedChange.bind(this),
+                }"
+            >
+            </ng-container>
+        } @empty {
+            <div
+                class="text-gray-500 text-center p-1 rounded-md bg-gray-50 shadow-lg border border-gray-200 vocabulary-list__no-vocabulary"
+            >
+                There is no vocabulary to show
             </div>
         }
     </div>
-</div>
-<div class="flex gap-4 flex-col max-h-96 overflow-auto vocabulary-list">
-    @for (translatedPhrase of vocabulary(); track translatedPhrase.id) {
-        <ng-container
-            [ngTemplateOutlet]="phrase"
-            [ngTemplateOutletContext]="{
-                translatedPhrase: translatedPhrase,
-                showSelectCheckbox: isSelectActive(),
-                isSelected: isSelected(translatedPhrase.id),
-                selectedChange: selectedChange.bind(this),
-            }"
-        >
-        </ng-container>
-    } @empty {
-        <div
-            class="text-gray-500 text-center p-1 rounded-md bg-gray-50 shadow-lg border border-gray-200 vocabulary-list__no-vocabulary"
-        >
-            There is no vocabulary to show
-        </div>
-    }
 </div>

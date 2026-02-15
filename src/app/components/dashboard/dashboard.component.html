@@ -1,107 +1,74 @@
-<div class="dashboard">
-    <app-toast></app-toast>
-    <div class="flex justify-between mb-6">
-        <div class="flex gap-4">
-            <button
-                (click)="openVocabularyForm()"
-                class="btn btn-primary btn-sm"
+@if (vocabularyStore.sourceVocabulary().length) {
+    <div class="grid grid-cols-5 gap-14">
+        <app-vocabulary-list
+            class="col-span-5 lg:col-span-3 max-h-[500px]"
+            [vocabulary]="vocabularyStore.vocabulary().review"
+            color="green"
+            title="To review"
+            statusText="reviewed"
+            [status]="vocabularyStore.vocabulary().reviewedToday.length"
+        >
+            <ng-template
+                #phrase
+                let-translatedPhrase="translatedPhrase"
+                let-showSelectCheckbox="showSelectCheckbox"
+                let-selectedChange="selectedChange"
+                let-isSelected="isSelected"
             >
-                + Create vocabulary
-            </button>
-        </div>
-        <button class="cursor-pointer" (click)="logout()">Logout</button>
+                <app-phrase
+                    [translatedPhrase]="translatedPhrase"
+                    [showSelectCheckbox]="showSelectCheckbox"
+                    [isSelected]="isSelected"
+                    (selectedChange)="selectedChange($event)"
+                />
+            </ng-template>
+        </app-vocabulary-list>
+        <app-vocabulary-list
+            class="col-span-5 lg:col-span-2 dashboard__new-vocabulary max-h-[500px]"
+            [vocabulary]="vocabularyStore.vocabulary().new"
+            [color]="'blue'"
+            title="New"
+            statusText="started"
+            [status]="vocabularyStore.vocabulary().startedToday.length"
+            [showSelectToggle]="false"
+        >
+            <ng-template
+                #phrase
+                let-translatedPhrase="translatedPhrase"
+                let-showSelectCheckbox="showSelectCheckbox"
+                let-selectedChange="selectedChange"
+            >
+                <app-phrase
+                    [showMenu]="false"
+                    [showReviewDate]="false"
+                    [showStage]="false"
+                    [showDeleteButton]="true"
+                    [translatedPhrase]="translatedPhrase"
+                    [showSelectCheckbox]="showSelectCheckbox"
+                    (selectedChange)="selectedChange($event)"
+                />
+            </ng-template>
+        </app-vocabulary-list>
+        <app-vocabulary-list
+            class="col-span-5 max-h-[500px]"
+            [vocabulary]="vocabularyStore.vocabulary().rest"
+            color="gray"
+            title="Next"
+        >
+            <ng-template
+                #phrase
+                let-translatedPhrase="translatedPhrase"
+                let-showSelectCheckbox="showSelectCheckbox"
+                let-selectedChange="selectedChange"
+                let-isSelected="isSelected"
+            >
+                <app-phrase
+                    [translatedPhrase]="translatedPhrase"
+                    [showSelectCheckbox]="showSelectCheckbox"
+                    [isSelected]="isSelected"
+                    (selectedChange)="selectedChange($event)"
+                />
+            </ng-template>
+        </app-vocabulary-list>
     </div>
-    @if (vocabularyStore.loading()) {
-        <span class="loading loading-spinner loading-xl"></span>
-    } @else if (vocabularyStore.sourceVocabulary().length) {
-        <div class="grid grid-cols-5 gap-14">
-            <app-vocabulary-list
-                class="col-span-5 lg:col-span-3"
-                [vocabulary]="vocabularyStore.vocabulary().review"
-                color="green"
-                title="To review"
-                statusText="reviewed"
-                [status]="vocabularyStore.vocabulary().reviewedToday.length"
-            >
-                <ng-template
-                    #phrase
-                    let-translatedPhrase="translatedPhrase"
-                    let-showSelectCheckbox="showSelectCheckbox"
-                    let-selectedChange="selectedChange"
-                    let-isSelected="isSelected"
-                >
-                    <app-phrase
-                        [translatedPhrase]="translatedPhrase"
-                        [showSelectCheckbox]="showSelectCheckbox"
-                        [isSelected]="isSelected"
-                        (selectedChange)="selectedChange($event)"
-                    />
-                </ng-template>
-            </app-vocabulary-list>
-            <app-vocabulary-list
-                class="col-span-5 lg:col-span-2 dashboard__new-vocabulary"
-                [vocabulary]="vocabularyStore.vocabulary().new"
-                [color]="'blue'"
-                title="New"
-                statusText="started"
-                [status]="vocabularyStore.vocabulary().startedToday.length"
-                [showSelectToggle]="false"
-            >
-                <ng-template
-                    #phrase
-                    let-translatedPhrase="translatedPhrase"
-                    let-showSelectCheckbox="showSelectCheckbox"
-                    let-selectedChange="selectedChange"
-                >
-                    <app-phrase
-                        [showMenu]="false"
-                        [showReviewDate]="false"
-                        [showStage]="false"
-                        [showDeleteButton]="true"
-                        [translatedPhrase]="translatedPhrase"
-                        [showSelectCheckbox]="showSelectCheckbox"
-                        (selectedChange)="selectedChange($event)"
-                    />
-                </ng-template>
-            </app-vocabulary-list>
-            <div class="col-span-5">
-                <app-vocabulary-list
-                    [vocabulary]="vocabularyStore.vocabulary().rest"
-                    color="gray"
-                    title="Next"
-                >
-                    <ng-template
-                        #phrase
-                        let-translatedPhrase="translatedPhrase"
-                        let-showSelectCheckbox="showSelectCheckbox"
-                        let-selectedChange="selectedChange"
-                        let-isSelected="isSelected"
-                    >
-                        <app-phrase
-                            [translatedPhrase]="translatedPhrase"
-                            [showSelectCheckbox]="showSelectCheckbox"
-                            [isSelected]="isSelected"
-                            (selectedChange)="selectedChange($event)"
-                        />
-                    </ng-template>
-                </app-vocabulary-list>
-            </div>
-        </div>
-    }
-
-    <dialog
-        #vocabularyFormModal
-        id="vocabularyFormModal"
-        class="modal"
-        (close)="onModalClose()"
-    >
-        <div class="modal-box max-w-3xl">
-            @if (vocabularyStore.isVocabularyFormOpen()) {
-                <app-vocabulary-form></app-vocabulary-form>
-            }
-        </div>
-        <form method="dialog" class="modal-backdrop">
-            <button>close</button>
-        </form>
-    </dialog>
-</div>
+}

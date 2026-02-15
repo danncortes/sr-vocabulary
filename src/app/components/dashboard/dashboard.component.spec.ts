@@ -23,8 +23,18 @@ describe('DashboardComponent', () => {
             new: [
                 {
                     id: 1,
-                    original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
-                    translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
+                    original: {
+                        id: 1,
+                        text: 'Hello',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
+                    translated: {
+                        id: 2,
+                        text: 'Hola',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
                     sr_stage_id: 1,
                     review_date: '',
                     modified_at: '',
@@ -33,8 +43,18 @@ describe('DashboardComponent', () => {
                 },
                 {
                     id: 2,
-                    original: { id: 3, text: 'World', audio_url: '', locale: mockLocale },
-                    translated: { id: 4, text: 'Mundo', audio_url: '', locale: mockLocale },
+                    original: {
+                        id: 3,
+                        text: 'World',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
+                    translated: {
+                        id: 4,
+                        text: 'Mundo',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
                     sr_stage_id: 1,
                     review_date: '',
                     modified_at: '',
@@ -43,8 +63,18 @@ describe('DashboardComponent', () => {
                 },
                 {
                     id: 3,
-                    original: { id: 5, text: 'Casa', audio_url: '', locale: mockLocale },
-                    translated: { id: 6, text: 'House', audio_url: '', locale: mockLocale },
+                    original: {
+                        id: 5,
+                        text: 'Casa',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
+                    translated: {
+                        id: 6,
+                        text: 'House',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
                     sr_stage_id: 1,
                     review_date: '',
                     modified_at: '',
@@ -63,8 +93,18 @@ describe('DashboardComponent', () => {
         spyOn(component.vocabularyStore, 'sourceVocabulary').and.returnValue([
             {
                 id: 1,
-                original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
-                translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
+                original: {
+                    id: 1,
+                    text: 'Hello',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
+                translated: {
+                    id: 2,
+                    text: 'Hola',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',
@@ -73,8 +113,18 @@ describe('DashboardComponent', () => {
             },
             {
                 id: 2,
-                original: { id: 3, text: 'World', audio_url: '', locale: mockLocale },
-                translated: { id: 4, text: 'Mundo', audio_url: '', locale: mockLocale },
+                original: {
+                    id: 3,
+                    text: 'World',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
+                translated: {
+                    id: 4,
+                    text: 'Mundo',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',
@@ -83,8 +133,18 @@ describe('DashboardComponent', () => {
             },
             {
                 id: 3,
-                original: { id: 5, text: 'Casa', audio_url: '', locale: mockLocale },
-                translated: { id: 6, text: 'House', audio_url: '', locale: mockLocale },
+                original: {
+                    id: 5,
+                    text: 'Casa',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
+                translated: {
+                    id: 6,
+                    text: 'House',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',
@@ -93,9 +153,6 @@ describe('DashboardComponent', () => {
             },
         ]);
 
-        // Mock loading signal
-        spyOn(component.vocabularyStore, 'loading').and.returnValue(false);
-
         fixture.detectChanges();
     });
 
@@ -103,7 +160,7 @@ describe('DashboardComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('show render the vocabulary list component with the new vocabulary', () => {
+    it('should render the vocabulary list component with the new vocabulary', () => {
         const newVocabularyList =
             fixture.debugElement.nativeElement.querySelector(
                 '.dashboard__new-vocabulary',
@@ -111,7 +168,7 @@ describe('DashboardComponent', () => {
         expect(newVocabularyList).toBeTruthy();
     });
 
-    it('should display the title "New(3)" and top "0  started" text', () => {
+    it('should display the title "New(3)" and top "0 started" text', () => {
         const titleElement = fixture.debugElement.nativeElement.querySelector(
             '.dashboard__new-vocabulary .vocabulary-list__title',
         );
@@ -123,5 +180,13 @@ describe('DashboardComponent', () => {
         );
         expect(startedElement).toBeTruthy();
         expect(startedElement.textContent.trim()).toBe('0  started');
+    });
+
+    it('should render vocabulary lists for review, new, and rest', () => {
+        const vocabularyLists =
+            fixture.debugElement.nativeElement.querySelectorAll(
+                'app-vocabulary-list',
+            );
+        expect(vocabularyLists.length).toBe(3);
     });
 });

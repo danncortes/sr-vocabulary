@@ -12,12 +12,29 @@ export const routes: Routes = [
         canActivate: [loginGuard],
     },
     {
-        path: 'dashboard',
+        path: '',
         loadComponent: () =>
-            import('./components/dashboard/dashboard.component').then(
-                (m) => m.DashboardComponent,
+            import('./components/main-layout/main-layout.component').then(
+                (m) => m.MainLayoutComponent,
             ),
         canActivate: [authGuard],
+        children: [
+            {
+                path: 'dashboard',
+                loadComponent: () =>
+                    import('./components/dashboard/dashboard.component').then(
+                        (m) => m.DashboardComponent,
+                    ),
+            },
+            {
+                path: 'vocabulary',
+                loadComponent: () =>
+                    import(
+                        './components/vocabulary-view/vocabulary-view.component'
+                    ).then((m) => m.VocabularyViewComponent),
+            },
+            { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+        ],
     },
     { path: '**', redirectTo: 'dashboard' },
 ];

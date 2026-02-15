@@ -740,7 +740,7 @@ describe('PhraseComponent', () => {
         // While busy, the delete button should show spinner instead of icon
         const deleteButtonContainer =
             fixture.debugElement.nativeElement.querySelector(
-                '.phrase-component .flex.gap-1',
+                '.phrase-component .flex.gap-2',
             );
         const spinner = deleteButtonContainer.querySelector('.loading-spinner');
         expect(spinner).toBeTruthy();

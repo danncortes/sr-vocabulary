@@ -1,0 +1,21 @@
+<app-vocabulary-list
+    [vocabulary]="vocabularyStore.sourceVocabulary()"
+    color="gray"
+    title="All Vocabulary"
+>
+    <ng-template
+        #phrase
+        let-translatedPhrase="translatedPhrase"
+        let-showSelectCheckbox="showSelectCheckbox"
+        let-selectedChange="selectedChange"
+        let-isSelected="isSelected"
+    >
+        <app-phrase
+            [showReviewDate]="false"
+            [translatedPhrase]="translatedPhrase"
+            [showSelectCheckbox]="showSelectCheckbox"
+            [isSelected]="isSelected"
+            (selectedChange)="selectedChange($event)"
+        />
+    </ng-template>
+</app-vocabulary-list>

@@ -1,0 +1,57 @@
+<div class="main-layout sm:pt-20 px-6 pb-6">
+    <app-toast></app-toast>
+    <div
+        class="flex justify-between p-6 bg-white sm:fixed top-0 left-0 right-0"
+    >
+        <div class="flex gap-4 items-center">
+            <button
+                (click)="openVocabularyForm()"
+                class="btn btn-primary btn-sm"
+            >
+                + Create vocabulary
+            </button>
+            <nav class="flex gap-2">
+                <a
+                    routerLink="/dashboard"
+                    routerLinkActive="btn-primary"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                    class="btn btn-ghost btn-sm"
+                    [class.btn-primary]="false"
+                >
+                    Dashboard
+                </a>
+                <a
+                    routerLink="/vocabulary"
+                    routerLinkActive="btn-primary"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                    class="btn btn-ghost btn-sm"
+                >
+                    Vocabulary
+                </a>
+            </nav>
+        </div>
+        <button class="cursor-pointer" (click)="logout()">Logout</button>
+    </div>
+
+    @if (vocabularyStore.loading()) {
+        <span class="loading loading-spinner loading-xl"></span>
+    } @else {
+        <router-outlet></router-outlet>
+    }
+
+    <dialog
+        #vocabularyFormModal
+        id="vocabularyFormModal"
+        class="modal"
+        (close)="onModalClose()"
+    >
+        <div class="modal-box max-w-3xl">
+            @if (vocabularyStore.isVocabularyFormOpen()) {
+                <app-vocabulary-form></app-vocabulary-form>
+            }
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+</div>

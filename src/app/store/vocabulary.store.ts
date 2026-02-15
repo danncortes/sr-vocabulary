@@ -57,7 +57,11 @@ export const VocabularyStore = signalStore(
                 const dateObj = new Date(v.review_date);
 
                 if (v.sr_stage_id === 0) {
-                    newVocabulary.push(v);
+                    const hasAudio =
+                        v.original.audio_url || v.translated.audio_url;
+                    if (hasAudio) {
+                        newVocabulary.push(v);
+                    }
                 } else if (dateObj <= today && v.learned !== 1) {
                     review.push(v);
                 } else if (dateObj > today && v.learned === 0) {

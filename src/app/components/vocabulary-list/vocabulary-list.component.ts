@@ -27,6 +27,7 @@ import { DeleteConfirmModalComponent } from '../delete-confirm-modal/delete-conf
         DeleteConfirmModalComponent,
     ],
     templateUrl: './vocabulary-list.component.html',
+    host: { class: 'block' },
 })
 export class VocabularyListComponent extends OptionsActionsBase {
     vocabulary = input.required<TranslatedPhrase[]>();

@@ -28,11 +28,11 @@ describe('IconComponent', () => {
             expect(svg).toBeTruthy();
         });
 
-        it('should have default size-5 class', () => {
+        it('should have default size-6 class', () => {
             fixture.componentRef.setInput('type', 'play');
             fixture.detectChanges();
             const svg = fixture.nativeElement.querySelector('svg');
-            expect(svg.classList.contains('size-5')).toBeTrue();
+            expect(svg.classList.contains('size-6')).toBeTrue();
         });
     });
 
@@ -95,12 +95,12 @@ describe('IconComponent', () => {
             expect(svg.classList.contains('text-red-500')).toBeTrue();
         });
 
-        it('should combine size-5 with custom class', () => {
+        it('should combine size-6 with custom class', () => {
             fixture.componentRef.setInput('type', 'play');
             fixture.componentRef.setInput('customClass', 'custom-class');
             fixture.detectChanges();
             const svg = fixture.nativeElement.querySelector('svg');
-            expect(svg.classList.contains('size-5')).toBeTrue();
+            expect(svg.classList.contains('size-6')).toBeTrue();
             expect(svg.classList.contains('custom-class')).toBeTrue();
         });
 
