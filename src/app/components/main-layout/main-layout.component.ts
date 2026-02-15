@@ -11,6 +11,7 @@ import { AuthService } from '../../services/auth/auth.service';
 import { VocabularyStore } from '../../store/vocabulary.store';
 import { ToastComponent } from '../toast/toast.component';
 import { VocabularyFormComponent } from '../vocabulary-form/vocabulary-form.component';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
     selector: 'app-main-layout',
@@ -21,14 +22,16 @@ import { VocabularyFormComponent } from '../vocabulary-form/vocabulary-form.comp
         RouterLinkActive,
         ToastComponent,
         VocabularyFormComponent,
+        IconComponent,
     ],
     templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent implements OnInit {
     authService = inject(AuthService);
     vocabularyStore = inject(VocabularyStore);
-    vocabularyFormModal =
-        viewChild<ElementRef<HTMLDialogElement>>('vocabularyFormModal');
+    vocabularyFormModal = viewChild<ElementRef<HTMLDialogElement>>(
+        'vocabularyFormModal',
+    );
 
     constructor() {
         effect(() => {

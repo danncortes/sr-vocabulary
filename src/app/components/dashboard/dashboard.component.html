@@ -1,7 +1,7 @@
 @if (vocabularyStore.sourceVocabulary().length) {
     <div class="grid grid-cols-5 gap-14">
         <app-vocabulary-list
-            class="col-span-5 lg:col-span-3 max-h-[500px]"
+            class="col-span-5 lg:col-span-3 max-h-[550px]"
             [vocabulary]="vocabularyStore.vocabulary().review"
             color="green"
             title="To review"
@@ -24,7 +24,7 @@
             </ng-template>
         </app-vocabulary-list>
         <app-vocabulary-list
-            class="col-span-5 lg:col-span-2 dashboard__new-vocabulary max-h-[500px]"
+            class="col-span-5 lg:col-span-2 dashboard__new-vocabulary max-h-[550px]"
             [vocabulary]="vocabularyStore.vocabulary().new"
             [color]="'blue'"
             title="New"
@@ -50,7 +50,7 @@
             </ng-template>
         </app-vocabulary-list>
         <app-vocabulary-list
-            class="col-span-5 max-h-[500px]"
+            class="col-span-5 max-h-[550px]"
             [vocabulary]="vocabularyStore.vocabulary().rest"
             color="gray"
             title="Next"
