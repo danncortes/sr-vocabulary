@@ -14,9 +14,9 @@
     @if (vocabularyStore.loading()) {
         <span class="loading loading-spinner loading-xl"></span>
     } @else if (vocabularyStore.sourceVocabulary().length) {
-        <div class="grid grid-cols-2 gap-14">
+        <div class="grid grid-cols-5 gap-14">
             <app-vocabulary-list
-                class="col-span-2 lg:col-span-1"
+                class="col-span-5 lg:col-span-3"
                 [vocabulary]="vocabularyStore.vocabulary().review"
                 color="green"
                 title="To review"
@@ -39,7 +39,7 @@
                 </ng-template>
             </app-vocabulary-list>
             <app-vocabulary-list
-                class="col-span-2 lg:col-span-1 dashboard__new-vocabulary"
+                class="col-span-5 lg:col-span-2 dashboard__new-vocabulary"
                 [vocabulary]="vocabularyStore.vocabulary().new"
                 [color]="'blue'"
                 title="New"
@@ -64,7 +64,7 @@
                     />
                 </ng-template>
             </app-vocabulary-list>
-            <div class="col-span-2">
+            <div class="col-span-5">
                 <app-vocabulary-list
                     [vocabulary]="vocabularyStore.vocabulary().rest"
                     color="gray"

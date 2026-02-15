@@ -18,91 +18,108 @@
         >
             {{ translatedPhrase().original.text }}
         </button>
-        @if (showReviewDate()) {
-            <div
-                class="text-sm text-gray-500 text-nowrap phrase-component__review-date"
-            >
-                {{ translatedPhrase().review_date | date: 'd MMM YY' }}
-            </div>
-        }
-        @if (showStage()) {
-            <div
-                class="text-xs text-gray-500 text-nowrap phrase-component__stage"
-            >
-                Stage {{ translatedPhrase().sr_stage_id }}
-            </div>
-        }
-        <div class="flex gap-2">
-            @if (showDeleteButton()) {
-                @if (busy()) {
-                    <span class="loading loading-spinner loading-xs"></span>
-                } @else {
-                    <button
-                        class="cursor-pointer phrase-component__delete-button text-red-600 hover:text-red-800"
-                        (click)="requestDelete()"
+        <div
+            class="flex max-sm:justify-between justify-end items-center max-sm:w-full gap-6"
+        >
+            <div class="flex gap-6">
+                @if (showReviewDate()) {
+                    <div
+                        class="text-sm text-gray-500 text-nowrap phrase-component__review-date"
                     >
-                        <app-icon type="trash" customClass="max-sm:size-7" />
-                    </button>
+                        {{ translatedPhrase().review_date | date: 'd MMM YY' }}
+                    </div>
                 }
-            }
-            @if (showEdit()) {
-                <button class="cursor-pointer" (click)="editVocabulary()">
-                    <app-icon type="pencil" customClass="max-sm:size-7" />
-                </button>
-            }
-            @if (isReviewLoading()) {
-                <span class="loading loading-spinner loading-xs"></span>
-            } @else {
-                <button
-                    class="cursor-pointer phrase-component__review-button"
-                    (click)="setReviewedVocabulary(translatedPhrase().id)"
-                >
-                    <app-icon type="check-circle" customClass="max-sm:size-7" />
-                </button>
-            }
-            @if (loadingAudioId() === translatedPhrase().original.id) {
-                <span class="loading loading-spinner loading-xs"></span>
-            } @else {
-                <button
-                    class="cursor-pointer phrase-component__play-audio--original"
-                    (click)="playAudio(translatedPhrase().original.id)"
-                >
-                    <app-icon type="play" customClass="size-7 max-sm:size-8" />
-                </button>
-            }
-
-            @if (showMenu()) {
-                <button
-                    #optionsMenuTrigger
-                    class="cursor-pointer phrase-component__options-button"
-                    [cdkMenuTriggerFor]="phraseOptionsMenu"
-                    cdkMenuTriggerCloseSource="click"
-                >
+                @if (showStage()) {
+                    <div
+                        class="text-xs text-gray-500 text-nowrap phrase-component__stage"
+                    >
+                        Stage {{ translatedPhrase().sr_stage_id }}
+                    </div>
+                }
+            </div>
+            <div class="flex gap-2">
+                @if (showDeleteButton()) {
                     @if (busy()) {
                         <span class="loading loading-spinner loading-xs"></span>
                     } @else {
+                        <button
+                            class="cursor-pointer phrase-component__delete-button text-red-600 hover:text-red-800"
+                            (click)="requestDelete()"
+                        >
+                            <app-icon
+                                type="trash"
+                                customClass="max-sm:size-7"
+                            />
+                        </button>
+                    }
+                }
+                @if (showEdit()) {
+                    <button class="cursor-pointer" (click)="editVocabulary()">
+                        <app-icon type="pencil" customClass="max-sm:size-7" />
+                    </button>
+                }
+                @if (isReviewLoading()) {
+                    <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                    <button
+                        class="cursor-pointer phrase-component__review-button"
+                        (click)="setReviewedVocabulary(translatedPhrase().id)"
+                    >
                         <app-icon
-                            type="ellipsis-horizontal"
+                            type="check-circle"
                             customClass="max-sm:size-7"
                         />
-                    }
-                </button>
-
-                <ng-template #phraseOptionsMenu>
-                    <div cdkMenu>
-                        <app-options-menu
-                            class="phrase-component__options-menu"
-                            (emitDelayDays)="
-                                delay([translatedPhrase().id], $event)
-                            "
-                            (emitReset)="reset([translatedPhrase().id])"
-                            (emitRestart)="restart([translatedPhrase().id])"
-                            (emitDelete)="requestDelete()"
-                            [disabled]="busy()"
+                    </button>
+                }
+                @if (loadingAudioId() === translatedPhrase().original.id) {
+                    <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                    <button
+                        class="cursor-pointer phrase-component__play-audio--original"
+                        (click)="playAudio(translatedPhrase().original.id)"
+                    >
+                        <app-icon
+                            type="play"
+                            customClass="size-7 max-sm:size-8"
                         />
-                    </div>
-                </ng-template>
-            }
+                    </button>
+                }
+
+                @if (showMenu()) {
+                    <button
+                        #optionsMenuTrigger
+                        class="cursor-pointer phrase-component__options-button"
+                        [cdkMenuTriggerFor]="phraseOptionsMenu"
+                        cdkMenuTriggerCloseSource="click"
+                    >
+                        @if (busy()) {
+                            <span
+                                class="loading loading-spinner loading-xs"
+                            ></span>
+                        } @else {
+                            <app-icon
+                                type="ellipsis-horizontal"
+                                customClass="max-sm:size-7"
+                            />
+                        }
+                    </button>
+
+                    <ng-template #phraseOptionsMenu>
+                        <div cdkMenu>
+                            <app-options-menu
+                                class="phrase-component__options-menu"
+                                (emitDelayDays)="
+                                    delay([translatedPhrase().id], $event)
+                                "
+                                (emitReset)="reset([translatedPhrase().id])"
+                                (emitRestart)="restart([translatedPhrase().id])"
+                                (emitDelete)="requestDelete()"
+                                [disabled]="busy()"
+                            />
+                        </div>
+                    </ng-template>
+                }
+            </div>
         </div>
     </div>
     @if (isTranlationVisible()) {
