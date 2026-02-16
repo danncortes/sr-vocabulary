@@ -1,21 +1,66 @@
-<app-vocabulary-list
-    [vocabulary]="vocabularyStore.sourceVocabulary()"
-    color="gray"
-    title="All Vocabulary"
->
-    <ng-template
-        #phrase
-        let-translatedPhrase="translatedPhrase"
-        let-showSelectCheckbox="showSelectCheckbox"
-        let-selectedChange="selectedChange"
-        let-isSelected="isSelected"
+<div class="grid gap-4">
+    <div
+        class="flex flex-wrap gap-4 items-center p-3 bg-gray-50 rounded-lg border border-gray-200 vocabulary-filters"
     >
-        <app-phrase
-            [showReviewDate]="false"
-            [translatedPhrase]="translatedPhrase"
-            [showSelectCheckbox]="showSelectCheckbox"
-            [isSelected]="isSelected"
-            (selectedChange)="selectedChange($event)"
-        />
-    </ng-template>
-</app-vocabulary-list>
+        <div class="flex items-center gap-2 vocabulary-filters__audio-filter">
+            <span class="text-sm text-gray-600">Audio:</span>
+            <select
+                class="select select-sm select-bordered"
+                [ngModel]="audioFilter()"
+                (ngModelChange)="audioFilter.set($event)"
+            >
+                <option value="all">All</option>
+                <option value="with-audio">With audio</option>
+                <option value="without-audio">Without audio</option>
+            </select>
+        </div>
+
+        <div class="flex items-center gap-2 vocabulary-filters__stage-filter">
+            <span class="text-sm text-gray-600">Stage:</span>
+            <select
+                class="select select-sm select-bordered"
+                [ngModel]="stageFilter()"
+                (ngModelChange)="stageFilter.set($event)"
+            >
+                <option value="all">All</option>
+                @for (stage of availableStages(); track stage) {
+                    <option [value]="stage">{{ getStageLabel(stage) }}</option>
+                }
+            </select>
+        </div>
+
+        <div
+            class="flex items-center gap-2 flex-1 min-w-48 vocabulary-filters__text-search"
+        >
+            <input
+                type="text"
+                placeholder="Search text..."
+                class="input input-sm input-bordered w-full max-w-xs"
+                [ngModel]="textSearch()"
+                (ngModelChange)="textSearch.set($event)"
+            />
+        </div>
+    </div>
+
+    <app-vocabulary-list
+        [vocabulary]="filteredVocabulary()"
+        color="gray"
+        title="All Vocabulary"
+    >
+        <ng-template
+            #phrase
+            let-translatedPhrase="translatedPhrase"
+            let-showSelectCheckbox="showSelectCheckbox"
+            let-selectedChange="selectedChange"
+            let-isSelected="isSelected"
+        >
+            <app-phrase
+                [showReviewDate]="false"
+                [translatedPhrase]="translatedPhrase"
+                [showSelectCheckbox]="showSelectCheckbox"
+                [isSelected]="isSelected"
+                (selectedChange)="selectedChange($event)"
+            />
+        </ng-template>
+    </app-vocabulary-list>
+</div>
