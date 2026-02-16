@@ -23,6 +23,7 @@ import { NewVocabulary, TranslatedPhrase } from '../../types/types';
 
 const NEW_VOCABULARY_STORAGE_KEY = 'newVocabulary';
 const EDIT_VOCABULARY_STORAGE_KEY = 'editVocabulary';
+const AUTO_TRANSLATION_STORAGE_KEY = 'autoTranslationEnabled';
 
 interface PhraseStorage {
     lang: string;
@@ -70,6 +71,10 @@ export class VocabularyFormComponent implements OnDestroy {
     loadingAudio = signal<'original' | 'translated' | null>(null);
     originalAudioFilename = signal<string | null>(null);
     translatedAudioFilename = signal<string | null>(null);
+    autoTranslationEnabled = signal(
+        localStorage.getItem(AUTO_TRANSLATION_STORAGE_KEY) !== 'false',
+    );
+    generatingPhraseFor = signal<'original' | 'translated' | null>(null);
 
     originalLocale = computed(() => {
         return (
@@ -308,6 +313,8 @@ export class VocabularyFormComponent implements OnDestroy {
                 distinctUntilChanged(),
             )
             .subscribe((phrase) => {
+                if (!this.autoTranslationEnabled()) return;
+
                 const source = sourceLocale();
                 const target = targetLocale();
 
@@ -646,6 +653,46 @@ export class VocabularyFormComponent implements OnDestroy {
 
             localStorage.removeItem(EDIT_VOCABULARY_STORAGE_KEY);
         }
+    }
+
+    toggleAutoTranslation(): void {
+        const newValue = !this.autoTranslationEnabled();
+        this.autoTranslationEnabled.set(newValue);
+        localStorage.setItem(AUTO_TRANSLATION_STORAGE_KEY, String(newValue));
+    }
+
+    onGeneratePhrase(type: 'original' | 'translated'): void {
+        const text =
+            type === 'original'
+                ? this.vocabularyForm.controls.originalPhrase.value
+                : this.vocabularyForm.controls.translatedPhrase.value;
+
+        const locale =
+            type === 'original' ? this.originalLocale() : this.translatedLocale();
+
+        if (!text || !locale) return;
+
+        this.generatingPhraseFor.set(type);
+        this.vocabularyService.generatePhrase(text, locale).subscribe({
+            next: (response) => {
+                if (type === 'original') {
+                    this.vocabularyForm.controls.originalPhrase.setValue(
+                        response.generatedPhrase,
+                        { emitEvent: false },
+                    );
+                } else {
+                    this.vocabularyForm.controls.translatedPhrase.setValue(
+                        response.generatedPhrase,
+                        { emitEvent: false },
+                    );
+                }
+                this.generatingPhraseFor.set(null);
+                this.saveToStorage();
+            },
+            error: () => {
+                this.generatingPhraseFor.set(null);
+            },
+        });
     }
 
     ngOnDestroy(): void {

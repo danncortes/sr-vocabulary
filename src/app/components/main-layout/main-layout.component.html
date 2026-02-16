@@ -32,7 +32,10 @@
                 </a>
             </nav>
         </div>
-        <button class="cursor-pointer" (click)="logout()">Logout</button>
+        <button class="cursor-pointer flex gap-2" (click)="logout()">
+            <span class="sm:hidden">Logout</span>
+            <app-icon type="arrow-right-start-on-rectangle" />
+        </button>
     </div>
 
     @if (vocabularyStore.loading()) {

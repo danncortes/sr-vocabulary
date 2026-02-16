@@ -72,9 +72,19 @@ describe('LoginComponent', () => {
         expect(loginButton.disabled).toBe(false);
     });
 
-    it('should show loading spinner when logging in', () => {
-        spyOn(window, 'prompt').and.returnValue('123456'); // Mock prompt
+    it('should show loading state when logging in', () => {
+        spyOn(window, 'prompt').and.returnValue('123456');
         spyOn(authService, 'login').and.returnValue(of({}));
+
+        const form = fixture.nativeElement.querySelector('form');
+        const emailInput: HTMLInputElement =
+            form.querySelector('input[name="email"]');
+        const passwordInput: HTMLInputElement =
+            form.querySelector('input[name="password"]');
+
+        expect(emailInput.disabled).toBe(false);
+        expect(passwordInput.disabled).toBe(false);
+
         component.onSubmit({
             valid: true,
             value: { email: 'test@example.com', password: 'password123' },
@@ -86,6 +96,8 @@ describe('LoginComponent', () => {
         expect(loginButton.innerText).toContain('Logging in...');
         const spinner = loginButton.querySelector('.loading-spinner');
         expect(spinner).toBeTruthy();
+        expect(emailInput.hasAttribute('disabled')).toBe(true);
+        expect(passwordInput.hasAttribute('disabled')).toBe(true);
     });
 
     it('should show error message on login failure', (done) => {

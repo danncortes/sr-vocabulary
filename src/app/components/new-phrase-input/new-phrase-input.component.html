@@ -3,14 +3,28 @@
         <label class="label" [for]="id()">
             <span class="label-text">{{ label() }}</span>
         </label>
-        <input
-            [id]="id()"
-            [type]="type()"
-            [(ngModel)]="phrase"
-            (ngModelChange)="onPhraseChange()"
-            [class]="classNames() + ' flex-grow'"
-            [placeholder]="placeholder()"
-        />
+        <div class="flex gap-2">
+            <input
+                [id]="id()"
+                [type]="type()"
+                [(ngModel)]="phrase"
+                (ngModelChange)="onPhraseChange()"
+                [class]="classNames() + ' flex-grow'"
+                [placeholder]="placeholder()"
+            />
+            <button
+                type="button"
+                class="btn"
+                [disabled]="!phrase || generatingPhrase()"
+                (click)="onGeneratePhrase()"
+            >
+                @if (generatingPhrase()) {
+                    <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                    <app-icon type="sparkles" />
+                }
+            </button>
+        </div>
     </div>
     <div class="flex gap-4 justify-between">
         <button type="button">{{ locale() }}</button>

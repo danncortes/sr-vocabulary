@@ -1,6 +1,17 @@
-<h2 class="text-lg font-bold">
-    {{ isEditMode() ? 'Edit Vocabulary' : 'Create Vocabulary' }}
-</h2>
+<div class="flex justify-between items-center mb-2">
+    <h2 class="text-lg font-bold">
+        {{ isEditMode() ? 'Edit Vocabulary' : 'Create Vocabulary' }}
+    </h2>
+    <label class="label cursor-pointer gap-2">
+        <span class="label-text text-xs">Auto-translate</span>
+        <input
+            type="checkbox"
+            class="toggle toggle-sm"
+            [checked]="autoTranslationEnabled()"
+            (change)="toggleAutoTranslation()"
+        />
+    </label>
+</div>
 <form
     action=""
     [formGroup]="vocabularyForm"
@@ -21,9 +32,11 @@
         [locale]="originalLocale()"
         [audioFilename]="originalAudioFilename()"
         [loadingAudio]="loadingAudio() === 'original'"
+        [generatingPhrase]="generatingPhraseFor() === 'original'"
         (audioGenerated)="onAudioGenerated($event, 'original')"
         (playAudio)="onPlayAudio($event, 'original')"
         (clearAudio)="onClearAudio('original')"
+        (generatePhrase)="onGeneratePhrase('original')"
     />
     <app-new-phrase-input
         formControlName="translatedPhrase"
@@ -39,9 +52,11 @@
         [locale]="translatedLocale()"
         [audioFilename]="translatedAudioFilename()"
         [loadingAudio]="loadingAudio() === 'translated'"
+        [generatingPhrase]="generatingPhraseFor() === 'translated'"
         (audioGenerated)="onAudioGenerated($event, 'translated')"
         (playAudio)="onPlayAudio($event, 'translated')"
         (clearAudio)="onClearAudio('translated')"
+        (generatePhrase)="onGeneratePhrase('translated')"
     />
 
     <div class="flex gap-2">

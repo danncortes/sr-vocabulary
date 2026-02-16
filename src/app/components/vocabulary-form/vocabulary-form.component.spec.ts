@@ -61,8 +61,9 @@ describe('VocabularyFormComponent', () => {
             updateVocabulary: jasmine.createSpy('updateVocabulary').and.returnValue(of({})),
         };
 
-        mockVocabularyService = jasmine.createSpyObj('VocabularyService', ['translatePhrase']);
+        mockVocabularyService = jasmine.createSpyObj('VocabularyService', ['translatePhrase', 'generatePhrase']);
         mockVocabularyService.translatePhrase.and.returnValue(of({ translatedPhrase: 'Translated' }));
+        mockVocabularyService.generatePhrase.and.returnValue(of({ generatedPhrase: 'Generated phrase' }));
 
         mockAudioService = jasmine.createSpyObj('AudioService', ['generateAudio', 'playAudio', 'deleteAudios']);
         mockAudioService.generateAudio.and.returnValue(of({ filename: 'new-audio.mp3' }));
@@ -89,6 +90,7 @@ describe('VocabularyFormComponent', () => {
     afterEach(() => {
         localStorage.removeItem('newVocabulary');
         localStorage.removeItem('editVocabulary');
+        localStorage.removeItem('autoTranslationEnabled');
     });
 
     it('should create', () => {
@@ -577,6 +579,117 @@ describe('VocabularyFormComponent', () => {
             spyOn(component, 'removeStoredEdit');
             component.ngOnDestroy();
             expect(component.removeStoredEdit).toHaveBeenCalled();
+        });
+    });
+
+    describe('autoTranslationEnabled', () => {
+        it('should initialize autoTranslationEnabled as true by default', () => {
+            expect(component.autoTranslationEnabled()).toBeTrue();
+        });
+
+        it('should load autoTranslationEnabled from localStorage if set to false', () => {
+            localStorage.setItem('autoTranslationEnabled', 'false');
+            fixture = TestBed.createComponent(VocabularyFormComponent);
+            component = fixture.componentInstance;
+            fixture.detectChanges();
+            expect(component.autoTranslationEnabled()).toBeFalse();
+        });
+    });
+
+    describe('toggleAutoTranslation', () => {
+        it('should toggle autoTranslationEnabled from true to false', () => {
+            component.autoTranslationEnabled.set(true);
+            component.toggleAutoTranslation();
+            expect(component.autoTranslationEnabled()).toBeFalse();
+        });
+
+        it('should toggle autoTranslationEnabled from false to true', () => {
+            component.autoTranslationEnabled.set(false);
+            component.toggleAutoTranslation();
+            expect(component.autoTranslationEnabled()).toBeTrue();
+        });
+
+        it('should save autoTranslationEnabled to localStorage', () => {
+            component.autoTranslationEnabled.set(true);
+            component.toggleAutoTranslation();
+            expect(localStorage.getItem('autoTranslationEnabled')).toBe('false');
+        });
+    });
+
+    describe('generatingPhraseFor', () => {
+        it('should initialize generatingPhraseFor as null', () => {
+            expect(component.generatingPhraseFor()).toBeNull();
+        });
+    });
+
+    describe('onGeneratePhrase', () => {
+        it('should not call service if phrase is empty', () => {
+            component.vocabularyForm.controls.originalPhrase.setValue('');
+            component.onGeneratePhrase('original');
+            expect(mockVocabularyService.generatePhrase).not.toHaveBeenCalled();
+        });
+
+        it('should call vocabularyService.generatePhrase with text and locale', fakeAsync(() => {
+            component.vocabularyForm.controls.originalPhrase.setValue('Hello');
+            component.onGeneratePhrase('original');
+            tick();
+            expect(mockVocabularyService.generatePhrase).toHaveBeenCalledWith('Hello', 'es-ES');
+        }));
+
+        it('should set generatingPhraseFor during generation', fakeAsync(() => {
+            const generateSubject = new Subject<{ generatedPhrase: string }>();
+            mockVocabularyService.generatePhrase.and.returnValue(generateSubject.asObservable());
+
+            component.vocabularyForm.controls.originalPhrase.setValue('Hello');
+            component.onGeneratePhrase('original');
+            expect(component.generatingPhraseFor()).toBe('original');
+
+            generateSubject.next({ generatedPhrase: 'Generated' });
+            generateSubject.complete();
+            tick();
+            expect(component.generatingPhraseFor()).toBeNull();
+        }));
+
+        it('should update original phrase with generated phrase', fakeAsync(() => {
+            component.vocabularyForm.controls.originalPhrase.setValue('Hello');
+            component.onGeneratePhrase('original');
+            tick();
+            expect(component.vocabularyForm.controls.originalPhrase.value).toBe('Generated phrase');
+        }));
+
+        it('should update translated phrase with generated phrase', fakeAsync(() => {
+            component.vocabularyForm.controls.translatedPhrase.setValue('Hola');
+            component.onGeneratePhrase('translated');
+            tick();
+            expect(component.vocabularyForm.controls.translatedPhrase.value).toBe('Generated phrase');
+        }));
+
+        it('should reset generatingPhraseFor on error', fakeAsync(() => {
+            mockVocabularyService.generatePhrase.and.returnValue(throwError(() => new Error('API Error')));
+            component.vocabularyForm.controls.originalPhrase.setValue('Hello');
+            component.onGeneratePhrase('original');
+            tick();
+            expect(component.generatingPhraseFor()).toBeNull();
+        }));
+    });
+
+    describe('auto-translation toggle UI', () => {
+        it('should have auto-translation toggle', () => {
+            const toggle = fixture.nativeElement.querySelector('input[type="checkbox"].toggle');
+            expect(toggle).toBeTruthy();
+        });
+
+        it('should show "Auto-translate" label', () => {
+            const label = fixture.nativeElement.querySelector('.label-text.text-xs');
+            expect(label.textContent.trim()).toBe('Auto-translate');
+        });
+
+        it('should toggle autoTranslationEnabled when clicked', () => {
+            const toggle = fixture.nativeElement.querySelector('input[type="checkbox"].toggle');
+            const initialValue = component.autoTranslationEnabled();
+            toggle.click();
+            fixture.detectChanges();
+            expect(component.autoTranslationEnabled()).toBe(!initialValue);
         });
     });
 });

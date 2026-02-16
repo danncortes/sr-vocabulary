@@ -89,4 +89,17 @@ export class VocabularyService {
             },
         );
     }
+
+    generatePhrase(
+        text: string,
+        locale: string,
+    ): Observable<{ generatedPhrase: string }> {
+        return this.http.post<{ generatedPhrase: string }>(
+            `${this.apiBaseUrl}/generate`,
+            {
+                text,
+                locale,
+            },
+        );
+    }
 }

@@ -27,6 +27,7 @@
                 required
                 email
                 placeholder="Email"
+                [attr.disabled]="isLoading() ? true : null"
             />
             <input
                 type="password"
@@ -36,6 +37,7 @@
                 ngModel
                 required
                 placeholder="Password"
+                [attr.disabled]="isLoading() ? true : null"
             />
             <div class="flex justify-end mb-8">
                 <button type="button" class="text-sm">Forgot password?</button>

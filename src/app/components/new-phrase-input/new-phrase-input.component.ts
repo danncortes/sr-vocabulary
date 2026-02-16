@@ -31,6 +31,7 @@ export class NewPhraseInputComponent implements ControlValueAccessor {
     audioFilename = input<string | null>(null);
     loadingAudio = input<boolean>(false);
     clearingAudio = input<boolean>(false);
+    generatingPhrase = input<boolean>(false);
 
     phrase = '';
     generatingAudio = signal(false);
@@ -38,6 +39,7 @@ export class NewPhraseInputComponent implements ControlValueAccessor {
     audioGenerated = output<string>();
     playAudio = output<string>();
     clearAudio = output<void>();
+    generatePhrase = output<void>();
 
     private onChange: (value: string) => void = () => {};
     private onTouched: (value: string) => void = () => {};
@@ -81,5 +83,10 @@ export class NewPhraseInputComponent implements ControlValueAccessor {
         const filename = this.audioFilename();
         if (!filename) return;
         this.playAudio.emit(filename);
+    }
+
+    onGeneratePhrase(): void {
+        if (!this.phrase) return;
+        this.generatePhrase.emit();
     }
 }

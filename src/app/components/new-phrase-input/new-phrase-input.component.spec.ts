@@ -28,40 +28,17 @@ describe('NewPhraseInputComponent', () => {
     });
 
     describe('input bindings', () => {
-        it('should have default classNames as empty string', () => {
+        it('should have correct default values for all inputs', () => {
             expect(component.classNames()).toBe('');
-        });
-
-        it('should have default type as text', () => {
             expect(component.type()).toBe('text');
-        });
-
-        it('should have default id as empty string', () => {
             expect(component.id()).toBe('');
-        });
-
-        it('should have default placeholder as empty string', () => {
             expect(component.placeholder()).toBe('');
-        });
-
-        it('should have default label as empty string', () => {
             expect(component.label()).toBe('');
-        });
-
-        it('should have default locale as empty string', () => {
             expect(component.locale()).toBe('');
-        });
-
-        it('should have default audioFilename as null', () => {
             expect(component.audioFilename()).toBeNull();
-        });
-
-        it('should have default loadingAudio as false', () => {
             expect(component.loadingAudio()).toBeFalse();
-        });
-
-        it('should have default clearingAudio as false', () => {
             expect(component.clearingAudio()).toBeFalse();
+            expect(component.generatingPhrase()).toBeFalse();
         });
 
         it('should apply classNames to input', () => {
@@ -88,7 +65,7 @@ describe('NewPhraseInputComponent', () => {
         it('should display locale in button', () => {
             fixture.componentRef.setInput('locale', 'en-US');
             fixture.detectChanges();
-            const localeButton = fixture.nativeElement.querySelector('button[type="button"]');
+            const localeButton = fixture.nativeElement.querySelector('.flex.gap-4.justify-between > button');
             expect(localeButton.textContent.trim()).toBe('en-US');
         });
     });
@@ -220,7 +197,7 @@ describe('NewPhraseInputComponent', () => {
             it('should be disabled when audioFilename is null', () => {
                 fixture.componentRef.setInput('audioFilename', null);
                 fixture.detectChanges();
-                const clearButton = fixture.nativeElement.querySelectorAll('button.btn')[0];
+                const clearButton = fixture.nativeElement.querySelectorAll('ul button.btn')[0];
                 expect(clearButton.disabled).toBeTrue();
             });
 
@@ -228,7 +205,7 @@ describe('NewPhraseInputComponent', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('clearingAudio', true);
                 fixture.detectChanges();
-                const clearButton = fixture.nativeElement.querySelectorAll('button.btn')[0];
+                const clearButton = fixture.nativeElement.querySelectorAll('ul button.btn')[0];
                 expect(clearButton.disabled).toBeTrue();
             });
 
@@ -236,7 +213,7 @@ describe('NewPhraseInputComponent', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('clearingAudio', false);
                 fixture.detectChanges();
-                const clearButton = fixture.nativeElement.querySelectorAll('button.btn')[0];
+                const clearButton = fixture.nativeElement.querySelectorAll('ul button.btn')[0];
                 expect(clearButton.disabled).toBeFalse();
             });
 
@@ -244,7 +221,7 @@ describe('NewPhraseInputComponent', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.detectChanges();
                 spyOn(component, 'onClearAudio');
-                const clearButton = fixture.nativeElement.querySelectorAll('button.btn')[0];
+                const clearButton = fixture.nativeElement.querySelectorAll('ul button.btn')[0];
                 clearButton.click();
                 expect(component.onClearAudio).toHaveBeenCalled();
             });
@@ -254,7 +231,7 @@ describe('NewPhraseInputComponent', () => {
             it('should be disabled when phrase is empty', () => {
                 component.phrase = '';
                 fixture.detectChanges();
-                const generateButton = fixture.nativeElement.querySelectorAll('button.btn')[1];
+                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
                 expect(generateButton.disabled).toBeTrue();
             });
 
@@ -262,7 +239,7 @@ describe('NewPhraseInputComponent', () => {
                 component.phrase = 'Test';
                 component.generatingAudio.set(true);
                 fixture.detectChanges();
-                const generateButton = fixture.nativeElement.querySelectorAll('button.btn')[1];
+                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
                 expect(generateButton.disabled).toBeTrue();
             });
 
@@ -270,7 +247,7 @@ describe('NewPhraseInputComponent', () => {
                 component.phrase = 'Test';
                 component.generatingAudio.set(false);
                 fixture.detectChanges();
-                const generateButton = fixture.nativeElement.querySelectorAll('button.btn')[1];
+                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
                 expect(generateButton.disabled).toBeFalse();
             });
 
@@ -278,7 +255,8 @@ describe('NewPhraseInputComponent', () => {
                 component.phrase = 'Test';
                 component.generatingAudio.set(true);
                 fixture.detectChanges();
-                const spinner = fixture.nativeElement.querySelector('.loading-spinner');
+                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
+                const spinner = generateButton.querySelector('.loading');
                 expect(spinner).toBeTruthy();
             });
 
@@ -286,7 +264,7 @@ describe('NewPhraseInputComponent', () => {
                 component.phrase = 'Test';
                 component.generatingAudio.set(false);
                 fixture.detectChanges();
-                const generateButton = fixture.nativeElement.querySelectorAll('button.btn')[1];
+                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
                 const icon = generateButton.querySelector('app-icon');
                 expect(icon).toBeTruthy();
             });
@@ -295,7 +273,7 @@ describe('NewPhraseInputComponent', () => {
                 component.phrase = 'Test';
                 fixture.detectChanges();
                 spyOn(component, 'onGenerateAudio');
-                const generateButton = fixture.nativeElement.querySelectorAll('button.btn')[1];
+                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
                 generateButton.click();
                 expect(component.onGenerateAudio).toHaveBeenCalled();
             });
@@ -305,7 +283,7 @@ describe('NewPhraseInputComponent', () => {
             it('should be disabled when audioFilename is null', () => {
                 fixture.componentRef.setInput('audioFilename', null);
                 fixture.detectChanges();
-                const playButton = fixture.nativeElement.querySelectorAll('button.btn')[2];
+                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
                 expect(playButton.disabled).toBeTrue();
             });
 
@@ -313,7 +291,7 @@ describe('NewPhraseInputComponent', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('loadingAudio', true);
                 fixture.detectChanges();
-                const playButton = fixture.nativeElement.querySelectorAll('button.btn')[2];
+                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
                 expect(playButton.disabled).toBeTrue();
             });
 
@@ -321,7 +299,7 @@ describe('NewPhraseInputComponent', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('loadingAudio', false);
                 fixture.detectChanges();
-                const playButton = fixture.nativeElement.querySelectorAll('button.btn')[2];
+                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
                 expect(playButton.disabled).toBeFalse();
             });
 
@@ -329,8 +307,8 @@ describe('NewPhraseInputComponent', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('loadingAudio', true);
                 fixture.detectChanges();
-                const playButton = fixture.nativeElement.querySelectorAll('button.btn')[2];
-                const spinner = playButton.querySelector('.loading-spinner');
+                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
+                const spinner = playButton.querySelector('.loading');
                 expect(spinner).toBeTruthy();
             });
 
@@ -338,7 +316,7 @@ describe('NewPhraseInputComponent', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('loadingAudio', false);
                 fixture.detectChanges();
-                const playButton = fixture.nativeElement.querySelectorAll('button.btn')[2];
+                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
                 const icon = playButton.querySelector('app-icon');
                 expect(icon).toBeTruthy();
             });
@@ -347,7 +325,7 @@ describe('NewPhraseInputComponent', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.detectChanges();
                 spyOn(component, 'onPlayAudio');
-                const playButton = fixture.nativeElement.querySelectorAll('button.btn')[2];
+                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
                 playButton.click();
                 expect(component.onPlayAudio).toHaveBeenCalled();
             });
@@ -390,6 +368,78 @@ describe('NewPhraseInputComponent', () => {
 
         it('should have clearAudio output', () => {
             expect(component.clearAudio).toBeDefined();
+        });
+
+        it('should have generatePhrase output', () => {
+            expect(component.generatePhrase).toBeDefined();
+        });
+    });
+
+    describe('onGeneratePhrase', () => {
+        it('should not emit if phrase is empty', () => {
+            component.phrase = '';
+            spyOn(component.generatePhrase, 'emit');
+            component.onGeneratePhrase();
+            expect(component.generatePhrase.emit).not.toHaveBeenCalled();
+        });
+
+        it('should emit generatePhrase when phrase is not empty', () => {
+            component.phrase = 'Test phrase';
+            spyOn(component.generatePhrase, 'emit');
+            component.onGeneratePhrase();
+            expect(component.generatePhrase.emit).toHaveBeenCalled();
+        });
+    });
+
+    describe('generate phrase button', () => {
+        it('should be disabled when phrase is empty', () => {
+            component.phrase = '';
+            fixture.detectChanges();
+            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
+            expect(generatePhraseButton.disabled).toBeTrue();
+        });
+
+        it('should be disabled when generatingPhrase is true', () => {
+            component.phrase = 'Test';
+            fixture.componentRef.setInput('generatingPhrase', true);
+            fixture.detectChanges();
+            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
+            expect(generatePhraseButton.disabled).toBeTrue();
+        });
+
+        it('should be enabled when phrase exists and not generating', () => {
+            component.phrase = 'Test';
+            fixture.componentRef.setInput('generatingPhrase', false);
+            fixture.detectChanges();
+            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
+            expect(generatePhraseButton.disabled).toBeFalse();
+        });
+
+        it('should show loading spinner when generating phrase', () => {
+            component.phrase = 'Test';
+            fixture.componentRef.setInput('generatingPhrase', true);
+            fixture.detectChanges();
+            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
+            const spinner = generatePhraseButton.querySelector('.loading-spinner');
+            expect(spinner).toBeTruthy();
+        });
+
+        it('should show sparkles icon when not generating', () => {
+            component.phrase = 'Test';
+            fixture.componentRef.setInput('generatingPhrase', false);
+            fixture.detectChanges();
+            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
+            const icon = generatePhraseButton.querySelector('app-icon');
+            expect(icon).toBeTruthy();
+        });
+
+        it('should call onGeneratePhrase when clicked', () => {
+            component.phrase = 'Test';
+            fixture.detectChanges();
+            spyOn(component, 'onGeneratePhrase');
+            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
+            generatePhraseButton.click();
+            expect(component.onGeneratePhrase).toHaveBeenCalled();
         });
     });
 });
