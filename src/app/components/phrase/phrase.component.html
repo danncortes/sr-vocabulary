@@ -2,22 +2,24 @@
     class="py-2 px-4 rounded-md bg-white shadow-md border border-gray-300 phrase-component"
     [title]="translatedPhrase().id"
 >
-    <div class="flex justify-between items-center gap-6 max-sm:flex-col">
-        @if (showSelectCheckbox()) {
-            <input
-                type="checkbox"
-                class="checkbox checkbox-sm phrase-component__select-checkbox"
-                (click)="toggleSelect()"
-                [checked]="isSelected()"
-            />
-        }
-        <button
-            class="grow text-left cursor-pointer phrase-component__original"
-            (click)="revealTranslation()"
-            [title]="translatedPhrase().original.id"
-        >
-            {{ translatedPhrase().original.text }}
-        </button>
+    <div class="flex justify-between gap-6 max-sm:flex-col">
+        <div class="flex items-center gap-4 items-start">
+            @if (showSelectCheckbox()) {
+                <input
+                    type="checkbox"
+                    class="checkbox checkbox-sm phrase-component__select-checkbox"
+                    (click)="toggleSelect()"
+                    [checked]="isSelected()"
+                />
+            }
+            <button
+                class="grow text-left cursor-pointer phrase-component__original"
+                (click)="revealTranslation()"
+                [title]="translatedPhrase().original.id"
+            >
+                {{ translatedPhrase().original.text }}
+            </button>
+        </div>
         <div
             class="flex max-sm:justify-between justify-end items-center max-sm:w-full gap-6"
         >
