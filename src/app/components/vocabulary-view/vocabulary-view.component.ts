@@ -11,6 +11,7 @@ export type AudioFilter = 'all' | 'with-audio' | 'without-audio';
     standalone: true,
     imports: [VocabularyListComponent, PhraseComponent, FormsModule],
     templateUrl: './vocabulary-view.component.html',
+    host: { style: 'height: calc(100vh - 32px - 3rem)' },
 })
 export class VocabularyViewComponent {
     vocabularyStore = inject(VocabularyStore);

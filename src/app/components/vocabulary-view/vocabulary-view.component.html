@@ -1,6 +1,6 @@
-<div class="grid gap-4">
+<div class="flex flex-col gap-4 h-full">
     <div
-        class="flex flex-wrap gap-4 items-center p-3 bg-gray-50 rounded-lg border border-gray-200 vocabulary-filters"
+        class="flex flex-wrap gap-4 items-center p-3 bg-gray-50 rounded-lg border border-gray-200 vocabulary-filters sticky"
     >
         <div class="flex items-center gap-2 vocabulary-filters__audio-filter">
             <span class="text-sm text-gray-600">Audio:</span>
@@ -43,6 +43,7 @@
     </div>
 
     <app-vocabulary-list
+        class="flex-1 min-h-0"
         [vocabulary]="filteredVocabulary()"
         color="gray"
         title="All Vocabulary"
@@ -58,6 +59,7 @@
                 [showReviewDate]="false"
                 [translatedPhrase]="translatedPhrase"
                 [showSelectCheckbox]="showSelectCheckbox"
+                [showDeleteButton]="true"
                 [isSelected]="isSelected"
                 (selectedChange)="selectedChange($event)"
             />

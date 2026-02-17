@@ -1,7 +1,7 @@
-<div class="main-layout sm:pt-20 px-6 pb-6">
+<div class="main-layout flex flex-col px-6">
     <app-toast></app-toast>
     <div
-        class="flex justify-between py-6 sm:px-6 bg-white sm:fixed top-0 left-0 right-0"
+        class="flex justify-between py-4 bg-white sm:sticky top-0 left-0 right-0 items-center"
     >
         <div class="flex gap-2 items-center">
             <button
@@ -39,9 +39,12 @@
             <app-icon type="arrow-right-start-on-rectangle" />
         </button>
     </div>
-
     @if (vocabularyStore.loading()) {
-        <span class="loading loading-spinner loading-xl"></span>
+        <div
+            class="h-full left-0 right-0 flex items-center justify-center absolute"
+        >
+            <span class="loading loading-spinner text-primary size-10"></span>
+        </div>
     } @else {
         <router-outlet></router-outlet>
     }
