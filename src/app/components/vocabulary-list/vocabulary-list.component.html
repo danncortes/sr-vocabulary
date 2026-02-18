@@ -1,11 +1,17 @@
-<div class="grid gap-5 h-full content-start">
-    <div class="flex justify-between items-center vocabulary-list-header">
-        <h2
-            [class]="`font-light text-${color()}-500 flex gap-2 items-end vocabulary-list__title`"
-        >
-            <span class="text-3xl">{{ title() }}</span>
-            <span class="text-2xl">({{ vocabulary().length }})</span>
-        </h2>
+<details class="grid gap-5 h-full content-start vocabulary-list" open>
+    <summary
+        class="flex justify-between items-center vocabulary-list-header cursor-pointer"
+    >
+        <div class="flex items-center gap-2">
+            <app-icon type="chevron-down"></app-icon>
+            <app-icon type="chevron-right"></app-icon>
+            <h2
+                [class]="`font-light text-${color()}-500 flex gap-2 items-end vocabulary-list__title`"
+            >
+                <span class="text-3xl">{{ title() }}</span>
+                <span class="text-2xl">({{ vocabulary().length }})</span>
+            </h2>
+        </div>
         <div class="flex gap-2 items-center">
             @if (showSelectToggle() && vocabulary().length > 0) {
                 @if (isSelectActive()) {
@@ -80,7 +86,7 @@
                 </div>
             }
         </div>
-    </div>
+    </summary>
     <div class="flex gap-4 flex-col overflow-auto vocabulary-list">
         @for (translatedPhrase of vocabulary(); track translatedPhrase.id) {
             <ng-container
@@ -97,8 +103,8 @@
             <div
                 class="text-gray-500 text-center p-1 rounded-md bg-gray-50 shadow-lg border border-gray-200 vocabulary-list__no-vocabulary"
             >
-                There is no vocabulary to show
+                {{ noVocabularyMessage() }}
             </div>
         }
     </div>
-</div>
+</details>

@@ -1,0 +1,7 @@
+details.vocabulary-list:not([open]) app-icon[type='chevron-down'] {
+    display: none;
+}
+
+details.vocabulary-list[open] app-icon[type='chevron-right'] {
+    display: none;
+}

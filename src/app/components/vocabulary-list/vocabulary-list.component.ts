@@ -14,6 +14,7 @@ import { CdkMenu, CdkMenuTrigger } from '@angular/cdk/menu';
 import { OptionsMenuComponent } from '../options-menu/options-menu.component';
 import { OptionsActionsBase } from '../shared/options-actions.base';
 import { DeleteConfirmModalComponent } from '../delete-confirm-modal/delete-confirm-modal.component';
+import { IconComponent } from '../icon/icon.component';
 
 // Add this interface above your component class
 @Component({
@@ -25,9 +26,11 @@ import { DeleteConfirmModalComponent } from '../delete-confirm-modal/delete-conf
         OptionsMenuComponent,
         CdkMenu,
         DeleteConfirmModalComponent,
+        IconComponent,
     ],
     templateUrl: './vocabulary-list.component.html',
     host: { class: 'block' },
+    styleUrls: ['./vocabulary-list.component.css'],
 })
 export class VocabularyListComponent extends OptionsActionsBase {
     vocabulary = input.required<TranslatedPhrase[]>();
@@ -41,6 +44,7 @@ export class VocabularyListComponent extends OptionsActionsBase {
     optionsMenuTrigger = viewChild('optionsMenuTrigger', {
         read: CdkMenuTrigger,
     });
+    noVocabularyMessage = input<string>('There is no vocabulary to show');
 
     constructor() {
         super();
