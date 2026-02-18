@@ -1,41 +1,52 @@
 <div class="flex flex-col gap-4 h-full">
     <div
-        class="flex flex-wrap gap-4 items-center p-3 bg-gray-50 rounded-lg border border-gray-200 vocabulary-filters sticky"
+        class="flex flex-row flex-wrap gap-4 items-center p-3 bg-gray-50 rounded-lg border border-gray-200 vocabulary-filters sticky"
     >
-        <div class="flex items-center gap-2 vocabulary-filters__audio-filter">
-            <span class="text-sm text-gray-600">Audio:</span>
-            <select
-                class="select select-sm select-bordered"
-                [ngModel]="audioFilter()"
-                (ngModelChange)="audioFilter.set($event)"
-            >
-                <option value="all">All</option>
-                <option value="with-audio">With audio</option>
-                <option value="without-audio">Without audio</option>
-            </select>
-        </div>
-
-        <div class="flex items-center gap-2 vocabulary-filters__stage-filter">
-            <span class="text-sm text-gray-600">Stage:</span>
-            <select
-                class="select select-sm select-bordered"
-                [ngModel]="stageFilter()"
-                (ngModelChange)="stageFilter.set($event)"
-            >
-                <option value="all">All</option>
-                @for (stage of availableStages(); track stage) {
-                    <option [value]="stage">{{ getStageLabel(stage) }}</option>
-                }
-            </select>
-        </div>
-
         <div
-            class="flex items-center gap-2 flex-1 min-w-48 vocabulary-filters__text-search"
+            class="flex flex-row flex-wrap gap-4 items-center shrink-0 max-w-full"
+        >
+            <div
+                class="flex items-center gap-2 flex-1 vocabulary-filters__audio-filter"
+            >
+                <span class="text-sm text-gray-600">Audio:</span>
+                <select
+                    name="audioFilter"
+                    class="select select-sm select-bordered flex-grow"
+                    [ngModel]="audioFilter()"
+                    (ngModelChange)="audioFilter.set($event)"
+                >
+                    <option value="all">All</option>
+                    <option value="with-audio">With audio</option>
+                    <option value="without-audio">Without audio</option>
+                </select>
+            </div>
+
+            <div
+                class="flex items-center gap-2 flex-1 vocabulary-filters__stage-filter"
+            >
+                <span class="text-sm text-gray-600">Stage:</span>
+                <select
+                    name="stageFilter"
+                    class="select select-sm select-bordered flex-grow"
+                    [ngModel]="stageFilter()"
+                    (ngModelChange)="stageFilter.set($event)"
+                >
+                    <option value="all">All</option>
+                    @for (stage of availableStages(); track stage) {
+                        <option [value]="stage">
+                            {{ getStageLabel(stage) }}
+                        </option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div
+            class="flex items-center gap-2 flex-1 vocabulary-filters__text-search"
         >
             <input
                 type="text"
                 placeholder="Search text..."
-                class="input input-sm input-bordered w-full max-w-xs"
+                class="input input-sm input-bordered w-full"
                 [ngModel]="textSearch()"
                 (ngModelChange)="textSearch.set($event)"
             />
