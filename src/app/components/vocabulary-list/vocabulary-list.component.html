@@ -1,6 +1,9 @@
-<details class="grid gap-5 h-full content-start vocabulary-list" open>
+<details
+    class="grid grid-rows-[auto_1fr] h-full overflow-auto vocabulary-list"
+    open
+>
     <summary
-        class="flex justify-between items-center vocabulary-list-header cursor-pointer"
+        class="flex justify-between items-center vocabulary-list-header cursor-pointer sticky top-0 bg-white z-9 pb-5"
     >
         <div class="flex items-center gap-2">
             <app-icon type="chevron-down"></app-icon>
@@ -87,7 +90,7 @@
             }
         </div>
     </summary>
-    <div class="flex gap-4 flex-col overflow-auto vocabulary-list">
+    <div class="flex flex-col gap-4 min-h-0 vocabulary-list">
         @for (translatedPhrase of vocabulary(); track translatedPhrase.id) {
             <ng-container
                 [ngTemplateOutlet]="phrase"
