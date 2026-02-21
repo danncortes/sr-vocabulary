@@ -668,7 +668,9 @@ export class VocabularyFormComponent implements OnDestroy {
                 : this.vocabularyForm.controls.translatedPhrase.value;
 
         const locale =
-            type === 'original' ? this.originalLocale() : this.translatedLocale();
+            type === 'original'
+                ? this.originalLocale()
+                : this.translatedLocale();
 
         if (!text || !locale) return;
 
@@ -678,12 +680,10 @@ export class VocabularyFormComponent implements OnDestroy {
                 if (type === 'original') {
                     this.vocabularyForm.controls.originalPhrase.setValue(
                         response.generatedPhrase,
-                        { emitEvent: false },
                     );
                 } else {
                     this.vocabularyForm.controls.translatedPhrase.setValue(
                         response.generatedPhrase,
-                        { emitEvent: false },
                     );
                 }
                 this.generatingPhraseFor.set(null);

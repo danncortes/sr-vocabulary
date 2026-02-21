@@ -73,18 +73,20 @@
                         />
                     </button>
                 }
-                @if (loadingAudioId() === translatedPhrase().original.id) {
-                    <span class="loading loading-spinner loading-xs"></span>
-                } @else {
-                    <button
-                        class="cursor-pointer phrase-component__play-audio--original"
-                        (click)="playAudio(translatedPhrase().original.id)"
-                    >
-                        <app-icon
-                            type="play"
-                            customClass="size-7 max-sm:size-8"
-                        />
-                    </button>
+                @if (translatedPhrase().original.audio_url) {
+                    @if (loadingAudioId() === translatedPhrase().original.id) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                    } @else {
+                        <button
+                            class="cursor-pointer phrase-component__play-audio--original"
+                            (click)="playAudio(translatedPhrase().original.id)"
+                        >
+                            <app-icon
+                                type="play"
+                                customClass="size-7 max-sm:size-8"
+                            />
+                        </button>
+                    }
                 }
 
                 @if (showMenu()) {
@@ -134,22 +136,27 @@
                     {{ translatedPhrase().translated.text }}
                 </div>
                 <div>
-                    @if (
-                        loadingAudioId() === translatedPhrase().translated.id
-                    ) {
-                        <span class="loading loading-spinner loading-xs"></span>
-                    } @else {
-                        <button
-                            class="cursor-pointer phrase-component__play-audio--translated"
-                            (click)="
-                                playAudio(translatedPhrase().translated.id)
-                            "
-                        >
-                            <app-icon
-                                type="play"
-                                customClass="size-7 max-sm:size-8"
-                            />
-                        </button>
+                    @if (translatedPhrase().translated.audio_url) {
+                        @if (
+                            loadingAudioId() ===
+                            translatedPhrase().translated.id
+                        ) {
+                            <span
+                                class="loading loading-spinner loading-xs"
+                            ></span>
+                        } @else {
+                            <button
+                                class="cursor-pointer phrase-component__play-audio--translated"
+                                (click)="
+                                    playAudio(translatedPhrase().translated.id)
+                                "
+                            >
+                                <app-icon
+                                    type="play"
+                                    customClass="size-7 max-sm:size-8"
+                                />
+                            </button>
+                        }
                     }
                 </div>
             </div>

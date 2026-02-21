@@ -84,8 +84,8 @@ describe('PhraseComponent', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (component as any).translatedPhrase = signal<TranslatedPhrase>({
             id: 1,
-            original: { id: 1, text: 'Hola', audio_url: '', locale: mockLocale },
-            translated: { id: 2, text: 'Hello', audio_url: '', locale: mockLocale },
+            original: { id: 1, text: 'Hola', audio_url: 'https://example.com/1.mp3', locale: mockLocale },
+            translated: { id: 2, text: 'Hello', audio_url: 'https://example.com/2.mp3', locale: mockLocale },
             review_date: '2025-07-16',
             sr_stage_id: 1,
             modified_at: '',
@@ -150,6 +150,52 @@ describe('PhraseComponent', () => {
         expect(audioButton).toBeTruthy();
         audioButton.click();
         expect(mockAudioService.playAudio).toHaveBeenCalledWith('1.mp3');
+    });
+
+    it('should hide play original phrase audio button when audio_url is null', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (component as any).translatedPhrase = signal<TranslatedPhrase>({
+            id: 1,
+            original: { id: 1, text: 'Hola', audio_url: '', locale: mockLocale },
+            translated: { id: 2, text: 'Hello', audio_url: 'https://example.com/2.mp3', locale: mockLocale },
+            review_date: '2025-07-16',
+            sr_stage_id: 1,
+            modified_at: '',
+            learned: 0,
+            priority: 0,
+        });
+        fixture.detectChanges();
+
+        const audioButton = fixture.debugElement.nativeElement.querySelector(
+            '.phrase-component__play-audio--original',
+        );
+        expect(audioButton).toBeFalsy();
+    });
+
+    it('should hide play translated phrase audio button when audio_url is null', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (component as any).translatedPhrase = signal<TranslatedPhrase>({
+            id: 1,
+            original: { id: 1, text: 'Hola', audio_url: 'https://example.com/1.mp3', locale: mockLocale },
+            translated: { id: 2, text: 'Hello', audio_url: '', locale: mockLocale },
+            review_date: '2025-07-16',
+            sr_stage_id: 1,
+            modified_at: '',
+            learned: 0,
+            priority: 0,
+        });
+        fixture.detectChanges();
+
+        const originalBtn = fixture.debugElement.nativeElement.querySelector(
+            '.phrase-component__original',
+        );
+        originalBtn.click();
+        fixture.detectChanges();
+
+        const audioButton = fixture.debugElement.nativeElement.querySelector(
+            '.phrase-component__play-audio--translated',
+        );
+        expect(audioButton).toBeFalsy();
     });
 
     it('should show play translated phrase audio button', () => {
