@@ -126,6 +126,27 @@ describe('IconComponent', () => {
         });
     });
 
+    describe('size input', () => {
+        it('uses size-6 when no explicit size is provided', () => {
+            fixture.componentRef.setInput('type', 'play');
+            fixture.detectChanges();
+
+            const svg = fixture.nativeElement.querySelector('svg');
+            expect(svg.classList.contains('size-6')).toBe(true);
+        });
+
+        it('uses an explicit size without the default size class', () => {
+            fixture.componentRef.setInput('type', 'play');
+            fixture.componentRef.setInput('size', '3.5rem');
+            fixture.detectChanges();
+
+            const svg = fixture.nativeElement.querySelector('svg');
+            expect(svg.classList.contains('size-6')).toBe(false);
+            expect(svg.style.width).toBe('3.5rem');
+            expect(svg.style.height).toBe('3.5rem');
+        });
+    });
+
     describe('SVG attributes', () => {
         it('should have proper SVG attributes', () => {
             fixture.componentRef.setInput('type', 'play');

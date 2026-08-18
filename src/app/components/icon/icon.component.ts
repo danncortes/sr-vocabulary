@@ -30,7 +30,10 @@ export type IconType =
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            [class]="'size-6 ' + customClass()"
+            [class]="customClass()"
+            [class.size-6]="!size()"
+            [style.width]="size()"
+            [style.height]="size()"
         >
             @switch (type()) {
                 @case ('play') {
@@ -171,4 +174,5 @@ export type IconType =
 export class IconComponent {
     type = input.required<IconType>();
     customClass = input<string>('');
+    size = input<string | null>(null);
 }
