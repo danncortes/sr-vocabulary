@@ -13,8 +13,6 @@ export type NotificationsDict = Record<number, Notification>;
     providedIn: 'root',
 })
 export class ToastService {
-    constructor() {}
-
     notifications = signal<NotificationsDict>({});
 
     toast(
@@ -44,7 +42,8 @@ export class ToastService {
 
     dismiss(id: number) {
         this.notifications.update((current) => {
-            const { [id]: removedNotification, ...rest } = current;
+            const rest = { ...current };
+            delete rest[id];
             return rest;
         });
     }

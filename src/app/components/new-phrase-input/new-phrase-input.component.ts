@@ -1,4 +1,10 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import {
+    Component,
+    inject,
+    input,
+    output,
+    signal,
+} from '@angular/core';
 import { ControlValueAccessor, FormsModule, NgControl } from '@angular/forms';
 import { IconComponent } from '../icon/icon.component';
 import { AudioService } from '../../services/audio/audio.service';
@@ -41,8 +47,8 @@ export class NewPhraseInputComponent implements ControlValueAccessor {
     clearAudio = output<void>();
     generatePhrase = output<void>();
 
-    private onChange: (value: string) => void = () => {};
-    private onTouched: (value: string) => void = () => {};
+    private onChange: (value: string) => void = () => undefined;
+    private onTouched: (value: string) => void = () => undefined;
 
     writeValue(value: string): void {
         this.phrase = value;

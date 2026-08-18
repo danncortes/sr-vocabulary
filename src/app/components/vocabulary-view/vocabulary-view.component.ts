@@ -1,4 +1,9 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import {
+    Component,
+    inject,
+    signal,
+    computed,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { VocabularyStore } from '../../store/vocabulary.store';
 import { VocabularyListComponent } from '../vocabulary-list/vocabulary-list.component';

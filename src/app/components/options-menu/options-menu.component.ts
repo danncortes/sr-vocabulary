@@ -1,4 +1,9 @@
-import { Component, inject, input, output } from '@angular/core';
+import {
+    Component,
+    inject,
+    input,
+    output,
+} from '@angular/core';
 import { VocabularyStore } from '../../store/vocabulary.store';
 
 @Component({

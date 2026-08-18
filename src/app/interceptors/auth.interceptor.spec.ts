@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import {
     HttpTestingController,
@@ -5,6 +6,7 @@ import {
 } from '@angular/common/http/testing';
 import {
     HttpClient,
+    HttpErrorResponse,
     provideHttpClient,
     withInterceptors,
 } from '@angular/common/http';
@@ -16,14 +18,17 @@ import { AuthService } from '../services/auth/auth.service';
 describe('authInterceptor', () => {
     let httpClient: HttpClient;
     let httpMock: HttpTestingController;
-    let authServiceSpy: jasmine.SpyObj<AuthService>;
+    let authServiceSpy: Pick<
+        MockedObject<AuthService>,
+        'getToken' | 'logout' | 'refreshToken'
+    >;
 
     beforeEach(() => {
-        authServiceSpy = jasmine.createSpyObj('AuthService', [
-            'getToken',
-            'logout',
-            'refreshToken',
-        ]);
+        authServiceSpy = {
+            getToken: vi.fn().mockName('AuthService.getToken'),
+            logout: vi.fn().mockName('AuthService.logout'),
+            refreshToken: vi.fn().mockName('AuthService.refreshToken'),
+        };
 
         TestBed.configureTestingModule({
             providers: [
@@ -42,7 +47,7 @@ describe('authInterceptor', () => {
     });
 
     it('should add Authorization header when token exists', () => {
-        authServiceSpy.getToken.and.returnValue('test-token');
+        authServiceSpy.getToken.mockReturnValue('test-token');
 
         httpClient.get('/api/test').subscribe();
 
@@ -54,28 +59,28 @@ describe('authInterceptor', () => {
     });
 
     it('should not add Authorization header when no token', () => {
-        authServiceSpy.getToken.and.returnValue(null);
+        authServiceSpy.getToken.mockReturnValue(null);
 
         httpClient.get('/api/test').subscribe();
 
         const req = httpMock.expectOne('/api/test');
-        expect(req.request.headers.has('Authorization')).toBeFalse();
+        expect(req.request.headers.has('Authorization')).toBe(false);
         req.flush({});
     });
 
     it('should skip auth for refresh endpoint', () => {
-        authServiceSpy.getToken.and.returnValue('test-token');
+        authServiceSpy.getToken.mockReturnValue('test-token');
 
         httpClient.post('/user/refresh', {}).subscribe();
 
         const req = httpMock.expectOne('/user/refresh');
-        expect(req.request.headers.has('Authorization')).toBeFalse();
+        expect(req.request.headers.has('Authorization')).toBe(false);
         req.flush({});
     });
 
     it('should attempt token refresh on 401 with expired message', () => {
-        authServiceSpy.getToken.and.returnValue('old-token');
-        authServiceSpy.refreshToken.and.returnValue(
+        authServiceSpy.getToken.mockReturnValue('old-token');
+        authServiceSpy.refreshToken.mockReturnValue(
             of({ access_token: 'new-token', refresh_token: 'new-refresh' }),
         );
 
@@ -98,13 +103,13 @@ describe('authInterceptor', () => {
     });
 
     it('should logout when refresh fails', () => {
-        authServiceSpy.getToken.and.returnValue('old-token');
-        authServiceSpy.refreshToken.and.returnValue(
+        authServiceSpy.getToken.mockReturnValue('old-token');
+        authServiceSpy.refreshToken.mockReturnValue(
             throwError(() => new Error('Refresh failed')),
         );
 
         httpClient.get('/api/test').subscribe({
-            error: () => {},
+            error: () => undefined,
         });
 
         const req = httpMock.expectOne('/api/test');
@@ -117,9 +122,9 @@ describe('authInterceptor', () => {
     });
 
     it('should pass through non-401 errors', () => {
-        authServiceSpy.getToken.and.returnValue('test-token');
+        authServiceSpy.getToken.mockReturnValue('test-token');
 
-        let errorResponse: any;
+        let errorResponse: HttpErrorResponse | undefined;
         httpClient.get('/api/test').subscribe({
             error: (err) => (errorResponse = err),
         });
@@ -130,7 +135,7 @@ describe('authInterceptor', () => {
             { status: 500, statusText: 'Internal Server Error' },
         );
 
-        expect(errorResponse.status).toBe(500);
+        expect(errorResponse?.status).toBe(500);
         expect(authServiceSpy.refreshToken).not.toHaveBeenCalled();
         expect(authServiceSpy.logout).not.toHaveBeenCalled();
     });

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import {
     HttpTestingController,
@@ -13,10 +14,12 @@ import { environment } from '../../../environments/environment';
 describe('AuthService', () => {
     let service: AuthService;
     let httpMock: HttpTestingController;
-    let routerSpy: jasmine.SpyObj<Router>;
+    let routerSpy: Pick<MockedObject<Router>, 'navigate'>;
 
     beforeEach(() => {
-        routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+        routerSpy = {
+            navigate: vi.fn().mockName('Router.navigate'),
+        };
 
         TestBed.configureTestingModule({
             providers: [
@@ -49,9 +52,7 @@ describe('AuthService', () => {
                 refresh_token: 'test-refresh-token',
             };
 
-            service
-                .login('test@example.com', 'password', '123456')
-                .subscribe();
+            service.login('test@example.com', 'password', '123456').subscribe();
 
             const req = httpMock.expectOne(
                 `${environment.apiBaseUrl}/user/login`,
@@ -75,9 +76,7 @@ describe('AuthService', () => {
         it('should not navigate if no access_token in response', () => {
             const mockResponse = { message: 'unverified', factorId: '123' };
 
-            service
-                .login('test@example.com', 'password', '')
-                .subscribe();
+            service.login('test@example.com', 'password', '').subscribe();
 
             const req = httpMock.expectOne(
                 `${environment.apiBaseUrl}/user/login`,
@@ -170,7 +169,10 @@ describe('AuthService', () => {
             const req = httpMock.expectOne(
                 `${environment.apiBaseUrl}/user/refresh`,
             );
-            req.flush({ error: 'Invalid token' }, { status: 401, statusText: 'Unauthorized' });
+            req.flush(
+                { error: 'Invalid token' },
+                { status: 401, statusText: 'Unauthorized' },
+            );
 
             expect(localStorage.getItem('token')).toBeNull();
             expect(localStorage.getItem('refresh_token')).toBeNull();
@@ -180,12 +182,12 @@ describe('AuthService', () => {
 
     describe('isAuthenticated', () => {
         it('should return false if no token', () => {
-            expect(service.isAuthenticated()).toBeFalse();
+            expect(service.isAuthenticated()).toBe(false);
         });
 
         it('should return false for invalid token format', () => {
             localStorage.setItem('token', 'invalid-token');
-            expect(service.isAuthenticated()).toBeFalse();
+            expect(service.isAuthenticated()).toBe(false);
         });
 
         it('should return false for expired token', () => {
@@ -196,7 +198,7 @@ describe('AuthService', () => {
             const expiredToken = `header.${expiredPayload}.signature`;
             localStorage.setItem('token', expiredToken);
 
-            expect(service.isAuthenticated()).toBeFalse();
+            expect(service.isAuthenticated()).toBe(false);
         });
 
         it('should return true for valid non-expired token', () => {
@@ -207,7 +209,7 @@ describe('AuthService', () => {
             const validToken = `header.${validPayload}.signature`;
             localStorage.setItem('token', validToken);
 
-            expect(service.isAuthenticated()).toBeTrue();
+            expect(service.isAuthenticated()).toBe(true);
         });
     });
 });

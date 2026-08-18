@@ -1,5 +1,11 @@
+import type { Mock, MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, signal, TemplateRef, ViewChild } from '@angular/core';
+import {
+    Component,
+    signal,
+    TemplateRef,
+    ViewChild,
+} from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { Subject } from 'rxjs';
@@ -57,8 +63,18 @@ describe('VocabularyListComponent within a host', () => {
     const mockVocabulary: TranslatedPhrase[] = [
         {
             id: 1,
-            original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
-            translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
+            original: {
+                id: 1,
+                text: 'Hello',
+                audio_url: '',
+                locale: mockLocale,
+            },
+            translated: {
+                id: 2,
+                text: 'Hola',
+                audio_url: '',
+                locale: mockLocale,
+            },
             sr_stage_id: 1,
             review_date: '',
             modified_at: '',
@@ -67,8 +83,18 @@ describe('VocabularyListComponent within a host', () => {
         },
         {
             id: 2,
-            original: { id: 3, text: 'World', audio_url: '', locale: mockLocale },
-            translated: { id: 4, text: 'Mundo', audio_url: '', locale: mockLocale },
+            original: {
+                id: 3,
+                text: 'World',
+                audio_url: '',
+                locale: mockLocale,
+            },
+            translated: {
+                id: 4,
+                text: 'Mundo',
+                audio_url: '',
+                locale: mockLocale,
+            },
             sr_stage_id: 1,
             review_date: '',
             modified_at: '',
@@ -77,18 +103,20 @@ describe('VocabularyListComponent within a host', () => {
         },
     ];
 
-    let mockAudioService: jasmine.SpyObj<AudioService>;
+    let mockAudioService: Pick<MockedObject<AudioService>, 'playAudio'>;
 
     beforeEach(async () => {
         mockVocabularyStore = {
-            setReviewedVocabulary: jasmine.createSpy().and.returnValue(of({})),
-            delayVocabulary: jasmine.createSpy().and.returnValue(of({})),
-            deleteVocabulary: jasmine.createSpy().and.returnValue(of({})),
-            editVocabulary: jasmine.createSpy(),
+            setReviewedVocabulary: vi.fn().mockReturnValue(of({})),
+            delayVocabulary: vi.fn().mockReturnValue(of({})),
+            deleteVocabulary: vi.fn().mockReturnValue(of({})),
+            editVocabulary: vi.fn(),
         };
 
-        mockAudioService = jasmine.createSpyObj('AudioService', ['playAudio']);
-        mockAudioService.playAudio.and.returnValue(of(undefined));
+        mockAudioService = {
+            playAudio: vi.fn().mockName('AudioService.playAudio'),
+        };
+        mockAudioService.playAudio.mockReturnValue(of(undefined));
 
         await TestBed.configureTestingModule({
             imports: [TestHostComponent],
@@ -317,8 +345,18 @@ describe('VocabularyListComponent within a host', () => {
         hostComponent.vocabulary.set([
             {
                 id: 1,
-                original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
-                translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
+                original: {
+                    id: 1,
+                    text: 'Hello',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
+                translated: {
+                    id: 2,
+                    text: 'Hola',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',
@@ -352,7 +390,7 @@ describe('VocabularyListComponent within a host', () => {
 
         // Make delayVocabulary return a controllable observable
         const delaySubject = new Subject<void>();
-        (mockVocabularyStore.delayVocabulary as jasmine.Spy).and.returnValue(
+        (mockVocabularyStore.delayVocabulary as Mock).mockReturnValue(
             delaySubject.asObservable(),
         );
 
@@ -370,7 +408,7 @@ describe('VocabularyListComponent within a host', () => {
             By.directive(OptionsMenuComponent),
         );
         expect(optionsMenuDE).toBeTruthy();
-        expect(optionsMenuDE.componentInstance.disabled()).toBeTrue();
+        expect(optionsMenuDE.componentInstance.disabled()).toBe(true);
 
         // Complete the action to clear busy state
         delaySubject.complete();
@@ -391,8 +429,18 @@ describe('VocabularyListComponent within a host', () => {
         hostComponent.vocabulary.set([
             {
                 id: 1,
-                original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
-                translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
+                original: {
+                    id: 1,
+                    text: 'Hello',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
+                translated: {
+                    id: 2,
+                    text: 'Hola',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',
@@ -401,8 +449,18 @@ describe('VocabularyListComponent within a host', () => {
             },
             {
                 id: 2,
-                original: { id: 3, text: 'World', audio_url: '', locale: mockLocale },
-                translated: { id: 4, text: 'Mundo', audio_url: '', locale: mockLocale },
+                original: {
+                    id: 3,
+                    text: 'World',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
+                translated: {
+                    id: 4,
+                    text: 'Mundo',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',
@@ -461,7 +519,7 @@ describe('VocabularyListComponent within a host', () => {
 
         // Make deleteVocabulary controllable
         const deleteSubject = new Subject<void>();
-        (mockVocabularyStore.deleteVocabulary as jasmine.Spy).and.returnValue(
+        (mockVocabularyStore.deleteVocabulary as Mock).mockReturnValue(
             deleteSubject.asObservable(),
         );
 
@@ -474,7 +532,7 @@ describe('VocabularyListComponent within a host', () => {
         expect(mockVocabularyStore.deleteVocabulary).toHaveBeenCalledWith([
             1, 2,
         ]);
-        expect(modalConfirmBtn.disabled).toBeTrue();
+        expect(modalConfirmBtn.disabled).toBe(true);
 
         // Emit success then complete to trigger onSuccess + finalize
         deleteSubject.next();
@@ -487,15 +545,25 @@ describe('VocabularyListComponent within a host', () => {
             By.css('app-delete-confirm-modal'),
         );
         expect(modalAfterDE).toBeFalsy();
-        expect(optionsBtn.nativeElement.disabled).toBeTrue();
+        expect(optionsBtn.nativeElement.disabled).toBe(true);
     });
 
     it('cancels delete modal without calling store', () => {
         hostComponent.vocabulary.set([
             {
                 id: 1,
-                original: { id: 1, text: 'Hello', audio_url: '', locale: mockLocale },
-                translated: { id: 2, text: 'Hola', audio_url: '', locale: mockLocale },
+                original: {
+                    id: 1,
+                    text: 'Hello',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
+                translated: {
+                    id: 2,
+                    text: 'Hola',
+                    audio_url: '',
+                    locale: mockLocale,
+                },
                 sr_stage_id: 1,
                 review_date: '',
                 modified_at: '',

@@ -19,7 +19,7 @@ describe('DashboardComponent', () => {
         component = fixture.componentInstance;
 
         // Mock the vocabularyStore.vocabulary method
-        spyOn(component.vocabularyStore, 'vocabulary').and.returnValue({
+        vi.spyOn(component.vocabularyStore, 'vocabulary').mockReturnValue({
             new: [
                 {
                     id: 1,
@@ -90,68 +90,70 @@ describe('DashboardComponent', () => {
         });
 
         // Mock sourceVocabulary signal
-        spyOn(component.vocabularyStore, 'sourceVocabulary').and.returnValue([
-            {
-                id: 1,
-                original: {
+        vi.spyOn(component.vocabularyStore, 'sourceVocabulary').mockReturnValue(
+            [
+                {
                     id: 1,
-                    text: 'Hello',
-                    audio_url: '',
-                    locale: mockLocale,
+                    original: {
+                        id: 1,
+                        text: 'Hello',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
+                    translated: {
+                        id: 2,
+                        text: 'Hola',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
+                    sr_stage_id: 1,
+                    review_date: '',
+                    modified_at: '',
+                    priority: 1,
+                    learned: 0,
                 },
-                translated: {
+                {
                     id: 2,
-                    text: 'Hola',
-                    audio_url: '',
-                    locale: mockLocale,
+                    original: {
+                        id: 3,
+                        text: 'World',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
+                    translated: {
+                        id: 4,
+                        text: 'Mundo',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
+                    sr_stage_id: 1,
+                    review_date: '',
+                    modified_at: '',
+                    priority: 1,
+                    learned: 0,
                 },
-                sr_stage_id: 1,
-                review_date: '',
-                modified_at: '',
-                priority: 1,
-                learned: 0,
-            },
-            {
-                id: 2,
-                original: {
+                {
                     id: 3,
-                    text: 'World',
-                    audio_url: '',
-                    locale: mockLocale,
+                    original: {
+                        id: 5,
+                        text: 'Casa',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
+                    translated: {
+                        id: 6,
+                        text: 'House',
+                        audio_url: '',
+                        locale: mockLocale,
+                    },
+                    sr_stage_id: 1,
+                    review_date: '',
+                    modified_at: '',
+                    priority: 1,
+                    learned: 0,
                 },
-                translated: {
-                    id: 4,
-                    text: 'Mundo',
-                    audio_url: '',
-                    locale: mockLocale,
-                },
-                sr_stage_id: 1,
-                review_date: '',
-                modified_at: '',
-                priority: 1,
-                learned: 0,
-            },
-            {
-                id: 3,
-                original: {
-                    id: 5,
-                    text: 'Casa',
-                    audio_url: '',
-                    locale: mockLocale,
-                },
-                translated: {
-                    id: 6,
-                    text: 'House',
-                    audio_url: '',
-                    locale: mockLocale,
-                },
-                sr_stage_id: 1,
-                review_date: '',
-                modified_at: '',
-                priority: 1,
-                learned: 0,
-            },
-        ]);
+            ],
+        );
 
         fixture.detectChanges();
     });

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { catchError, Observable, of, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
@@ -38,11 +38,11 @@ interface TwoFactorResponse {
     providedIn: 'root',
 })
 export class AuthService {
+    private platformId = inject(PLATFORM_ID);
+
     private http = inject(HttpClient);
     private router = inject(Router);
     private baseUrl = `${environment.apiBaseUrl}`;
-
-    constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
     private getStorage(key: string): string | null {
         if (isPlatformBrowser(this.platformId)) {
@@ -82,7 +82,10 @@ export class AuthService {
                     if (resp.access_token) {
                         this.setStorage('token', resp.access_token);
                         if (resp.refresh_token) {
-                            this.setStorage('refresh_token', resp.refresh_token);
+                            this.setStorage(
+                                'refresh_token',
+                                resp.refresh_token,
+                            );
                         }
                         this.router.navigate(['/dashboard']);
                     }
@@ -108,7 +111,10 @@ export class AuthService {
         return this.getStorage('refresh_token');
     }
 
-    refreshToken(): Observable<{ access_token: string; refresh_token: string } | null> {
+    refreshToken(): Observable<{
+        access_token: string;
+        refresh_token: string;
+    } | null> {
         const refreshToken = this.getRefreshToken();
         if (!refreshToken) {
             return of(null);
@@ -117,7 +123,7 @@ export class AuthService {
         return this.http
             .post<{ access_token: string; refresh_token: string }>(
                 `${this.baseUrl}/user/refresh`,
-                { refresh_token: refreshToken }
+                { refresh_token: refreshToken },
             )
             .pipe(
                 tap((resp) => {
@@ -131,7 +137,7 @@ export class AuthService {
                 catchError(() => {
                     this.logout();
                     return of(null);
-                })
+                }),
             );
     }
 

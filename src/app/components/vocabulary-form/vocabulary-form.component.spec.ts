@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import type { Mock, MockedObject } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { signal, WritableSignal } from '@angular/core';
 import { of, throwError, Subject } from 'rxjs';
@@ -9,18 +10,30 @@ import { AudioService } from '../../services/audio/audio.service';
 import { TranslatedPhrase, UserSettings } from '../../types/types';
 
 describe('VocabularyFormComponent', () => {
+    beforeEach(() => {
+        vi.useFakeTimers({ advanceTimeDelta: 1, shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+        vi.useRealTimers();
+    });
     let component: VocabularyFormComponent;
     let fixture: ComponentFixture<VocabularyFormComponent>;
     let mockVocabularyStore: {
         vocabularyToEdit: WritableSignal<TranslatedPhrase | null>;
         isVocabularyFormOpen: WritableSignal<boolean>;
         userSettings: WritableSignal<UserSettings | null>;
-        closeVocabularyForm: jasmine.Spy;
-        createVocabulary: jasmine.Spy;
-        updateVocabulary: jasmine.Spy;
+        closeVocabularyForm: Mock;
+        createVocabulary: Mock;
+        updateVocabulary: Mock;
     };
-    let mockVocabularyService: jasmine.SpyObj<VocabularyService>;
-    let mockAudioService: jasmine.SpyObj<AudioService>;
+    let mockVocabularyService: Pick<
+        MockedObject<VocabularyService>,
+        'translatePhrase' | 'generatePhrase'
+    >;
+    let mockAudioService: Pick<
+        MockedObject<AudioService>,
+        'generateAudio' | 'playAudio' | 'deleteAudios'
+    >;
 
     const mockUserSettings = {
         id: 1,
@@ -56,19 +69,42 @@ describe('VocabularyFormComponent', () => {
             vocabularyToEdit: signal<TranslatedPhrase | null>(null),
             isVocabularyFormOpen: signal<boolean>(true),
             userSettings: signal<UserSettings | null>(mockUserSettings),
-            closeVocabularyForm: jasmine.createSpy('closeVocabularyForm'),
-            createVocabulary: jasmine.createSpy('createVocabulary').and.returnValue(of({})),
-            updateVocabulary: jasmine.createSpy('updateVocabulary').and.returnValue(of({})),
+            closeVocabularyForm: vi.fn().mockName('closeVocabularyForm'),
+            createVocabulary: vi
+                .fn()
+                .mockName('createVocabulary')
+                .mockReturnValue(of({})),
+            updateVocabulary: vi
+                .fn()
+                .mockName('updateVocabulary')
+                .mockReturnValue(of({})),
         };
 
-        mockVocabularyService = jasmine.createSpyObj('VocabularyService', ['translatePhrase', 'generatePhrase']);
-        mockVocabularyService.translatePhrase.and.returnValue(of({ translatedPhrase: 'Translated' }));
-        mockVocabularyService.generatePhrase.and.returnValue(of({ generatedPhrase: 'Generated phrase' }));
+        mockVocabularyService = {
+            translatePhrase: vi
+                .fn()
+                .mockName('VocabularyService.translatePhrase'),
+            generatePhrase: vi
+                .fn()
+                .mockName('VocabularyService.generatePhrase'),
+        };
+        mockVocabularyService.translatePhrase.mockReturnValue(
+            of({ translatedPhrase: 'Translated' }),
+        );
+        mockVocabularyService.generatePhrase.mockReturnValue(
+            of({ generatedPhrase: 'Generated phrase' }),
+        );
 
-        mockAudioService = jasmine.createSpyObj('AudioService', ['generateAudio', 'playAudio', 'deleteAudios']);
-        mockAudioService.generateAudio.and.returnValue(of({ filename: 'new-audio.mp3' }));
-        mockAudioService.playAudio.and.returnValue(of(undefined));
-        mockAudioService.deleteAudios.and.returnValue(of({ deleted: [] }));
+        mockAudioService = {
+            generateAudio: vi.fn().mockName('AudioService.generateAudio'),
+            playAudio: vi.fn().mockName('AudioService.playAudio'),
+            deleteAudios: vi.fn().mockName('AudioService.deleteAudios'),
+        };
+        mockAudioService.generateAudio.mockReturnValue(
+            of({ filename: 'new-audio.mp3' }),
+        );
+        mockAudioService.playAudio.mockReturnValue(of(undefined));
+        mockAudioService.deleteAudios.mockReturnValue(of({ deleted: [] }));
 
         localStorage.removeItem('newVocabulary');
         localStorage.removeItem('editVocabulary');
@@ -103,11 +139,15 @@ describe('VocabularyFormComponent', () => {
         });
 
         it('should have originalPhrase form control', () => {
-            expect(component.vocabularyForm.controls.originalPhrase).toBeTruthy();
+            expect(
+                component.vocabularyForm.controls.originalPhrase,
+            ).toBeTruthy();
         });
 
         it('should have translatedPhrase form control', () => {
-            expect(component.vocabularyForm.controls.translatedPhrase).toBeTruthy();
+            expect(
+                component.vocabularyForm.controls.translatedPhrase,
+            ).toBeTruthy();
         });
 
         it('should have reviewDate form control', () => {
@@ -122,32 +162,46 @@ describe('VocabularyFormComponent', () => {
     describe('form validation', () => {
         it('should be invalid when originalPhrase is empty', () => {
             component.vocabularyForm.controls.originalPhrase.setValue('');
-            component.vocabularyForm.controls.translatedPhrase.setValue('Hello');
-            expect(component.vocabularyForm.invalid).toBeTrue();
+            component.vocabularyForm.controls.translatedPhrase.setValue(
+                'Hello',
+            );
+            expect(component.vocabularyForm.invalid).toBe(true);
         });
 
         it('should be invalid when translatedPhrase is empty', () => {
             component.vocabularyForm.controls.originalPhrase.setValue('Hola');
             component.vocabularyForm.controls.translatedPhrase.setValue('');
-            expect(component.vocabularyForm.invalid).toBeTrue();
+            expect(component.vocabularyForm.invalid).toBe(true);
         });
 
         it('should be invalid when originalPhrase has less than 2 characters', () => {
             component.vocabularyForm.controls.originalPhrase.setValue('H');
-            component.vocabularyForm.controls.translatedPhrase.setValue('Hello');
-            expect(component.vocabularyForm.controls.originalPhrase.hasError('minlength')).toBeTrue();
+            component.vocabularyForm.controls.translatedPhrase.setValue(
+                'Hello',
+            );
+            expect(
+                component.vocabularyForm.controls.originalPhrase.hasError(
+                    'minlength',
+                ),
+            ).toBe(true);
         });
 
         it('should be invalid when translatedPhrase has less than 2 characters', () => {
             component.vocabularyForm.controls.originalPhrase.setValue('Hola');
             component.vocabularyForm.controls.translatedPhrase.setValue('H');
-            expect(component.vocabularyForm.controls.translatedPhrase.hasError('minlength')).toBeTrue();
+            expect(
+                component.vocabularyForm.controls.translatedPhrase.hasError(
+                    'minlength',
+                ),
+            ).toBe(true);
         });
 
         it('should be valid with both phrases filled correctly', () => {
             component.vocabularyForm.controls.originalPhrase.setValue('Hola');
-            component.vocabularyForm.controls.translatedPhrase.setValue('Hello');
-            expect(component.vocabularyForm.valid).toBeTrue();
+            component.vocabularyForm.controls.translatedPhrase.setValue(
+                'Hello',
+            );
+            expect(component.vocabularyForm.valid).toBe(true);
         });
     });
 
@@ -177,14 +231,18 @@ describe('VocabularyFormComponent', () => {
             expect(title.textContent.trim()).toBe('Create Vocabulary');
         });
 
-        it('should populate form with vocabulary data in edit mode', fakeAsync(() => {
+        it('should populate form with vocabulary data in edit mode', async () => {
             mockVocabularyStore.vocabularyToEdit.set(mockVocabularyToEdit);
-            tick();
+            await vi.advanceTimersByTimeAsync(0);
             fixture.detectChanges();
-            expect(component.vocabularyForm.controls.originalPhrase.value).toBe('Hola');
-            expect(component.vocabularyForm.controls.translatedPhrase.value).toBe('Hello');
+            expect(component.vocabularyForm.controls.originalPhrase.value).toBe(
+                'Hola',
+            );
+            expect(
+                component.vocabularyForm.controls.translatedPhrase.value,
+            ).toBe('Hello');
             expect(component.vocabularyForm.controls.priority.value).toBe('1');
-        }));
+        });
     });
 
     describe('locale computation', () => {
@@ -198,19 +256,19 @@ describe('VocabularyFormComponent', () => {
             expect(component.translatedLocale()).toBe('en-US');
         });
 
-        it('should get originalLocale from vocabulary in edit mode', fakeAsync(() => {
+        it('should get originalLocale from vocabulary in edit mode', async () => {
             mockVocabularyStore.vocabularyToEdit.set(mockVocabularyToEdit);
-            tick();
+            await vi.advanceTimersByTimeAsync(0);
             fixture.detectChanges();
             expect(component.originalLocale()).toBe('es-ES');
-        }));
+        });
 
-        it('should get translatedLocale from vocabulary in edit mode', fakeAsync(() => {
+        it('should get translatedLocale from vocabulary in edit mode', async () => {
             mockVocabularyStore.vocabularyToEdit.set(mockVocabularyToEdit);
-            tick();
+            await vi.advanceTimersByTimeAsync(0);
             fixture.detectChanges();
             expect(component.translatedLocale()).toBe('en-US');
-        }));
+        });
     });
 
     describe('onAudioGenerated', () => {
@@ -221,55 +279,65 @@ describe('VocabularyFormComponent', () => {
 
         it('should set translatedAudioFilename for translated type', () => {
             component.onAudioGenerated('new-translated.mp3', 'translated');
-            expect(component.translatedAudioFilename()).toBe('new-translated.mp3');
+            expect(component.translatedAudioFilename()).toBe(
+                'new-translated.mp3',
+            );
         });
 
-        it('should delete previous audio in create mode', fakeAsync(() => {
+        it('should delete previous audio in create mode', async () => {
             component.originalAudioFilename.set('old-audio.mp3');
             component.onAudioGenerated('new-audio.mp3', 'original');
-            tick();
-            expect(mockAudioService.deleteAudios).toHaveBeenCalledWith(['old-audio.mp3']);
-        }));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(mockAudioService.deleteAudios).toHaveBeenCalledWith([
+                'old-audio.mp3',
+            ]);
+        });
     });
 
     describe('onPlayAudio', () => {
-        it('should set loadingAudio for original type and reset after complete', fakeAsync(() => {
+        it('should set loadingAudio for original type and reset after complete', async () => {
             const playSubject = new Subject<void>();
-            mockAudioService.playAudio.and.returnValue(playSubject.asObservable());
+            mockAudioService.playAudio.mockReturnValue(
+                playSubject.asObservable(),
+            );
 
             component.onPlayAudio('test.mp3', 'original');
             expect(component.loadingAudio()).toBe('original');
 
             playSubject.next();
             playSubject.complete();
-            tick();
+            await vi.advanceTimersByTimeAsync(0);
             expect(component.loadingAudio()).toBeNull();
-        }));
+        });
 
-        it('should set loadingAudio for translated type and reset after complete', fakeAsync(() => {
+        it('should set loadingAudio for translated type and reset after complete', async () => {
             const playSubject = new Subject<void>();
-            mockAudioService.playAudio.and.returnValue(playSubject.asObservable());
+            mockAudioService.playAudio.mockReturnValue(
+                playSubject.asObservable(),
+            );
 
             component.onPlayAudio('test.mp3', 'translated');
             expect(component.loadingAudio()).toBe('translated');
 
             playSubject.next();
             playSubject.complete();
-            tick();
+            await vi.advanceTimersByTimeAsync(0);
             expect(component.loadingAudio()).toBeNull();
-        }));
+        });
 
         it('should call audioService.playAudio', () => {
             component.onPlayAudio('test.mp3', 'original');
             expect(mockAudioService.playAudio).toHaveBeenCalledWith('test.mp3');
         });
 
-        it('should reset loadingAudio after error', fakeAsync(() => {
-            mockAudioService.playAudio.and.returnValue(throwError(() => new Error('Play error')));
+        it('should reset loadingAudio after error', async () => {
+            mockAudioService.playAudio.mockReturnValue(
+                throwError(() => new Error('Play error')),
+            );
             component.onPlayAudio('test.mp3', 'original');
-            tick();
+            await vi.advanceTimersByTimeAsync(0);
             expect(component.loadingAudio()).toBeNull();
-        }));
+        });
     });
 
     describe('onClearAudio', () => {
@@ -279,67 +347,78 @@ describe('VocabularyFormComponent', () => {
             expect(mockAudioService.deleteAudios).not.toHaveBeenCalled();
         });
 
-        it('should delete audio and clear filename in create mode', fakeAsync(() => {
+        it('should delete audio and clear filename in create mode', async () => {
             component.originalAudioFilename.set('test-audio.mp3');
             component.onClearAudio('original');
-            tick();
-            expect(mockAudioService.deleteAudios).toHaveBeenCalledWith(['test-audio.mp3']);
+            await vi.advanceTimersByTimeAsync(0);
+            expect(mockAudioService.deleteAudios).toHaveBeenCalledWith([
+                'test-audio.mp3',
+            ]);
             expect(component.originalAudioFilename()).toBeNull();
-        }));
+        });
     });
 
     describe('submitForm', () => {
         beforeEach(() => {
             component.vocabularyForm.controls.originalPhrase.setValue('Hola');
-            component.vocabularyForm.controls.translatedPhrase.setValue('Hello');
+            component.vocabularyForm.controls.translatedPhrase.setValue(
+                'Hello',
+            );
         });
 
         describe('create mode', () => {
-            it('should set saving to true and reset after complete', fakeAsync(() => {
-                const saveSubject = new Subject<{}>();
-                mockVocabularyStore.createVocabulary.and.returnValue(saveSubject.asObservable());
+            it('should set saving to true and reset after complete', async () => {
+                const saveSubject = new Subject<object>();
+                mockVocabularyStore.createVocabulary.mockReturnValue(
+                    saveSubject.asObservable(),
+                );
 
                 component.submitForm();
-                expect(component.saving()).toBeTrue();
+                expect(component.saving()).toBe(true);
 
                 saveSubject.next({});
                 saveSubject.complete();
-                tick();
-                expect(component.saving()).toBeFalse();
-            }));
+                await vi.advanceTimersByTimeAsync(0);
+                expect(component.saving()).toBe(false);
+            });
 
             it('should call createVocabulary on store', () => {
                 component.submitForm();
                 expect(mockVocabularyStore.createVocabulary).toHaveBeenCalled();
             });
 
-            it('should close form on success', fakeAsync(() => {
+            it('should close form on success', async () => {
                 component.submitForm();
-                tick();
-                expect(mockVocabularyStore.closeVocabularyForm).toHaveBeenCalled();
-            }));
+                await vi.advanceTimersByTimeAsync(0);
+                expect(
+                    mockVocabularyStore.closeVocabularyForm,
+                ).toHaveBeenCalled();
+            });
 
-            it('should set saving to false on error', fakeAsync(() => {
-                mockVocabularyStore.createVocabulary.and.returnValue(throwError(() => new Error('Save error')));
+            it('should set saving to false on error', async () => {
+                mockVocabularyStore.createVocabulary.mockReturnValue(
+                    throwError(() => new Error('Save error')),
+                );
                 component.submitForm();
-                tick();
-                expect(component.saving()).toBeFalse();
-            }));
+                await vi.advanceTimersByTimeAsync(0);
+                expect(component.saving()).toBe(false);
+            });
 
-            it('should remove localStorage on success', fakeAsync(() => {
+            it('should remove localStorage on success', async () => {
                 localStorage.setItem('newVocabulary', JSON.stringify({}));
                 component.submitForm();
-                tick();
+                await vi.advanceTimersByTimeAsync(0);
                 expect(localStorage.getItem('newVocabulary')).toBeNull();
-            }));
+            });
         });
 
         describe('edit mode', () => {
-            beforeEach(fakeAsync(() => {
+            beforeEach(async () => {
                 mockVocabularyStore.vocabularyToEdit.set(mockVocabularyToEdit);
-                tick();
+                await vi.advanceTimersByTimeAsync(0);
                 fixture.detectChanges();
-            }));
+                await vi.runOnlyPendingTimersAsync();
+            });
 
             it('should call updateVocabulary on store', () => {
                 component.submitForm();
@@ -348,177 +427,234 @@ describe('VocabularyFormComponent', () => {
 
             it('should pass correct vocabulary id', () => {
                 component.submitForm();
-                const callArgs = mockVocabularyStore.updateVocabulary.calls.mostRecent().args[0];
+                const callArgs = vi.mocked(mockVocabularyStore.updateVocabulary)
+                    .mock.lastCall![0];
                 expect(callArgs.vocabularyId).toBe(1);
             });
 
-            it('should close form on success', fakeAsync(() => {
+            it('should close form on success', async () => {
                 component.submitForm();
-                tick();
-                expect(mockVocabularyStore.closeVocabularyForm).toHaveBeenCalled();
-            }));
+                await vi.advanceTimersByTimeAsync(0);
+                expect(
+                    mockVocabularyStore.closeVocabularyForm,
+                ).toHaveBeenCalled();
+            });
         });
     });
 
     describe('cancelForm', () => {
         describe('create mode', () => {
-            it('should close vocabulary form', fakeAsync(() => {
+            it('should close vocabulary form', async () => {
                 component.cancelForm();
-                tick();
-                expect(mockVocabularyStore.closeVocabularyForm).toHaveBeenCalled();
-            }));
+                await vi.advanceTimersByTimeAsync(0);
+                expect(
+                    mockVocabularyStore.closeVocabularyForm,
+                ).toHaveBeenCalled();
+            });
 
-            it('should delete generated audio files', fakeAsync(() => {
+            it('should delete generated audio files', async () => {
                 component.originalAudioFilename.set('audio1.mp3');
                 component.translatedAudioFilename.set('audio2.mp3');
                 component.cancelForm();
-                tick();
-                expect(mockAudioService.deleteAudios).toHaveBeenCalledWith(['audio1.mp3', 'audio2.mp3']);
-            }));
+                await vi.advanceTimersByTimeAsync(0);
+                expect(mockAudioService.deleteAudios).toHaveBeenCalledWith([
+                    'audio1.mp3',
+                    'audio2.mp3',
+                ]);
+            });
 
-            it('should remove localStorage', fakeAsync(() => {
+            it('should remove localStorage', async () => {
                 localStorage.setItem('newVocabulary', JSON.stringify({}));
                 component.cancelForm();
-                tick();
+                await vi.advanceTimersByTimeAsync(0);
                 expect(localStorage.getItem('newVocabulary')).toBeNull();
-            }));
+            });
         });
 
         describe('edit mode', () => {
-            beforeEach(fakeAsync(() => {
+            beforeEach(async () => {
                 mockVocabularyStore.vocabularyToEdit.set(mockVocabularyToEdit);
-                tick();
+                await vi.advanceTimersByTimeAsync(0);
                 fixture.detectChanges();
-            }));
+                await vi.runOnlyPendingTimersAsync();
+            });
 
             it('should reset form', () => {
-                component.vocabularyForm.controls.originalPhrase.setValue('Changed');
+                component.vocabularyForm.controls.originalPhrase.setValue(
+                    'Changed',
+                );
                 component.cancelForm();
-                expect(component.vocabularyForm.controls.priority.value).toBe('0');
+                expect(component.vocabularyForm.controls.priority.value).toBe(
+                    '0',
+                );
             });
 
             it('should close vocabulary form', () => {
                 component.cancelForm();
-                expect(mockVocabularyStore.closeVocabularyForm).toHaveBeenCalled();
+                expect(
+                    mockVocabularyStore.closeVocabularyForm,
+                ).toHaveBeenCalled();
             });
         });
     });
 
     describe('resetForm', () => {
         describe('create mode', () => {
-            it('should reset form to default values', fakeAsync(() => {
-                component.vocabularyForm.controls.originalPhrase.setValue('Test');
-                component.vocabularyForm.controls.translatedPhrase.setValue('Test');
+            it('should reset form to default values', async () => {
+                component.vocabularyForm.controls.originalPhrase.setValue(
+                    'Test',
+                );
+                component.vocabularyForm.controls.translatedPhrase.setValue(
+                    'Test',
+                );
                 component.resetForm();
-                tick();
-                expect(component.vocabularyForm.controls.originalPhrase.value).toBe('');
-                expect(component.vocabularyForm.controls.translatedPhrase.value).toBe('');
-            }));
+                await vi.advanceTimersByTimeAsync(0);
+                expect(
+                    component.vocabularyForm.controls.originalPhrase.value,
+                ).toBe('');
+                expect(
+                    component.vocabularyForm.controls.translatedPhrase.value,
+                ).toBe('');
+            });
 
-            it('should clear audio filenames', fakeAsync(() => {
+            it('should clear audio filenames', async () => {
                 component.originalAudioFilename.set('audio.mp3');
                 component.translatedAudioFilename.set('audio2.mp3');
                 component.resetForm();
-                tick();
+                await vi.advanceTimersByTimeAsync(0);
                 expect(component.originalAudioFilename()).toBeNull();
                 expect(component.translatedAudioFilename()).toBeNull();
-            }));
+            });
 
-            it('should delete audio files', fakeAsync(() => {
+            it('should delete audio files', async () => {
                 component.originalAudioFilename.set('audio.mp3');
                 component.resetForm();
-                tick();
-                expect(mockAudioService.deleteAudios).toHaveBeenCalledWith(['audio.mp3']);
-            }));
+                await vi.advanceTimersByTimeAsync(0);
+                expect(mockAudioService.deleteAudios).toHaveBeenCalledWith([
+                    'audio.mp3',
+                ]);
+            });
         });
     });
 
     describe('UI elements', () => {
         it('should have cancel button', () => {
-            const formButtons = fixture.nativeElement.querySelectorAll('form > div:last-child button[type="button"]');
+            const formButtons = fixture.nativeElement.querySelectorAll(
+                'form > div:last-child button[type="button"]',
+            );
             expect(formButtons[0].textContent.trim()).toBe('Cancel');
         });
 
         it('should have reset button', () => {
-            const formButtons = fixture.nativeElement.querySelectorAll('form > div:last-child button[type="button"]');
+            const formButtons = fixture.nativeElement.querySelectorAll(
+                'form > div:last-child button[type="button"]',
+            );
             expect(formButtons[1].textContent.trim()).toBe('Reset');
         });
 
         it('should have submit button', () => {
-            const submitButton = fixture.nativeElement.querySelector('button[type="submit"]');
+            const submitButton = fixture.nativeElement.querySelector(
+                'button[type="submit"]',
+            );
             expect(submitButton).toBeTruthy();
         });
 
         it('should disable submit button when form is invalid', () => {
             component.vocabularyForm.controls.originalPhrase.setValue('');
             fixture.detectChanges();
-            const submitButton = fixture.nativeElement.querySelector('button[type="submit"]');
-            expect(submitButton.disabled).toBeTrue();
+            const submitButton = fixture.nativeElement.querySelector(
+                'button[type="submit"]',
+            );
+            expect(submitButton.disabled).toBe(true);
         });
 
         it('should enable submit button when form is valid', () => {
             component.vocabularyForm.controls.originalPhrase.setValue('Hola');
-            component.vocabularyForm.controls.translatedPhrase.setValue('Hello');
+            component.vocabularyForm.controls.translatedPhrase.setValue(
+                'Hello',
+            );
             fixture.detectChanges();
-            const submitButton = fixture.nativeElement.querySelector('button[type="submit"]');
-            expect(submitButton.disabled).toBeFalse();
+            const submitButton = fixture.nativeElement.querySelector(
+                'button[type="submit"]',
+            );
+            expect(submitButton.disabled).toBe(false);
         });
 
         it('should disable submit button when saving', () => {
             component.vocabularyForm.controls.originalPhrase.setValue('Hola');
-            component.vocabularyForm.controls.translatedPhrase.setValue('Hello');
+            component.vocabularyForm.controls.translatedPhrase.setValue(
+                'Hello',
+            );
             component.saving.set(true);
             fixture.detectChanges();
-            const submitButton = fixture.nativeElement.querySelector('button[type="submit"]');
-            expect(submitButton.disabled).toBeTrue();
+            const submitButton = fixture.nativeElement.querySelector(
+                'button[type="submit"]',
+            );
+            expect(submitButton.disabled).toBe(true);
         });
 
         it('should show "Saving..." text when saving', () => {
             component.vocabularyForm.controls.originalPhrase.setValue('Hola');
-            component.vocabularyForm.controls.translatedPhrase.setValue('Hello');
+            component.vocabularyForm.controls.translatedPhrase.setValue(
+                'Hello',
+            );
             component.saving.set(true);
             fixture.detectChanges();
-            const submitButton = fixture.nativeElement.querySelector('button[type="submit"]');
+            const submitButton = fixture.nativeElement.querySelector(
+                'button[type="submit"]',
+            );
             expect(submitButton.textContent).toContain('Saving...');
         });
 
         it('should show loading spinner when saving', () => {
             component.saving.set(true);
             fixture.detectChanges();
-            const spinner = fixture.nativeElement.querySelector('.loading-spinner');
+            const spinner =
+                fixture.nativeElement.querySelector('.loading-spinner');
             expect(spinner).toBeTruthy();
         });
 
         it('should show "Save" text in create mode', () => {
             component.vocabularyForm.controls.originalPhrase.setValue('Hola');
-            component.vocabularyForm.controls.translatedPhrase.setValue('Hello');
+            component.vocabularyForm.controls.translatedPhrase.setValue(
+                'Hello',
+            );
             component.saving.set(false);
             fixture.detectChanges();
-            const submitButton = fixture.nativeElement.querySelector('button[type="submit"]');
+            const submitButton = fixture.nativeElement.querySelector(
+                'button[type="submit"]',
+            );
             expect(submitButton.textContent.trim()).toBe('Save');
         });
 
-        it('should show "Save Changes" text in edit mode', fakeAsync(() => {
+        it('should show "Save Changes" text in edit mode', async () => {
             mockVocabularyStore.vocabularyToEdit.set(mockVocabularyToEdit);
-            tick();
+            await vi.advanceTimersByTimeAsync(0);
             fixture.detectChanges();
-            const submitButton = fixture.nativeElement.querySelector('button[type="submit"]');
+            const submitButton = fixture.nativeElement.querySelector(
+                'button[type="submit"]',
+            );
             expect(submitButton.textContent.trim()).toBe('Save Changes');
-        }));
+        });
 
         it('should have review date input', () => {
-            const reviewDateInput = fixture.nativeElement.querySelector('#review-date-input');
+            const reviewDateInput =
+                fixture.nativeElement.querySelector('#review-date-input');
             expect(reviewDateInput).toBeTruthy();
             expect(reviewDateInput.type).toBe('date');
         });
 
         it('should have priority select', () => {
-            const prioritySelect = fixture.nativeElement.querySelector('select[formControlName="priority"]');
+            const prioritySelect = fixture.nativeElement.querySelector(
+                'select[formControlName="priority"]',
+            );
             expect(prioritySelect).toBeTruthy();
         });
 
         it('should have priority options 0, 1, 2', () => {
-            const options = fixture.nativeElement.querySelectorAll('select[formControlName="priority"] option');
+            const options = fixture.nativeElement.querySelectorAll(
+                'select[formControlName="priority"] option',
+            );
             expect(options.length).toBe(3);
             expect(options[0].value).toBe('0');
             expect(options[1].value).toBe('1');
@@ -528,23 +664,29 @@ describe('VocabularyFormComponent', () => {
 
     describe('button interactions', () => {
         it('should call cancelForm when cancel button is clicked', () => {
-            spyOn(component, 'cancelForm');
-            const formButtons = fixture.nativeElement.querySelectorAll('form > div:last-child button[type="button"]');
+            vi.spyOn(component, 'cancelForm').mockReturnValue(undefined);
+            const formButtons = fixture.nativeElement.querySelectorAll(
+                'form > div:last-child button[type="button"]',
+            );
             formButtons[0].click();
             expect(component.cancelForm).toHaveBeenCalled();
         });
 
         it('should call resetForm when reset button is clicked', () => {
-            spyOn(component, 'resetForm');
-            const formButtons = fixture.nativeElement.querySelectorAll('form > div:last-child button[type="button"]');
+            vi.spyOn(component, 'resetForm').mockReturnValue(undefined);
+            const formButtons = fixture.nativeElement.querySelectorAll(
+                'form > div:last-child button[type="button"]',
+            );
             formButtons[1].click();
             expect(component.resetForm).toHaveBeenCalled();
         });
 
         it('should call submitForm on form submit', () => {
-            spyOn(component, 'submitForm');
+            vi.spyOn(component, 'submitForm').mockReturnValue(undefined);
             component.vocabularyForm.controls.originalPhrase.setValue('Hola');
-            component.vocabularyForm.controls.translatedPhrase.setValue('Hello');
+            component.vocabularyForm.controls.translatedPhrase.setValue(
+                'Hello',
+            );
             fixture.detectChanges();
             const form = fixture.nativeElement.querySelector('form');
             form.dispatchEvent(new Event('submit'));
@@ -558,7 +700,7 @@ describe('VocabularyFormComponent', () => {
         });
 
         it('should initialize saving as false', () => {
-            expect(component.saving()).toBeFalse();
+            expect(component.saving()).toBe(false);
         });
 
         it('should initialize loadingAudio as null', () => {
@@ -576,7 +718,7 @@ describe('VocabularyFormComponent', () => {
 
     describe('ngOnDestroy', () => {
         it('should call removeStoredEdit on destroy', () => {
-            spyOn(component, 'removeStoredEdit');
+            vi.spyOn(component, 'removeStoredEdit').mockReturnValue(undefined);
             component.ngOnDestroy();
             expect(component.removeStoredEdit).toHaveBeenCalled();
         });
@@ -584,7 +726,7 @@ describe('VocabularyFormComponent', () => {
 
     describe('autoTranslationEnabled', () => {
         it('should initialize autoTranslationEnabled as true by default', () => {
-            expect(component.autoTranslationEnabled()).toBeTrue();
+            expect(component.autoTranslationEnabled()).toBe(true);
         });
 
         it('should load autoTranslationEnabled from localStorage if set to false', () => {
@@ -592,7 +734,7 @@ describe('VocabularyFormComponent', () => {
             fixture = TestBed.createComponent(VocabularyFormComponent);
             component = fixture.componentInstance;
             fixture.detectChanges();
-            expect(component.autoTranslationEnabled()).toBeFalse();
+            expect(component.autoTranslationEnabled()).toBe(false);
         });
     });
 
@@ -600,19 +742,21 @@ describe('VocabularyFormComponent', () => {
         it('should toggle autoTranslationEnabled from true to false', () => {
             component.autoTranslationEnabled.set(true);
             component.toggleAutoTranslation();
-            expect(component.autoTranslationEnabled()).toBeFalse();
+            expect(component.autoTranslationEnabled()).toBe(false);
         });
 
         it('should toggle autoTranslationEnabled from false to true', () => {
             component.autoTranslationEnabled.set(false);
             component.toggleAutoTranslation();
-            expect(component.autoTranslationEnabled()).toBeTrue();
+            expect(component.autoTranslationEnabled()).toBe(true);
         });
 
         it('should save autoTranslationEnabled to localStorage', () => {
             component.autoTranslationEnabled.set(true);
             component.toggleAutoTranslation();
-            expect(localStorage.getItem('autoTranslationEnabled')).toBe('false');
+            expect(localStorage.getItem('autoTranslationEnabled')).toBe(
+                'false',
+            );
         });
     });
 
@@ -629,16 +773,23 @@ describe('VocabularyFormComponent', () => {
             expect(mockVocabularyService.generatePhrase).not.toHaveBeenCalled();
         });
 
-        it('should call vocabularyService.generatePhrase with text and locale', fakeAsync(() => {
+        it('should call vocabularyService.generatePhrase with text and locale', async () => {
             component.vocabularyForm.controls.originalPhrase.setValue('Hello');
             component.onGeneratePhrase('original');
-            tick();
-            expect(mockVocabularyService.generatePhrase).toHaveBeenCalledWith('Hello', 'es-ES');
-        }));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(mockVocabularyService.generatePhrase).toHaveBeenCalledWith(
+                'Hello',
+                'es-ES',
+            );
+        });
 
-        it('should set generatingPhraseFor during generation', fakeAsync(() => {
-            const generateSubject = new Subject<{ generatedPhrase: string }>();
-            mockVocabularyService.generatePhrase.and.returnValue(generateSubject.asObservable());
+        it('should set generatingPhraseFor during generation', async () => {
+            const generateSubject = new Subject<{
+                generatedPhrase: string;
+            }>();
+            mockVocabularyService.generatePhrase.mockReturnValue(
+                generateSubject.asObservable(),
+            );
 
             component.vocabularyForm.controls.originalPhrase.setValue('Hello');
             component.onGeneratePhrase('original');
@@ -646,46 +797,58 @@ describe('VocabularyFormComponent', () => {
 
             generateSubject.next({ generatedPhrase: 'Generated' });
             generateSubject.complete();
-            tick();
+            await vi.advanceTimersByTimeAsync(0);
             expect(component.generatingPhraseFor()).toBeNull();
-        }));
+        });
 
-        it('should update original phrase with generated phrase', fakeAsync(() => {
+        it('should update original phrase with generated phrase', async () => {
             component.vocabularyForm.controls.originalPhrase.setValue('Hello');
             component.onGeneratePhrase('original');
-            tick();
-            expect(component.vocabularyForm.controls.originalPhrase.value).toBe('Generated phrase');
-        }));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(component.vocabularyForm.controls.originalPhrase.value).toBe(
+                'Generated phrase',
+            );
+        });
 
-        it('should update translated phrase with generated phrase', fakeAsync(() => {
+        it('should update translated phrase with generated phrase', async () => {
             component.vocabularyForm.controls.translatedPhrase.setValue('Hola');
             component.onGeneratePhrase('translated');
-            tick();
-            expect(component.vocabularyForm.controls.translatedPhrase.value).toBe('Generated phrase');
-        }));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(
+                component.vocabularyForm.controls.translatedPhrase.value,
+            ).toBe('Generated phrase');
+        });
 
-        it('should reset generatingPhraseFor on error', fakeAsync(() => {
-            mockVocabularyService.generatePhrase.and.returnValue(throwError(() => new Error('API Error')));
+        it('should reset generatingPhraseFor on error', async () => {
+            mockVocabularyService.generatePhrase.mockReturnValue(
+                throwError(() => new Error('API Error')),
+            );
             component.vocabularyForm.controls.originalPhrase.setValue('Hello');
             component.onGeneratePhrase('original');
-            tick();
+            await vi.advanceTimersByTimeAsync(0);
             expect(component.generatingPhraseFor()).toBeNull();
-        }));
+        });
     });
 
     describe('auto-translation toggle UI', () => {
         it('should have auto-translation toggle', () => {
-            const toggle = fixture.nativeElement.querySelector('input[type="checkbox"].toggle');
+            const toggle = fixture.nativeElement.querySelector(
+                'input[type="checkbox"].toggle',
+            );
             expect(toggle).toBeTruthy();
         });
 
         it('should show "Auto-translate" label', () => {
-            const label = fixture.nativeElement.querySelector('.label-text.text-xs');
+            const label = fixture.nativeElement.querySelector(
+                '.label-text.text-xs',
+            );
             expect(label.textContent.trim()).toBe('Auto-translate');
         });
 
         it('should toggle autoTranslationEnabled when clicked', () => {
-            const toggle = fixture.nativeElement.querySelector('input[type="checkbox"].toggle');
+            const toggle = fixture.nativeElement.querySelector(
+                'input[type="checkbox"].toggle',
+            );
             const initialValue = component.autoTranslationEnabled();
             toggle.click();
             fixture.detectChanges();

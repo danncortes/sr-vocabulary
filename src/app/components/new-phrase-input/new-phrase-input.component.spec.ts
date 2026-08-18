@@ -1,17 +1,32 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import type { MockedObject } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { of, throwError, Subject } from 'rxjs';
 import { NewPhraseInputComponent } from './new-phrase-input.component';
 import { AudioService } from '../../services/audio/audio.service';
 
 describe('NewPhraseInputComponent', () => {
+    beforeEach(() => {
+        vi.useFakeTimers({ advanceTimeDelta: 1, shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+        vi.useRealTimers();
+    });
     let component: NewPhraseInputComponent;
     let fixture: ComponentFixture<NewPhraseInputComponent>;
-    let mockAudioService: jasmine.SpyObj<AudioService>;
+    let mockAudioService: Pick<
+        MockedObject<AudioService>,
+        'generateAudio' | 'playAudio'
+    >;
 
     beforeEach(async () => {
-        mockAudioService = jasmine.createSpyObj('AudioService', ['generateAudio', 'playAudio']);
-        mockAudioService.generateAudio.and.returnValue(of({ filename: 'generated-audio.mp3' }));
+        mockAudioService = {
+            generateAudio: vi.fn().mockName('AudioService.generateAudio'),
+            playAudio: vi.fn().mockName('AudioService.playAudio'),
+        };
+        mockAudioService.generateAudio.mockReturnValue(
+            of({ filename: 'generated-audio.mp3' }),
+        );
 
         await TestBed.configureTestingModule({
             imports: [NewPhraseInputComponent, FormsModule],
@@ -36,16 +51,16 @@ describe('NewPhraseInputComponent', () => {
             expect(component.label()).toBe('');
             expect(component.locale()).toBe('');
             expect(component.audioFilename()).toBeNull();
-            expect(component.loadingAudio()).toBeFalse();
-            expect(component.clearingAudio()).toBeFalse();
-            expect(component.generatingPhrase()).toBeFalse();
+            expect(component.loadingAudio()).toBe(false);
+            expect(component.clearingAudio()).toBe(false);
+            expect(component.generatingPhrase()).toBe(false);
         });
 
         it('should apply classNames to input', () => {
             fixture.componentRef.setInput('classNames', 'custom-input-class');
             fixture.detectChanges();
             const input = fixture.nativeElement.querySelector('input');
-            expect(input.classList.contains('custom-input-class')).toBeTrue();
+            expect(input.classList.contains('custom-input-class')).toBe(true);
         });
 
         it('should apply placeholder to input', () => {
@@ -65,7 +80,9 @@ describe('NewPhraseInputComponent', () => {
         it('should display locale in button', () => {
             fixture.componentRef.setInput('locale', 'en-US');
             fixture.detectChanges();
-            const localeButton = fixture.nativeElement.querySelector('.flex.gap-4.justify-between > button');
+            const localeButton = fixture.nativeElement.querySelector(
+                '.flex.gap-4.justify-between > button',
+            );
             expect(localeButton.textContent.trim()).toBe('en-US');
         });
     });
@@ -81,7 +98,7 @@ describe('NewPhraseInputComponent', () => {
         });
 
         it('should register onChange callback', () => {
-            const onChangeSpy = jasmine.createSpy('onChange');
+            const onChangeSpy = vi.fn().mockName('onChange');
             component.registerOnChange(onChangeSpy);
             component.phrase = 'Test';
             component.onPhraseChange();
@@ -89,15 +106,14 @@ describe('NewPhraseInputComponent', () => {
         });
 
         it('should register onTouched callback', () => {
-            const onTouchedSpy = jasmine.createSpy('onTouched');
-            component.registerOnTouched(onTouchedSpy);
-            expect(typeof (component as any).onTouched).toBe('function');
+            const onTouchedSpy = vi.fn().mockName('onTouched');
+            expect(() => component.registerOnTouched(onTouchedSpy)).not.toThrow();
         });
     });
 
     describe('onPhraseChange', () => {
         it('should call onChange when phrase changes', () => {
-            const onChangeSpy = jasmine.createSpy('onChange');
+            const onChangeSpy = vi.fn().mockName('onChange');
             component.registerOnChange(onChangeSpy);
             component.phrase = 'New phrase';
             component.onPhraseChange();
@@ -107,7 +123,7 @@ describe('NewPhraseInputComponent', () => {
 
     describe('onClearAudio', () => {
         it('should emit clearAudio event', () => {
-            spyOn(component.clearAudio, 'emit');
+            vi.spyOn(component.clearAudio, 'emit').mockReturnValue(undefined);
             component.onClearAudio();
             expect(component.clearAudio.emit).toHaveBeenCalled();
         });
@@ -120,65 +136,81 @@ describe('NewPhraseInputComponent', () => {
             expect(mockAudioService.generateAudio).not.toHaveBeenCalled();
         });
 
-        it('should call audioService.generateAudio with phrase', fakeAsync(() => {
+        it('should call audioService.generateAudio with phrase', async () => {
             component.phrase = 'Test phrase';
             component.onGenerateAudio();
-            tick();
-            expect(mockAudioService.generateAudio).toHaveBeenCalledWith('Test phrase');
-        }));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(mockAudioService.generateAudio).toHaveBeenCalledWith(
+                'Test phrase',
+            );
+        });
 
-        it('should set generatingAudio to true during generation and reset after complete', fakeAsync(() => {
-            const generateSubject = new Subject<{ filename: string }>();
-            mockAudioService.generateAudio.and.returnValue(generateSubject.asObservable());
+        it('should set generatingAudio to true during generation and reset after complete', async () => {
+            const generateSubject = new Subject<{
+                filename: string;
+            }>();
+            mockAudioService.generateAudio.mockReturnValue(
+                generateSubject.asObservable(),
+            );
 
             component.phrase = 'Test phrase';
             component.onGenerateAudio();
-            expect(component.generatingAudio()).toBeTrue();
+            expect(component.generatingAudio()).toBe(true);
 
             generateSubject.next({ filename: 'test.mp3' });
             generateSubject.complete();
-            tick();
-            expect(component.generatingAudio()).toBeFalse();
-        }));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(component.generatingAudio()).toBe(false);
+        });
 
-        it('should emit audioGenerated with filename on success', fakeAsync(() => {
-            spyOn(component.audioGenerated, 'emit');
+        it('should emit audioGenerated with filename on success', async () => {
+            vi.spyOn(component.audioGenerated, 'emit').mockReturnValue(
+                undefined,
+            );
             component.phrase = 'Test phrase';
             component.onGenerateAudio();
-            tick();
-            expect(component.audioGenerated.emit).toHaveBeenCalledWith('generated-audio.mp3');
-        }));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(component.audioGenerated.emit).toHaveBeenCalledWith(
+                'generated-audio.mp3',
+            );
+        });
 
-        it('should set generatingAudio to false after success', fakeAsync(() => {
+        it('should set generatingAudio to false after success', async () => {
             component.phrase = 'Test phrase';
             component.onGenerateAudio();
-            tick();
-            expect(component.generatingAudio()).toBeFalse();
-        }));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(component.generatingAudio()).toBe(false);
+        });
 
-        it('should set generatingAudio to false on error', fakeAsync(() => {
-            mockAudioService.generateAudio.and.returnValue(throwError(() => new Error('API Error')));
+        it('should set generatingAudio to false on error', async () => {
+            mockAudioService.generateAudio.mockReturnValue(
+                throwError(() => new Error('API Error')),
+            );
             component.phrase = 'Test phrase';
             component.onGenerateAudio();
-            tick();
-            expect(component.generatingAudio()).toBeFalse();
-        }));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(component.generatingAudio()).toBe(false);
+        });
 
-        it('should not emit audioGenerated on error', fakeAsync(() => {
-            mockAudioService.generateAudio.and.returnValue(throwError(() => new Error('API Error')));
-            spyOn(component.audioGenerated, 'emit');
+        it('should not emit audioGenerated on error', async () => {
+            mockAudioService.generateAudio.mockReturnValue(
+                throwError(() => new Error('API Error')),
+            );
+            vi.spyOn(component.audioGenerated, 'emit').mockReturnValue(
+                undefined,
+            );
             component.phrase = 'Test phrase';
             component.onGenerateAudio();
-            tick();
+            await vi.advanceTimersByTimeAsync(0);
             expect(component.audioGenerated.emit).not.toHaveBeenCalled();
-        }));
+        });
     });
 
     describe('onPlayAudio', () => {
         it('should not emit if audioFilename is null', () => {
             fixture.componentRef.setInput('audioFilename', null);
             fixture.detectChanges();
-            spyOn(component.playAudio, 'emit');
+            vi.spyOn(component.playAudio, 'emit').mockReturnValue(undefined);
             component.onPlayAudio();
             expect(component.playAudio.emit).not.toHaveBeenCalled();
         });
@@ -186,9 +218,11 @@ describe('NewPhraseInputComponent', () => {
         it('should emit playAudio with filename', () => {
             fixture.componentRef.setInput('audioFilename', 'test-audio.mp3');
             fixture.detectChanges();
-            spyOn(component.playAudio, 'emit');
+            vi.spyOn(component.playAudio, 'emit').mockReturnValue(undefined);
             component.onPlayAudio();
-            expect(component.playAudio.emit).toHaveBeenCalledWith('test-audio.mp3');
+            expect(component.playAudio.emit).toHaveBeenCalledWith(
+                'test-audio.mp3',
+            );
         });
     });
 
@@ -197,31 +231,35 @@ describe('NewPhraseInputComponent', () => {
             it('should be disabled when audioFilename is null', () => {
                 fixture.componentRef.setInput('audioFilename', null);
                 fixture.detectChanges();
-                const clearButton = fixture.nativeElement.querySelectorAll('ul button.btn')[0];
-                expect(clearButton.disabled).toBeTrue();
+                const clearButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[0];
+                expect(clearButton.disabled).toBe(true);
             });
 
             it('should be disabled when clearingAudio is true', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('clearingAudio', true);
                 fixture.detectChanges();
-                const clearButton = fixture.nativeElement.querySelectorAll('ul button.btn')[0];
-                expect(clearButton.disabled).toBeTrue();
+                const clearButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[0];
+                expect(clearButton.disabled).toBe(true);
             });
 
             it('should be enabled when audioFilename exists and not clearing', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('clearingAudio', false);
                 fixture.detectChanges();
-                const clearButton = fixture.nativeElement.querySelectorAll('ul button.btn')[0];
-                expect(clearButton.disabled).toBeFalse();
+                const clearButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[0];
+                expect(clearButton.disabled).toBe(false);
             });
 
             it('should call onClearAudio when clicked', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.detectChanges();
-                spyOn(component, 'onClearAudio');
-                const clearButton = fixture.nativeElement.querySelectorAll('ul button.btn')[0];
+                vi.spyOn(component, 'onClearAudio').mockReturnValue(undefined);
+                const clearButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[0];
                 clearButton.click();
                 expect(component.onClearAudio).toHaveBeenCalled();
             });
@@ -231,31 +269,35 @@ describe('NewPhraseInputComponent', () => {
             it('should be disabled when phrase is empty', () => {
                 component.phrase = '';
                 fixture.detectChanges();
-                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
-                expect(generateButton.disabled).toBeTrue();
+                const generateButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[1];
+                expect(generateButton.disabled).toBe(true);
             });
 
             it('should be disabled when generating audio', () => {
                 component.phrase = 'Test';
                 component.generatingAudio.set(true);
                 fixture.detectChanges();
-                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
-                expect(generateButton.disabled).toBeTrue();
+                const generateButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[1];
+                expect(generateButton.disabled).toBe(true);
             });
 
             it('should be enabled when phrase exists and not generating', () => {
                 component.phrase = 'Test';
                 component.generatingAudio.set(false);
                 fixture.detectChanges();
-                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
-                expect(generateButton.disabled).toBeFalse();
+                const generateButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[1];
+                expect(generateButton.disabled).toBe(false);
             });
 
             it('should show loading spinner when generating', () => {
                 component.phrase = 'Test';
                 component.generatingAudio.set(true);
                 fixture.detectChanges();
-                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
+                const generateButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[1];
                 const spinner = generateButton.querySelector('.loading');
                 expect(spinner).toBeTruthy();
             });
@@ -264,7 +306,8 @@ describe('NewPhraseInputComponent', () => {
                 component.phrase = 'Test';
                 component.generatingAudio.set(false);
                 fixture.detectChanges();
-                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
+                const generateButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[1];
                 const icon = generateButton.querySelector('app-icon');
                 expect(icon).toBeTruthy();
             });
@@ -272,8 +315,11 @@ describe('NewPhraseInputComponent', () => {
             it('should call onGenerateAudio when clicked', () => {
                 component.phrase = 'Test';
                 fixture.detectChanges();
-                spyOn(component, 'onGenerateAudio');
-                const generateButton = fixture.nativeElement.querySelectorAll('ul button.btn')[1];
+                vi.spyOn(component, 'onGenerateAudio').mockReturnValue(
+                    undefined,
+                );
+                const generateButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[1];
                 generateButton.click();
                 expect(component.onGenerateAudio).toHaveBeenCalled();
             });
@@ -283,31 +329,35 @@ describe('NewPhraseInputComponent', () => {
             it('should be disabled when audioFilename is null', () => {
                 fixture.componentRef.setInput('audioFilename', null);
                 fixture.detectChanges();
-                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
-                expect(playButton.disabled).toBeTrue();
+                const playButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[2];
+                expect(playButton.disabled).toBe(true);
             });
 
             it('should be disabled when loadingAudio is true', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('loadingAudio', true);
                 fixture.detectChanges();
-                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
-                expect(playButton.disabled).toBeTrue();
+                const playButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[2];
+                expect(playButton.disabled).toBe(true);
             });
 
             it('should be enabled when audioFilename exists and not loading', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('loadingAudio', false);
                 fixture.detectChanges();
-                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
-                expect(playButton.disabled).toBeFalse();
+                const playButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[2];
+                expect(playButton.disabled).toBe(false);
             });
 
             it('should show loading spinner when loading audio', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('loadingAudio', true);
                 fixture.detectChanges();
-                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
+                const playButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[2];
                 const spinner = playButton.querySelector('.loading');
                 expect(spinner).toBeTruthy();
             });
@@ -316,7 +366,8 @@ describe('NewPhraseInputComponent', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.componentRef.setInput('loadingAudio', false);
                 fixture.detectChanges();
-                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
+                const playButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[2];
                 const icon = playButton.querySelector('app-icon');
                 expect(icon).toBeTruthy();
             });
@@ -324,8 +375,9 @@ describe('NewPhraseInputComponent', () => {
             it('should call onPlayAudio when clicked', () => {
                 fixture.componentRef.setInput('audioFilename', 'test.mp3');
                 fixture.detectChanges();
-                spyOn(component, 'onPlayAudio');
-                const playButton = fixture.nativeElement.querySelectorAll('ul button.btn')[2];
+                vi.spyOn(component, 'onPlayAudio').mockReturnValue(undefined);
+                const playButton =
+                    fixture.nativeElement.querySelectorAll('ul button.btn')[2];
                 playButton.click();
                 expect(component.onPlayAudio).toHaveBeenCalled();
             });
@@ -333,14 +385,14 @@ describe('NewPhraseInputComponent', () => {
     });
 
     describe('input element', () => {
-        it('should update phrase on input change', fakeAsync(() => {
+        it('should update phrase on input change', async () => {
             const input = fixture.nativeElement.querySelector('input');
             input.value = 'New value';
             input.dispatchEvent(new Event('input'));
             fixture.detectChanges();
-            tick();
+            await vi.advanceTimersByTimeAsync(0);
             expect(component.phrase).toBe('New value');
-        }));
+        });
 
         it('should have correct id attribute', () => {
             fixture.componentRef.setInput('id', 'phrase-input');
@@ -378,14 +430,18 @@ describe('NewPhraseInputComponent', () => {
     describe('onGeneratePhrase', () => {
         it('should not emit if phrase is empty', () => {
             component.phrase = '';
-            spyOn(component.generatePhrase, 'emit');
+            vi.spyOn(component.generatePhrase, 'emit').mockReturnValue(
+                undefined,
+            );
             component.onGeneratePhrase();
             expect(component.generatePhrase.emit).not.toHaveBeenCalled();
         });
 
         it('should emit generatePhrase when phrase is not empty', () => {
             component.phrase = 'Test phrase';
-            spyOn(component.generatePhrase, 'emit');
+            vi.spyOn(component.generatePhrase, 'emit').mockReturnValue(
+                undefined,
+            );
             component.onGeneratePhrase();
             expect(component.generatePhrase.emit).toHaveBeenCalled();
         });
@@ -395,32 +451,41 @@ describe('NewPhraseInputComponent', () => {
         it('should be disabled when phrase is empty', () => {
             component.phrase = '';
             fixture.detectChanges();
-            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
-            expect(generatePhraseButton.disabled).toBeTrue();
+            const generatePhraseButton = fixture.nativeElement.querySelector(
+                '.form-control button.btn',
+            );
+            expect(generatePhraseButton.disabled).toBe(true);
         });
 
         it('should be disabled when generatingPhrase is true', () => {
             component.phrase = 'Test';
             fixture.componentRef.setInput('generatingPhrase', true);
             fixture.detectChanges();
-            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
-            expect(generatePhraseButton.disabled).toBeTrue();
+            const generatePhraseButton = fixture.nativeElement.querySelector(
+                '.form-control button.btn',
+            );
+            expect(generatePhraseButton.disabled).toBe(true);
         });
 
         it('should be enabled when phrase exists and not generating', () => {
             component.phrase = 'Test';
             fixture.componentRef.setInput('generatingPhrase', false);
             fixture.detectChanges();
-            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
-            expect(generatePhraseButton.disabled).toBeFalse();
+            const generatePhraseButton = fixture.nativeElement.querySelector(
+                '.form-control button.btn',
+            );
+            expect(generatePhraseButton.disabled).toBe(false);
         });
 
         it('should show loading spinner when generating phrase', () => {
             component.phrase = 'Test';
             fixture.componentRef.setInput('generatingPhrase', true);
             fixture.detectChanges();
-            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
-            const spinner = generatePhraseButton.querySelector('.loading-spinner');
+            const generatePhraseButton = fixture.nativeElement.querySelector(
+                '.form-control button.btn',
+            );
+            const spinner =
+                generatePhraseButton.querySelector('.loading-spinner');
             expect(spinner).toBeTruthy();
         });
 
@@ -428,7 +493,9 @@ describe('NewPhraseInputComponent', () => {
             component.phrase = 'Test';
             fixture.componentRef.setInput('generatingPhrase', false);
             fixture.detectChanges();
-            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
+            const generatePhraseButton = fixture.nativeElement.querySelector(
+                '.form-control button.btn',
+            );
             const icon = generatePhraseButton.querySelector('app-icon');
             expect(icon).toBeTruthy();
         });
@@ -436,8 +503,10 @@ describe('NewPhraseInputComponent', () => {
         it('should call onGeneratePhrase when clicked', () => {
             component.phrase = 'Test';
             fixture.detectChanges();
-            spyOn(component, 'onGeneratePhrase');
-            const generatePhraseButton = fixture.nativeElement.querySelector('.form-control button.btn');
+            vi.spyOn(component, 'onGeneratePhrase').mockReturnValue(undefined);
+            const generatePhraseButton = fixture.nativeElement.querySelector(
+                '.form-control button.btn',
+            );
             generatePhraseButton.click();
             expect(component.onGeneratePhrase).toHaveBeenCalled();
         });

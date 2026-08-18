@@ -1,4 +1,4 @@
-import { Component, OnDestroy, signal } from '@angular/core';
+import { Component, OnDestroy, signal, inject } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
 import { finalize, from, Observable, Subscription, switchMap } from 'rxjs';
@@ -10,13 +10,13 @@ import { finalize, from, Observable, Subscription, switchMap } from 'rxjs';
     styleUrls: ['./login.component.css'],
 })
 export class LoginComponent implements OnDestroy {
+    private authService = inject(AuthService);
+
     isLoading = signal(false);
     errorMessage = signal('');
     subscriptions: Subscription[] = [];
     qrCodeUrl = signal('');
     twoFactorloginActive = signal(true);
-
-    constructor(private authService: AuthService) {}
 
     onSubmit(form: NgForm) {
         if (form.valid) {

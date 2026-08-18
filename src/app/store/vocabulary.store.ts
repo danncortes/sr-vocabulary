@@ -195,9 +195,7 @@ export const VocabularyStore = signalStore(
                             });
 
                             toastService.toast({
-                                message: `Vocabulary ${id} marked as reviewed.
-                                Next review date: ${review_date}
-                                `,
+                                message: `Vocabulary ${id} marked as reviewed.\nNext review date: ${review_date}`,
                                 type: 'success',
                             });
                         },

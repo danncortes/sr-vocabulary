@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { signal } from '@angular/core';
@@ -78,7 +79,7 @@ describe('VocabularyViewComponent', () => {
     ];
 
     const sourceVocabularySignal = signal<TranslatedPhrase[]>(mockVocabulary);
-    let mockAudioService: jasmine.SpyObj<AudioService>;
+    let mockAudioService: Pick<MockedObject<AudioService>, 'playAudio'>;
 
     beforeEach(async () => {
         sourceVocabularySignal.set(mockVocabulary);
@@ -87,8 +88,10 @@ describe('VocabularyViewComponent', () => {
             sourceVocabulary: sourceVocabularySignal,
         };
 
-        mockAudioService = jasmine.createSpyObj('AudioService', ['playAudio']);
-        mockAudioService.playAudio.and.returnValue(of(undefined));
+        mockAudioService = {
+            playAudio: vi.fn().mockName('AudioService.playAudio'),
+        };
+        mockAudioService.playAudio.mockReturnValue(of(undefined));
 
         await TestBed.configureTestingModule({
             imports: [VocabularyViewComponent],
@@ -155,9 +158,13 @@ describe('VocabularyViewComponent', () => {
             expect(options[0].nativeElement.value).toBe('all');
             expect(options[0].nativeElement.textContent.trim()).toBe('All');
             expect(options[1].nativeElement.value).toBe('with-audio');
-            expect(options[1].nativeElement.textContent.trim()).toBe('With audio');
+            expect(options[1].nativeElement.textContent.trim()).toBe(
+                'With audio',
+            );
             expect(options[2].nativeElement.value).toBe('without-audio');
-            expect(options[2].nativeElement.textContent.trim()).toBe('Without audio');
+            expect(options[2].nativeElement.textContent.trim()).toBe(
+                'Without audio',
+            );
         });
 
         it('should render stage filter dropdown', () => {
@@ -224,7 +231,9 @@ describe('VocabularyViewComponent', () => {
                 (opt) => opt.nativeElement.value === '6',
             );
             expect(learnedOption).toBeTruthy();
-            expect(learnedOption!.nativeElement.textContent.trim()).toBe('Learned');
+            expect(learnedOption!.nativeElement.textContent.trim()).toBe(
+                'Learned',
+            );
         });
     });
 
@@ -233,7 +242,9 @@ describe('VocabularyViewComponent', () => {
             const vocabularyList = fixture.debugElement.query(
                 By.directive(VocabularyListComponent),
             );
-            expect(vocabularyList.componentInstance.vocabulary().length).toBe(3);
+            expect(vocabularyList.componentInstance.vocabulary().length).toBe(
+                3,
+            );
         });
 
         it('should filter to show only vocabulary with audio', () => {
@@ -269,13 +280,15 @@ describe('VocabularyViewComponent', () => {
             const vocabularyList = fixture.debugElement.query(
                 By.directive(VocabularyListComponent),
             );
-            expect(vocabularyList.componentInstance.vocabulary().length).toBe(3);
+            expect(vocabularyList.componentInstance.vocabulary().length).toBe(
+                3,
+            );
 
             const filteredVocab = vocabularyList.componentInstance.vocabulary();
             const hasNoAudioItem = filteredVocab.some(
                 (v: TranslatedPhrase) => v.id === 4,
             );
-            expect(hasNoAudioItem).toBeFalse();
+            expect(hasNoAudioItem).toBe(false);
         });
 
         it('should filter to show only vocabulary without audio', () => {
@@ -355,7 +368,9 @@ describe('VocabularyViewComponent', () => {
             const vocabularyList = fixture.debugElement.query(
                 By.directive(VocabularyListComponent),
             );
-            expect(vocabularyList.componentInstance.vocabulary().length).toBe(3);
+            expect(vocabularyList.componentInstance.vocabulary().length).toBe(
+                3,
+            );
         });
     });
 
@@ -385,7 +400,9 @@ describe('VocabularyViewComponent', () => {
             let vocabularyList = fixture.debugElement.query(
                 By.directive(VocabularyListComponent),
             );
-            expect(vocabularyList.componentInstance.vocabulary().length).toBe(1);
+            expect(vocabularyList.componentInstance.vocabulary().length).toBe(
+                1,
+            );
 
             component.stageFilter.set('all');
             fixture.detectChanges();
@@ -393,7 +410,9 @@ describe('VocabularyViewComponent', () => {
             vocabularyList = fixture.debugElement.query(
                 By.directive(VocabularyListComponent),
             );
-            expect(vocabularyList.componentInstance.vocabulary().length).toBe(3);
+            expect(vocabularyList.componentInstance.vocabulary().length).toBe(
+                3,
+            );
         });
 
         it('should filter by stage 6 when selecting Learned option', () => {
@@ -552,7 +571,9 @@ describe('VocabularyViewComponent', () => {
             let vocabularyList = fixture.debugElement.query(
                 By.directive(VocabularyListComponent),
             );
-            expect(vocabularyList.componentInstance.vocabulary().length).toBe(0);
+            expect(vocabularyList.componentInstance.vocabulary().length).toBe(
+                0,
+            );
 
             const newVocabulary: TranslatedPhrase[] = [
                 {
@@ -582,7 +603,9 @@ describe('VocabularyViewComponent', () => {
             vocabularyList = fixture.debugElement.query(
                 By.directive(VocabularyListComponent),
             );
-            expect(vocabularyList.componentInstance.vocabulary().length).toBe(1);
+            expect(vocabularyList.componentInstance.vocabulary().length).toBe(
+                1,
+            );
         });
     });
 

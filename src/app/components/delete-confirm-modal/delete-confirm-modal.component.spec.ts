@@ -30,12 +30,12 @@ describe('DeleteConfirmModalComponent', () => {
 
         const confirmBtn =
             fixture.debugElement.nativeElement.querySelector('.btn-error');
-        expect(confirmBtn.disabled).toBeTrue();
+        expect(confirmBtn.disabled).toBe(true);
     });
 
     it('emits cancel and confirm', () => {
-        spyOn(component.cancelModal, 'emit');
-        spyOn(component.confirm, 'emit');
+        vi.spyOn(component.cancelModal, 'emit').mockReturnValue(undefined);
+        vi.spyOn(component.confirm, 'emit').mockReturnValue(undefined);
 
         fixture.componentRef.setInput('count', 1);
         fixture.componentRef.setInput('busy', false);

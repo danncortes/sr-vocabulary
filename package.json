@@ -1,6 +1,9 @@
 {
     "name": "sr-vocabulary",
     "version": "0.0.0",
+    "engines": {
+        "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+    },
     "scripts": {
         "ng": "ng",
         "start": "ng serve",
@@ -12,40 +15,35 @@
     },
     "private": true,
     "dependencies": {
-        "@angular/cdk": "^19.2.16",
-        "@angular/common": "^19.2.0",
-        "@angular/compiler": "^19.2.0",
-        "@angular/core": "^19.2.0",
-        "@angular/forms": "^19.2.0",
-        "@angular/platform-browser": "^19.2.0",
-        "@angular/platform-browser-dynamic": "^19.2.0",
-        "@angular/router": "^19.2.0",
-        "@ngrx/signals": "^19.1.0",
+        "@angular/cdk": "^21.2.14",
+        "@angular/common": "^21.2.20",
+        "@angular/compiler": "^21.2.20",
+        "@angular/core": "^21.2.20",
+        "@angular/forms": "^21.2.20",
+        "@angular/platform-browser": "^21.2.20",
+        "@angular/platform-browser-dynamic": "^21.2.20",
+        "@angular/router": "^21.2.20",
+        "@ngrx/signals": "^21.1.1",
         "rxjs": "~7.8.0",
         "tslib": "^2.3.0",
         "zone.js": "~0.15.0"
     },
     "devDependencies": {
-        "@angular-devkit/build-angular": "^19.2.10",
-        "@angular/cli": "^19.2.10",
-        "@angular/compiler-cli": "^19.2.0",
-        "@types/jasmine": "~5.1.0",
-        "@types/node": "^18.18.0",
+        "@angular/build": "^21.2.21",
+        "@angular/cli": "^21.2.21",
+        "@angular/compiler-cli": "^21.2.20",
+        "@types/node": "^22.20.1",
         "angular-cli-ghpages": "^2.0.3",
-        "angular-eslint": "19.3.0",
+        "angular-eslint": "21.4.0",
         "autoprefixer": "^10.4.21",
         "daisyui": "^4.12.24",
         "eslint": "^9.23.0",
-        "jasmine-core": "~5.6.0",
-        "karma": "~6.4.0",
-        "karma-chrome-launcher": "~3.2.0",
-        "karma-coverage": "~2.2.0",
-        "karma-jasmine": "~5.1.0",
-        "karma-jasmine-html-reporter": "~2.1.0",
+        "jsdom": "^30.0.1",
         "postcss": "^8.5.3",
         "prettier": "^3.5.3",
         "tailwindcss": "^3.4.17",
-        "typescript": "~5.7.2",
-        "typescript-eslint": "8.27.0"
+        "typescript": "~5.9.3",
+        "typescript-eslint": "8.67.0",
+        "vitest": "^4.0.8"
     }
 }

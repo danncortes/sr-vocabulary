@@ -37,7 +37,7 @@ describe('LoginComponent', () => {
         // Initially, "With Two Factor" should be active
         expect(withTwoFactorButton.classList).toContain('btn-primary');
         expect(twoFactorSetupButton.classList).not.toContain('btn-primary');
-        expect(login2FAButton.innerText).toContain('Login with 2FA');
+        expect(login2FAButton.textContent).toContain('Login with 2FA');
 
         // Click "Two Factor setup" button
         twoFactorSetupButton.click();
@@ -49,7 +49,7 @@ describe('LoginComponent', () => {
         // Now, "Two Factor setup" should be active
         expect(withTwoFactorButton.classList).not.toContain('btn-primary');
         expect(twoFactorSetupButton.classList).toContain('btn-primary');
-        expect(setup2FAButton.innerText).toContain('Get 2FA QR');
+        expect(setup2FAButton.textContent).toContain('Get 2FA QR');
     });
 
     it('should enable login button when form is valid', () => {
@@ -73,14 +73,16 @@ describe('LoginComponent', () => {
     });
 
     it('should show loading state when logging in', () => {
-        spyOn(window, 'prompt').and.returnValue('123456');
-        spyOn(authService, 'login').and.returnValue(of({}));
+        vi.spyOn(window, 'prompt').mockReturnValue('123456');
+        vi.spyOn(authService, 'login').mockReturnValue(of({}));
 
         const form = fixture.nativeElement.querySelector('form');
-        const emailInput: HTMLInputElement =
-            form.querySelector('input[name="email"]');
-        const passwordInput: HTMLInputElement =
-            form.querySelector('input[name="password"]');
+        const emailInput: HTMLInputElement = form.querySelector(
+            'input[name="email"]',
+        );
+        const passwordInput: HTMLInputElement = form.querySelector(
+            'input[name="password"]',
+        );
 
         expect(emailInput.disabled).toBe(false);
         expect(passwordInput.disabled).toBe(false);
@@ -93,16 +95,16 @@ describe('LoginComponent', () => {
 
         const loginButton: HTMLButtonElement =
             fixture.nativeElement.querySelector('button[type="submit"]');
-        expect(loginButton.innerText).toContain('Logging in...');
+        expect(loginButton.textContent).toContain('Logging in...');
         const spinner = loginButton.querySelector('.loading-spinner');
         expect(spinner).toBeTruthy();
         expect(emailInput.hasAttribute('disabled')).toBe(true);
         expect(passwordInput.hasAttribute('disabled')).toBe(true);
     });
 
-    it('should show error message on login failure', (done) => {
-        spyOn(window, 'prompt').and.returnValue('123456'); // Mock prompt
-        spyOn(authService, 'login').and.returnValue(
+    it('should show error message on login failure', async () => {
+        vi.spyOn(window, 'prompt').mockReturnValue('123456'); // Mock prompt
+        vi.spyOn(authService, 'login').mockReturnValue(
             throwError(() => new Error('Login failed')),
         );
 
@@ -110,14 +112,11 @@ describe('LoginComponent', () => {
             valid: true,
             value: { email: 'test@example.com', password: 'wrongpassword' },
         } as NgForm);
-        // Use setTimeout to wait for async operation to complete
-        setTimeout(() => {
-            fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
 
-            const errorMessage =
-                fixture.nativeElement.querySelector('.error-message');
-            expect(errorMessage.textContent).toContain('Login failed');
-            done();
-        }, 0);
+        const errorMessage =
+            fixture.nativeElement.querySelector('.error-message');
+        expect(errorMessage.textContent).toContain('Login failed');
     });
 });

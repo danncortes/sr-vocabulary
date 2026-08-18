@@ -12,8 +12,8 @@ describe('OptionsMenuComponent', () => {
 
     beforeEach(async () => {
         mockVocabularyStore = {
-            setReviewedVocabulary: jasmine.createSpy().and.returnValue(of({})),
-            delayVocabulary: jasmine.createSpy().and.returnValue(of({})),
+            setReviewedVocabulary: vi.fn().mockReturnValue(of({})),
+            delayVocabulary: vi.fn().mockReturnValue(of({})),
         };
 
         await TestBed.configureTestingModule({
@@ -41,7 +41,7 @@ describe('OptionsMenuComponent', () => {
         );
         expect(buttons.length).toBeGreaterThan(0);
         buttons.forEach((btn) => {
-            expect(btn.nativeElement.disabled).toBeTrue();
+            expect(btn.nativeElement.disabled).toBe(true);
         });
     });
 
@@ -54,7 +54,7 @@ describe('OptionsMenuComponent', () => {
         );
         expect(buttons.length).toBeGreaterThan(0);
         buttons.forEach((btn) => {
-            expect(btn.nativeElement.disabled).toBeFalse();
+            expect(btn.nativeElement.disabled).toBe(false);
         });
     });
 });

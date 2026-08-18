@@ -32,7 +32,7 @@ describe('IconComponent', () => {
             fixture.componentRef.setInput('type', 'play');
             fixture.detectChanges();
             const svg = fixture.nativeElement.querySelector('svg');
-            expect(svg.classList.contains('size-6')).toBeTrue();
+            expect(svg.classList.contains('size-6')).toBe(true);
         });
     });
 
@@ -92,7 +92,7 @@ describe('IconComponent', () => {
             fixture.componentRef.setInput('customClass', 'text-red-500');
             fixture.detectChanges();
             const svg = fixture.nativeElement.querySelector('svg');
-            expect(svg.classList.contains('text-red-500')).toBeTrue();
+            expect(svg.classList.contains('text-red-500')).toBe(true);
         });
 
         it('should combine size-6 with custom class', () => {
@@ -100,8 +100,8 @@ describe('IconComponent', () => {
             fixture.componentRef.setInput('customClass', 'custom-class');
             fixture.detectChanges();
             const svg = fixture.nativeElement.querySelector('svg');
-            expect(svg.classList.contains('size-6')).toBeTrue();
-            expect(svg.classList.contains('custom-class')).toBeTrue();
+            expect(svg.classList.contains('size-6')).toBe(true);
+            expect(svg.classList.contains('custom-class')).toBe(true);
         });
 
         it('should have empty custom class by default', () => {
@@ -112,11 +112,14 @@ describe('IconComponent', () => {
 
         it('should apply multiple custom classes', () => {
             fixture.componentRef.setInput('type', 'play');
-            fixture.componentRef.setInput('customClass', 'text-blue-500 hover:text-blue-700');
+            fixture.componentRef.setInput(
+                'customClass',
+                'text-blue-500 hover:text-blue-700',
+            );
             fixture.detectChanges();
             const svg = fixture.nativeElement.querySelector('svg');
-            expect(svg.classList.contains('text-blue-500')).toBeTrue();
-            expect(svg.classList.contains('hover:text-blue-700')).toBeTrue();
+            expect(svg.classList.contains('text-blue-500')).toBe(true);
+            expect(svg.classList.contains('hover:text-blue-700')).toBe(true);
         });
     });
 
@@ -125,7 +128,9 @@ describe('IconComponent', () => {
             fixture.componentRef.setInput('type', 'play');
             fixture.detectChanges();
             const svg = fixture.nativeElement.querySelector('svg');
-            expect(svg.getAttribute('xmlns')).toBe('http://www.w3.org/2000/svg');
+            expect(svg.getAttribute('xmlns')).toBe(
+                'http://www.w3.org/2000/svg',
+            );
             expect(svg.getAttribute('fill')).toBe('none');
             expect(svg.getAttribute('viewBox')).toBe('0 0 24 24');
             expect(svg.getAttribute('stroke-width')).toBe('1.5');

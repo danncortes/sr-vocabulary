@@ -1,8 +1,8 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
-import { of } from 'rxjs';
 import { MainLayoutComponent } from './main-layout.component';
 import { VocabularyStore } from '../../store/vocabulary.store';
 import { AuthService } from '../../services/auth/auth.service';
@@ -40,19 +40,21 @@ describe('MainLayoutComponent', () => {
     const sourceVocabularySignal = signal<TranslatedPhrase[]>(mockVocabulary);
     const loadingSignal = signal<boolean>(false);
     const isVocabularyFormOpenSignal = signal<boolean>(false);
-    let initializeAppDataSpy: jasmine.Spy;
-    let openVocabularyFormSpy: jasmine.Spy;
-    let closeVocabularyFormSpy: jasmine.Spy;
-    let logoutSpy: jasmine.Spy;
+    let initializeAppDataSpy: Mock;
+    let openVocabularyFormSpy: Mock;
+    let closeVocabularyFormSpy: Mock;
+    let logoutSpy: Mock;
 
     beforeEach(async () => {
+        HTMLDialogElement.prototype.close = vi.fn();
+        HTMLDialogElement.prototype.showModal = vi.fn();
         sourceVocabularySignal.set(mockVocabulary);
         loadingSignal.set(false);
         isVocabularyFormOpenSignal.set(false);
-        initializeAppDataSpy = jasmine.createSpy('initializeAppData');
-        openVocabularyFormSpy = jasmine.createSpy('openVocabularyForm');
-        closeVocabularyFormSpy = jasmine.createSpy('closeVocabularyForm');
-        logoutSpy = jasmine.createSpy('logout');
+        initializeAppDataSpy = vi.fn().mockName('initializeAppData');
+        openVocabularyFormSpy = vi.fn().mockName('openVocabularyForm');
+        closeVocabularyFormSpy = vi.fn().mockName('closeVocabularyForm');
+        logoutSpy = vi.fn().mockName('logout');
 
         const mockVocabularyStore = {
             sourceVocabulary: sourceVocabularySignal,
@@ -140,9 +142,7 @@ describe('MainLayoutComponent', () => {
         loadingSignal.set(true);
         fixture.detectChanges();
 
-        const spinner = fixture.debugElement.query(
-            By.css('.loading-spinner'),
-        );
+        const spinner = fixture.debugElement.query(By.css('.loading-spinner'));
         expect(spinner).toBeTruthy();
     });
 
