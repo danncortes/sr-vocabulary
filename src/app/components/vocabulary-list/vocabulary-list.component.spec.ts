@@ -25,6 +25,7 @@ import { AudioService } from '../../services/audio/audio.service';
             [focusModeAvailable]="focusModeAvailable()"
             [focusMode]="focusMode()"
             [showFocusDelays]="showFocusDelays()"
+            [showFocusReviewDate]="showFocusReviewDate()"
         >
             <ng-template
                 #phrase
@@ -52,6 +53,7 @@ class TestHostComponent {
     focusModeAvailable = signal(false);
     focusMode = signal(false);
     showFocusDelays = signal(true);
+    showFocusReviewDate = signal(false);
     @ViewChild('phrase', { static: true })
     phraseTemplate!: TemplateRef<unknown>;
 }
@@ -285,7 +287,7 @@ describe('VocabularyListComponent within a host', () => {
         ).toBeNull();
     });
 
-    it('marks the focused vocabulary as reviewed and advances', () => {
+    it('marks the focused vocabulary as reviewed without incrementing its index', () => {
         hostComponent.vocabulary.set(mockVocabulary);
         hostComponent.focusMode.set(true);
         hostFixture.detectChanges();
@@ -299,7 +301,20 @@ describe('VocabularyListComponent within a host', () => {
         expect(mockVocabularyStore.setReviewedVocabulary).toHaveBeenCalledWith(
             1,
         );
-        expect(component.focusedVocabulary()?.id).toBe(2);
+        expect(component.focusIndex()).toBe(0);
+    });
+
+    it('shows the review date in focus mode when enabled', () => {
+        hostComponent.vocabulary.set([
+            { ...mockVocabulary[0], review_date: '2025-07-16' },
+        ]);
+        hostComponent.focusMode.set(true);
+        hostComponent.showFocusReviewDate.set(true);
+        hostFixture.detectChanges();
+
+        expect(hostFixture.nativeElement.textContent).toContain(
+            'Review date: 16 Jul 25',
+        );
     });
 
     it('delays the focused vocabulary and advances', () => {

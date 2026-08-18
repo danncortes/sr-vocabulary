@@ -13,6 +13,7 @@
                 [focusModeAvailable]="true"
                 [focusMode]="focusedList() === 'review'"
                 [showFocusDelays]="true"
+                [showFocusReviewDate]="true"
                 (focusModeChange)="setFocusMode('review', $event)"
             >
                 <ng-template
@@ -45,6 +46,7 @@
                 [focusModeAvailable]="true"
                 [focusMode]="focusedList() === 'new'"
                 [showFocusDelays]="false"
+                [showFocusReviewDate]="false"
                 (focusModeChange)="setFocusMode('new', $event)"
             >
                 <ng-template

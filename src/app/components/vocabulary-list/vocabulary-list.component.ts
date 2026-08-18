@@ -12,7 +12,7 @@ import {
     inject,
     viewChild,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { TranslatedPhrase } from '../../types/types';
 import { VocabularyStore } from '../../store/vocabulary.store';
 import { CdkMenu, CdkMenuTrigger } from '@angular/cdk/menu';
@@ -34,6 +34,7 @@ import { finalize } from 'rxjs';
         CdkMenu,
         DeleteConfirmModalComponent,
         IconComponent,
+        DatePipe,
     ],
     templateUrl: './vocabulary-list.component.html',
     host: { class: 'block' },
@@ -49,6 +50,7 @@ export class VocabularyListComponent extends OptionsActionsBase {
     focusModeAvailable = input<boolean>(false);
     focusMode = input<boolean>(false);
     showFocusDelays = input<boolean>(true);
+    showFocusReviewDate = input<boolean>(false);
     focusModeChange = output<boolean>();
     isSelectActive = signal(false);
     focusIndex = signal(0);
@@ -72,12 +74,17 @@ export class VocabularyListComponent extends OptionsActionsBase {
     private audioService = inject(AudioService);
     private lastAutoPlayedOriginalId: number | null = null;
 
+    focusPosition = computed(() => {
+        const length = this.vocabulary().length;
+        return length === 0 ? 0 : this.focusIndex() % length;
+    });
+
     focusedVocabulary = computed(() => {
         const vocabulary = this.vocabulary();
         if (vocabulary.length === 0) {
             return null;
         }
-        return vocabulary[this.focusIndex() % vocabulary.length];
+        return vocabulary[this.focusPosition()];
     });
 
     keepExpandedOnDesktop(event: MouseEvent) {
@@ -137,14 +144,16 @@ export class VocabularyListComponent extends OptionsActionsBase {
         if (!vocabulary || this.focusActionBusy()) {
             return;
         }
-        const completedIndex = this.focusIndex();
+        const completedIndex = this.focusPosition();
         this.focusActionBusy.set(true);
         this.vocabularyStore
             .setReviewedVocabulary(vocabulary.id)
             .pipe(finalize(() => this.focusActionBusy.set(false)))
             .subscribe({
-                next: () =>
-                    this.advanceAfterAction(vocabulary.id, completedIndex),
+                next: () => {
+                    this.focusIndex.set(completedIndex);
+                    this.focusPhrasesRevealed.set(false);
+                },
                 error: () => undefined,
             });
     }

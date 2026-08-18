@@ -13,8 +13,10 @@
             <h2
                 [class]="`font-light text-${color()}-500 flex gap-2 items-end vocabulary-list__title`"
             >
-                <span class="text-3xl">{{ title() }}</span>
-                <span class="text-2xl">({{ vocabulary().length }})</span>
+                <span class="text-2xl lg:text-3xl">{{ title() }}</span>
+                <span class="text-xl lg:text-2xl"
+                    >({{ vocabulary().length }})</span
+                >
             </h2>
         </div>
         <div class="flex gap-2 items-center">
@@ -106,8 +108,13 @@
             @if (focusedVocabulary(); as focusedPhrase) {
                 <article class="vocabulary-list__focus-card">
                     <div class="text-center text-sm text-gray-500">
-                        {{ focusIndex() + 1 }} / {{ vocabulary().length }}
+                        {{ focusPosition() + 1 }} / {{ vocabulary().length }}
                     </div>
+                    @if (showFocusReviewDate() && focusedPhrase.review_date) {
+                        <div class="text-center text-sm text-gray-500">
+                            {{ focusedPhrase.review_date | date: 'd MMM yy' }}
+                        </div>
+                    }
                     <div class="vocabulary-list__focus-phrases">
                         <p class="text-xl font-medium">
                             {{ focusedPhrase.original.text }}
