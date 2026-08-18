@@ -5,3 +5,10 @@ details.vocabulary-list:not([open]) app-icon[type='chevron-down'] {
 details.vocabulary-list[open] app-icon[type='chevron-right'] {
     display: none;
 }
+
+@media (min-width: 1024px) {
+    details.vocabulary-list app-icon[type='chevron-down'],
+    details.vocabulary-list app-icon[type='chevron-right'] {
+        display: none;
+    }
+}

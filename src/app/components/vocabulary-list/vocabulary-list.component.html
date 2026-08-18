@@ -1,9 +1,11 @@
 <details
+    #detailsElement
     class="grid grid-rows-[auto_1fr] h-full overflow-auto vocabulary-list"
     open
 >
     <summary
-        class="flex justify-between items-center vocabulary-list-header cursor-pointer sticky top-0 bg-white z-9 pb-5"
+        class="flex justify-between items-center vocabulary-list-header cursor-pointer lg:cursor-default sticky top-0 bg-white z-9 pb-5"
+        (click)="keepExpandedOnDesktop($event)"
     >
         <div class="flex items-center gap-2">
             <app-icon type="chevron-down"></app-icon>

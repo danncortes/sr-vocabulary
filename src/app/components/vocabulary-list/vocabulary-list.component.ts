@@ -2,6 +2,8 @@ import {
     Component,
     input,
     ContentChild,
+    ElementRef,
+    HostListener,
     TemplateRef,
     signal,
     inject,
@@ -44,7 +46,22 @@ export class VocabularyListComponent extends OptionsActionsBase {
     optionsMenuTrigger = viewChild('optionsMenuTrigger', {
         read: CdkMenuTrigger,
     });
+    detailsElement = viewChild<ElementRef<HTMLDetailsElement>>('detailsElement');
     noVocabularyMessage = input<string>('There is no vocabulary to show');
+
+    keepExpandedOnDesktop(event: MouseEvent) {
+        if (window.innerWidth >= 1024) {
+            event.preventDefault();
+            this.detailsElement()?.nativeElement.setAttribute('open', '');
+        }
+    }
+
+    @HostListener('window:resize')
+    keepExpandedAfterResize() {
+        if (window.innerWidth >= 1024) {
+            this.detailsElement()?.nativeElement.setAttribute('open', '');
+        }
+    }
 
     constructor() {
         super();

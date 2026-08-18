@@ -135,6 +135,46 @@ describe('VocabularyListComponent within a host', () => {
         expect(hostComponent).toBeTruthy();
     });
 
+    it('keeps the list expanded on desktop', () => {
+        const listDebugElement = hostFixture.debugElement.query(
+            By.directive(VocabularyListComponent),
+        );
+        const component =
+            listDebugElement.componentInstance as VocabularyListComponent;
+        const details = listDebugElement.nativeElement.querySelector(
+            'details',
+        ) as HTMLDetailsElement;
+        const clickEvent = new MouseEvent('click', { cancelable: true });
+
+        details.removeAttribute('open');
+        component.keepExpandedOnDesktop(clickEvent);
+
+        expect(clickEvent.defaultPrevented).toBe(true);
+        expect(details.open).toBe(true);
+    });
+
+    it('allows the list to collapse below 1024px', () => {
+        const listDebugElement = hostFixture.debugElement.query(
+            By.directive(VocabularyListComponent),
+        );
+        const component =
+            listDebugElement.componentInstance as VocabularyListComponent;
+        const originalWidth = window.innerWidth;
+        const clickEvent = new MouseEvent('click', { cancelable: true });
+
+        Object.defineProperty(window, 'innerWidth', {
+            configurable: true,
+            value: 1023,
+        });
+        component.keepExpandedOnDesktop(clickEvent);
+        Object.defineProperty(window, 'innerWidth', {
+            configurable: true,
+            value: originalWidth,
+        });
+
+        expect(clickEvent.defaultPrevented).toBe(false);
+    });
+
     it('should render the correct number of phrase components', async () => {
         hostComponent.vocabulary.set(mockVocabulary);
         hostFixture.detectChanges();
