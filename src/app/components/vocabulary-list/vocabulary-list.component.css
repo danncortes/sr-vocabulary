@@ -12,3 +12,57 @@ details.vocabulary-list[open] app-icon[type='chevron-right'] {
         display: none;
     }
 }
+
+.vocabulary-list__focus-mode {
+    display: grid;
+    min-height: 0;
+    place-items: center;
+    padding: 1rem;
+}
+
+.vocabulary-list__focus-card {
+    display: flex;
+    width: min(100%, 42rem);
+    flex-direction: column;
+    gap: 1.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    background: white;
+    padding: clamp(1rem, 4vw, 2rem);
+    box-shadow: 0 10px 25px rgb(0 0 0 / 8%);
+}
+
+.vocabulary-list__focus-phrases {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.vocabulary-list__focus-controls {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: start;
+    justify-items: center;
+    gap: 0.75rem;
+}
+
+.vocabulary-list__focus-audio-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    color: #6b7280;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.vocabulary-list__focus-review {
+    align-self: center;
+}
+
+.vocabulary-list__focus-delays {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.5rem;
+}

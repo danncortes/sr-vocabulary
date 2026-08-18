@@ -18,6 +18,15 @@
             </h2>
         </div>
         <div class="flex gap-2 items-center">
+            @if (focusModeAvailable()) {
+                <button
+                    class="btn btn-sm vocabulary-list__focus-button"
+                    [class.btn-primary]="focusMode()"
+                    (click)="toggleFocusMode($event)"
+                >
+                    {{ focusMode() ? 'Exit focus mode' : 'Focus mode' }}
+                </button>
+            }
             @if (showSelectToggle() && vocabulary().length > 0) {
                 @if (isSelectActive()) {
                     <button
@@ -92,24 +101,182 @@
             }
         </div>
     </summary>
-    <div class="flex flex-col gap-4 min-h-0 vocabulary-list">
-        @for (translatedPhrase of vocabulary(); track translatedPhrase.id) {
-            <ng-container
-                [ngTemplateOutlet]="phrase"
-                [ngTemplateOutletContext]="{
-                    translatedPhrase: translatedPhrase,
-                    showSelectCheckbox: isSelectActive(),
-                    isSelected: isSelected(translatedPhrase.id),
-                    selectedChange: selectedChange.bind(this),
-                }"
-            >
-            </ng-container>
-        } @empty {
-            <div
-                class="text-gray-500 text-center p-1 rounded-md bg-gray-50 shadow-lg border border-gray-200 vocabulary-list__no-vocabulary"
-            >
-                {{ noVocabularyMessage() }}
-            </div>
-        }
-    </div>
+    @if (focusMode()) {
+        <div class="vocabulary-list__focus-mode">
+            @if (focusedVocabulary(); as focusedPhrase) {
+                <article class="vocabulary-list__focus-card">
+                    <div class="text-center text-sm text-gray-500">
+                        {{ focusIndex() + 1 }} / {{ vocabulary().length }}
+                    </div>
+                    <div class="vocabulary-list__focus-phrases">
+                        <p class="text-xl font-medium">
+                            {{ focusedPhrase.original.text }}
+                        </p>
+                        @if (focusPhrasesRevealed()) {
+                            <p class="text-xl text-gray-500">
+                                {{ focusedPhrase.translated.text }}
+                            </p>
+                        } @else {
+                            <button
+                                class="btn btn-xs self-center"
+                                (click)="revealFocusPhrases()"
+                            >
+                                Reveal translation
+                            </button>
+                        }
+                    </div>
+                    <div class="vocabulary-list__focus-controls">
+                        <button
+                            aria-label="Previous vocabulary"
+                            title="Previous vocabulary"
+                            (click)="previousFocusItem()"
+                        >
+                            <app-icon
+                                type="chevron-double-left"
+                                customClass="size-14"
+                            />
+                        </button>
+                        <div class="vocabulary-list__focus-audio-control">
+                            <button
+                                aria-label="Play original phrase"
+                                title="Play original phrase"
+                                [disabled]="
+                                    !focusedPhrase.original.audio_url ||
+                                    loadingAudioId() ===
+                                        focusedPhrase.original.id
+                                "
+                                (click)="
+                                    playFocusAudio(focusedPhrase.original.id)
+                                "
+                            >
+                                @if (
+                                    loadingAudioId() ===
+                                    focusedPhrase.original.id
+                                ) {
+                                    <span
+                                        class="loading loading-spinner size-12"
+                                    ></span>
+                                } @else {
+                                    <app-icon
+                                        type="play-circle"
+                                        customClass="size-14"
+                                    />
+                                }
+                            </button>
+                            <span>{{
+                                focusLocaleCode(
+                                    focusedPhrase.original.locale.locale_code
+                                )
+                            }}</span>
+                        </div>
+                        <div class="vocabulary-list__focus-audio-control">
+                            <button
+                                aria-label="Play translated phrase"
+                                title="Play translated phrase"
+                                [disabled]="
+                                    !focusedPhrase.translated.audio_url ||
+                                    loadingAudioId() ===
+                                        focusedPhrase.translated.id
+                                "
+                                (click)="
+                                    playFocusAudio(focusedPhrase.translated.id)
+                                "
+                            >
+                                @if (
+                                    loadingAudioId() ===
+                                    focusedPhrase.translated.id
+                                ) {
+                                    <span
+                                        class="loading loading-spinner size-12"
+                                    ></span>
+                                } @else {
+                                    <app-icon
+                                        type="play-circle"
+                                        customClass="size-14"
+                                    />
+                                }
+                            </button>
+                            <span>{{
+                                focusLocaleCode(
+                                    focusedPhrase.translated.locale.locale_code
+                                )
+                            }}</span>
+                        </div>
+                        <button
+                            aria-label="Next vocabulary"
+                            title="Next vocabulary"
+                            (click)="nextFocusItem()"
+                        >
+                            <app-icon
+                                type="chevron-double-right"
+                                customClass="size-14"
+                            />
+                        </button>
+                    </div>
+                    <button
+                        class="btn btn-success text-white vocabulary-list__focus-review"
+                        aria-label="Mark vocabulary as reviewed"
+                        [disabled]="focusActionBusy()"
+                        (click)="reviewFocusedVocabulary()"
+                    >
+                        @if (focusActionBusy()) {
+                            <span
+                                class="loading loading-spinner loading-sm"
+                            ></span>
+                        } @else {
+                            <app-icon type="check-circle" />
+                        }
+                        Mark as reviewed
+                    </button>
+                    @if (showFocusDelays()) {
+                        <div class="vocabulary-list__focus-delays">
+                            @for (
+                                delayOption of focusDelayOptions;
+                                track delayOption.value
+                            ) {
+                                <button
+                                    class="btn btn-sm bg-gray-200 text-gray-700 border-0 hover:bg-gray-300"
+                                    [disabled]="busy()"
+                                    (click)="
+                                        delayFocusedVocabulary(
+                                            delayOption.value
+                                        )
+                                    "
+                                >
+                                    {{ delayOption.label }}
+                                </button>
+                            }
+                        </div>
+                    }
+                </article>
+            } @else {
+                <div
+                    class="text-gray-500 text-center p-4 rounded-md bg-gray-50 shadow-lg border border-gray-200 vocabulary-list__no-vocabulary"
+                >
+                    {{ noVocabularyMessage() }}
+                </div>
+            }
+        </div>
+    } @else {
+        <div class="flex flex-col gap-4 min-h-0 vocabulary-list">
+            @for (translatedPhrase of vocabulary(); track translatedPhrase.id) {
+                <ng-container
+                    [ngTemplateOutlet]="phrase"
+                    [ngTemplateOutletContext]="{
+                        translatedPhrase: translatedPhrase,
+                        showSelectCheckbox: isSelectActive(),
+                        isSelected: isSelected(translatedPhrase.id),
+                        selectedChange: selectedChange.bind(this),
+                    }"
+                >
+                </ng-container>
+            } @empty {
+                <div
+                    class="text-gray-500 text-center p-1 rounded-md bg-gray-50 shadow-lg border border-gray-200 vocabulary-list__no-vocabulary"
+                >
+                    {{ noVocabularyMessage() }}
+                </div>
+            }
+        </div>
+    }
 </details>

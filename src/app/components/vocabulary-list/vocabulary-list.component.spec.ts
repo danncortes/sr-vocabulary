@@ -1,11 +1,6 @@
 import type { Mock, MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import {
-    Component,
-    signal,
-    TemplateRef,
-    ViewChild,
-} from '@angular/core';
+import { Component, signal, TemplateRef, ViewChild } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { Subject } from 'rxjs';
@@ -27,6 +22,9 @@ import { AudioService } from '../../services/audio/audio.service';
             [showSelectToggle]="showSelectToggle()"
             [statusText]="statusText()"
             [status]="status()"
+            [focusModeAvailable]="focusModeAvailable()"
+            [focusMode]="focusMode()"
+            [showFocusDelays]="showFocusDelays()"
         >
             <ng-template
                 #phrase
@@ -51,6 +49,9 @@ class TestHostComponent {
     showSelectToggle = signal<boolean>(true);
     statusText = signal<string>('');
     status = signal<number>(0);
+    focusModeAvailable = signal(false);
+    focusMode = signal(false);
+    showFocusDelays = signal(true);
     @ViewChild('phrase', { static: true })
     phraseTemplate!: TemplateRef<unknown>;
 }
@@ -173,6 +174,150 @@ describe('VocabularyListComponent within a host', () => {
         });
 
         expect(clickEvent.defaultPrevented).toBe(false);
+    });
+
+    it('renders focus mode as a circular vocabulary carousel', () => {
+        hostComponent.vocabulary.set(mockVocabulary);
+        hostComponent.focusModeAvailable.set(true);
+        hostComponent.focusMode.set(true);
+        hostFixture.detectChanges();
+
+        const listDebugElement = hostFixture.debugElement.query(
+            By.directive(VocabularyListComponent),
+        );
+        const component =
+            listDebugElement.componentInstance as VocabularyListComponent;
+        const focusCard = listDebugElement.nativeElement.querySelector(
+            '.vocabulary-list__focus-card',
+        );
+
+        expect(focusCard.textContent).toContain('Hello');
+        expect(focusCard.textContent).not.toContain('Hola');
+        expect(focusCard.textContent).toContain('Reveal translation');
+        component.revealFocusPhrases();
+        hostFixture.detectChanges();
+        expect(focusCard.textContent).toContain('Hola');
+        component.previousFocusItem();
+        hostFixture.detectChanges();
+        expect(focusCard.textContent).toContain('World');
+        expect(focusCard.textContent).not.toContain('Mundo');
+        component.revealFocusPhrases();
+        hostFixture.detectChanges();
+        expect(focusCard.textContent).toContain('Mundo');
+        component.nextFocusItem();
+        hostFixture.detectChanges();
+        expect(focusCard.textContent).toContain('Hello');
+        expect(focusCard.textContent).not.toContain('Hola');
+        component.revealFocusPhrases();
+        hostFixture.detectChanges();
+        expect(focusCard.textContent).toContain('Hola');
+    });
+
+    it('plays both focus-mode audio tracks using the existing audio service', () => {
+        hostComponent.vocabulary.set(mockVocabulary);
+        hostComponent.focusMode.set(true);
+        hostFixture.detectChanges();
+
+        const component = hostFixture.debugElement.query(
+            By.directive(VocabularyListComponent),
+        ).componentInstance as VocabularyListComponent;
+
+        component.playFocusAudio(mockVocabulary[0].original.id);
+        component.playFocusAudio(mockVocabulary[0].translated.id);
+
+        expect(mockAudioService.playAudio).toHaveBeenCalledWith('1.mp3');
+        expect(mockAudioService.playAudio).toHaveBeenCalledWith('2.mp3');
+    });
+
+    it('automatically plays the original audio when focus mode starts', () => {
+        hostComponent.vocabulary.set([
+            {
+                ...mockVocabulary[0],
+                original: {
+                    ...mockVocabulary[0].original,
+                    audio_url: 'original-audio.mp3',
+                },
+            },
+        ]);
+        hostComponent.focusMode.set(true);
+        hostFixture.detectChanges();
+
+        expect(mockAudioService.playAudio).toHaveBeenCalledTimes(1);
+        expect(mockAudioService.playAudio).toHaveBeenCalledWith('1.mp3');
+
+        hostFixture.detectChanges();
+        expect(mockAudioService.playAudio).toHaveBeenCalledTimes(1);
+    });
+
+    it('automatically plays the original audio when the active card changes', () => {
+        hostComponent.vocabulary.set(
+            mockVocabulary.map((vocabulary) => ({
+                ...vocabulary,
+                original: {
+                    ...vocabulary.original,
+                    audio_url: `${vocabulary.original.id}.mp3`,
+                },
+            })),
+        );
+        hostComponent.focusMode.set(true);
+        hostFixture.detectChanges();
+        const component = hostFixture.debugElement.query(
+            By.directive(VocabularyListComponent),
+        ).componentInstance as VocabularyListComponent;
+
+        component.nextFocusItem();
+        hostFixture.detectChanges();
+
+        expect(mockAudioService.playAudio).toHaveBeenNthCalledWith(1, '1.mp3');
+        expect(mockAudioService.playAudio).toHaveBeenNthCalledWith(2, '3.mp3');
+    });
+
+    it('hides focus-mode delay buttons when delays are disabled', () => {
+        hostComponent.vocabulary.set(mockVocabulary);
+        hostComponent.focusMode.set(true);
+        hostComponent.showFocusDelays.set(false);
+        hostFixture.detectChanges();
+
+        expect(
+            hostFixture.nativeElement.querySelector(
+                '.vocabulary-list__focus-delays',
+            ),
+        ).toBeNull();
+    });
+
+    it('marks the focused vocabulary as reviewed and advances', () => {
+        hostComponent.vocabulary.set(mockVocabulary);
+        hostComponent.focusMode.set(true);
+        hostFixture.detectChanges();
+
+        const component = hostFixture.debugElement.query(
+            By.directive(VocabularyListComponent),
+        ).componentInstance as VocabularyListComponent;
+
+        component.reviewFocusedVocabulary();
+
+        expect(mockVocabularyStore.setReviewedVocabulary).toHaveBeenCalledWith(
+            1,
+        );
+        expect(component.focusedVocabulary()?.id).toBe(2);
+    });
+
+    it('delays the focused vocabulary and advances', () => {
+        hostComponent.vocabulary.set(mockVocabulary);
+        hostComponent.focusMode.set(true);
+        hostFixture.detectChanges();
+
+        const component = hostFixture.debugElement.query(
+            By.directive(VocabularyListComponent),
+        ).componentInstance as VocabularyListComponent;
+
+        component.delayFocusedVocabulary(7);
+
+        expect(mockVocabularyStore.delayVocabulary).toHaveBeenCalledWith(
+            [1],
+            7,
+        );
+        expect(component.focusedVocabulary()?.id).toBe(2);
     });
 
     it('should render the correct number of phrase components', async () => {

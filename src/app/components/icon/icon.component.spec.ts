@@ -39,12 +39,15 @@ describe('IconComponent', () => {
     describe('Icon types', () => {
         const iconTypes: IconType[] = [
             'play',
+            'play-circle',
             'check-circle',
             'ellipsis-horizontal',
             'speaker-wave',
             'speaker-x-mark',
             'pencil',
             'trash',
+            'chevron-double-left',
+            'chevron-double-right',
         ];
 
         iconTypes.forEach((iconType) => {

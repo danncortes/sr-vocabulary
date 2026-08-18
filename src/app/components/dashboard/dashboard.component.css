@@ -1,3 +1,6 @@
 .dashboard {
     padding: min(3.5rem, 6dvw);
 }
+.dashboard__focus-active {
+    grid-column: 1 / -1;
+}

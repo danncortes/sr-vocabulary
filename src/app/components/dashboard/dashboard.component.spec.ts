@@ -191,4 +191,26 @@ describe('DashboardComponent', () => {
             );
         expect(vocabularyLists.length).toBe(3);
     });
+
+    it('shows only the selected list while focus mode is active', () => {
+        const focusButtons =
+            fixture.debugElement.nativeElement.querySelectorAll(
+                '.vocabulary-list__focus-button',
+            );
+
+        focusButtons[0].click();
+        fixture.detectChanges();
+
+        expect(component.focusedList()).toBe('review');
+        expect(
+            fixture.debugElement.nativeElement.querySelectorAll(
+                'app-vocabulary-list',
+            ).length,
+        ).toBe(1);
+        expect(
+            fixture.debugElement.nativeElement
+                .querySelector('.vocabulary-list__focus-button')
+                .textContent.trim(),
+        ).toBe('Exit focus mode');
+    });
 });

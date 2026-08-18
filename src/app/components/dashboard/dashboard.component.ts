@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { VocabularyStore } from '../../store/vocabulary.store';
 import { PhraseComponent } from '../phrase/phrase.component';
 import { VocabularyListComponent } from '../vocabulary-list/vocabulary-list.component';
@@ -11,4 +11,9 @@ import { VocabularyListComponent } from '../vocabulary-list/vocabulary-list.comp
 })
 export class DashboardComponent {
     vocabularyStore = inject(VocabularyStore);
+    focusedList = signal<'review' | 'new' | null>(null);
+
+    setFocusMode(list: 'review' | 'new', enabled: boolean) {
+        this.focusedList.set(enabled ? list : null);
+    }
 }

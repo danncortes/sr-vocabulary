@@ -2,6 +2,7 @@ import { Component, input } from '@angular/core';
 
 export type IconType =
     | 'play'
+    | 'play-circle'
     | 'check-circle'
     | 'ellipsis-horizontal'
     | 'speaker-wave'
@@ -15,6 +16,8 @@ export type IconType =
     | 'arrow-right-start-on-rectangle'
     | 'chat-bubble-bottom-center-text'
     | 'chevron-right'
+    | 'chevron-double-right'
+    | 'chevron-double-left'
     | 'chevron-down';
 
 @Component({
@@ -35,6 +38,18 @@ export type IconType =
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                    />
+                }
+                @case ('play-circle') {
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                    />
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z"
                     />
                 }
                 @case ('check-circle') {
@@ -126,6 +141,20 @@ export type IconType =
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                    />
+                }
+                @case ('chevron-double-right') {
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
+                    />
+                }
+                @case ('chevron-double-left') {
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5"
                     />
                 }
                 @case ('chevron-down') {
