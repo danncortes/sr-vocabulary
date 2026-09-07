@@ -1,198 +1,144 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { catchError, Observable, of, tap } from 'rxjs';
-import { Router } from '@angular/router';
-import { environment } from '../../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
+import { inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Router } from '@angular/router';
+import {
+    createClient,
+    type Session,
+    type SupabaseClient,
+} from '@supabase/supabase-js';
+import { from, map, Observable, of } from 'rxjs';
 
-type LoginResponse = TwoFARequiredResponse | UnverifiedTwoFAResponse;
-export interface TwoFARequiredResponse {
-    message: '2FA required';
-    factorId: string;
-    userId: string;
-    token: string;
-}
-export interface UnverifiedTwoFAResponse {
-    message: 'unverified';
-    factorId: string;
-    token: string;
-}
+import { environment } from '../../../environments/environment';
 
-export interface TwoFactorEnrollResponse {
-    id: string;
-    type: 'totp';
-    friendly_name: string;
-    totp: {
-        qr_code: string;
-        secret: string;
-        uri: string;
-    };
-}
-
-interface TwoFactorResponse {
-    access_token: string;
-    refresh_token: string;
-}
-
-@Injectable({
-    providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-    private platformId = inject(PLATFORM_ID);
+    private readonly platformId = inject(PLATFORM_ID);
+    private readonly router = inject(Router);
+    private readonly supabase: SupabaseClient | null;
+    private session: Session | null = null;
+    private initialization: Promise<boolean> | null = null;
 
-    private http = inject(HttpClient);
-    private router = inject(Router);
-    private baseUrl = `${environment.apiBaseUrl}`;
-
-    private getStorage(key: string): string | null {
-        if (isPlatformBrowser(this.platformId)) {
-            return localStorage.getItem(key);
-        }
-        return null;
+    constructor() {
+        this.supabase = this.createBrowserClient();
+        this.supabase?.auth.onAuthStateChange((_event, session) => {
+            this.session = session;
+        });
     }
 
-    private setStorage(key: string, value: string): void {
-        if (isPlatformBrowser(this.platformId)) {
-            localStorage.setItem(key, value);
+    async signInWithGoogle(): Promise<void> {
+        const supabase = this.requireClient();
+        const redirectTo = new URL('auth/callback', document.baseURI).toString();
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo },
+        });
+
+        if (error) {
+            throw error;
         }
     }
 
-    private removeStorage(key: string): void {
-        if (isPlatformBrowser(this.platformId)) {
-            localStorage.removeItem(key);
+    async completeOAuthSignIn(): Promise<void> {
+        const authenticated = await this.initializeSession();
+        if (!authenticated) {
+            throw new Error('Unable to complete sign-in with Google.');
         }
+
+        await this.router.navigate(['/dashboard']);
     }
 
-    // TODO: add two-factor authentication
-    login(
-        email: string,
-        password: string,
-        code: string,
-    ): Observable<
-        Partial<LoginResponse | TwoFactorEnrollResponse | TwoFactorResponse>
-    > {
-        return this.http
-            .post<Partial<TwoFactorResponse>>(`${this.baseUrl}/user/login`, {
-                email,
-                password,
-                code,
-            })
-            .pipe(
-                tap((resp) => {
-                    if (resp.access_token) {
-                        this.setStorage('token', resp.access_token);
-                        if (resp.refresh_token) {
-                            this.setStorage(
-                                'refresh_token',
-                                resp.refresh_token,
-                            );
-                        }
-                        this.router.navigate(['/dashboard']);
+    initializeSession(): Promise<boolean> {
+        if (!this.supabase) {
+            return Promise.resolve(false);
+        }
+
+        if (!this.initialization) {
+            this.initialization = this.supabase.auth
+                .getSession()
+                .then(async ({ data, error }) => {
+                    if (error) {
+                        this.session = null;
+                        return false;
                     }
-                    return of(resp);
-                }),
-                catchError((error) => {
-                    console.error(
-                        'Error during two-factor verification:',
-                        error,
-                    ); // Error log
-                    throw error;
-                }),
-            );
+                    this.session = data.session;
+                    return Boolean(this.session?.access_token);
+                })
+                .finally(() => {
+                    this.initialization = null;
+                });
+        }
+
+        return this.initialization;
     }
 
-    logout(): void {
-        this.removeStorage('token');
-        this.removeStorage('refresh_token');
-        this.router.navigate(['/login']);
+    async logout(): Promise<void> {
+        this.session = null;
+        if (this.supabase) {
+            await this.supabase.auth.signOut();
+        }
+        await this.router.navigate(['/login']);
     }
 
-    getRefreshToken(): string | null {
-        return this.getStorage('refresh_token');
+    getToken(): string | null {
+        return this.session?.access_token ?? null;
     }
 
     refreshToken(): Observable<{
         access_token: string;
         refresh_token: string;
     } | null> {
-        const refreshToken = this.getRefreshToken();
-        if (!refreshToken) {
+        if (!this.supabase) {
             return of(null);
         }
 
-        return this.http
-            .post<{ access_token: string; refresh_token: string }>(
-                `${this.baseUrl}/user/refresh`,
-                { refresh_token: refreshToken },
-            )
-            .pipe(
-                tap((resp) => {
-                    if (resp.access_token) {
-                        this.setStorage('token', resp.access_token);
-                    }
-                    if (resp.refresh_token) {
-                        this.setStorage('refresh_token', resp.refresh_token);
-                    }
-                }),
-                catchError(() => {
-                    this.logout();
-                    return of(null);
-                }),
+        return from(this.supabase.auth.refreshSession()).pipe(
+            map(({ data, error }) => {
+                if (error || !data.session) {
+                    void this.logout();
+                    return null;
+                }
+
+                this.session = data.session;
+                return {
+                    access_token: data.session.access_token,
+                    refresh_token: data.session.refresh_token,
+                };
+            }),
+        );
+    }
+
+    private createBrowserClient(): SupabaseClient | null {
+        if (!isPlatformBrowser(this.platformId)) {
+            return null;
+        }
+
+        if (
+            environment.supabaseUrl.startsWith('__') ||
+            environment.supabasePublishableKey.startsWith('__')
+        ) {
+            return null;
+        }
+
+        return createClient(
+            environment.supabaseUrl,
+            environment.supabasePublishableKey,
+            {
+                auth: {
+                    persistSession: true,
+                    autoRefreshToken: true,
+                    detectSessionInUrl: true,
+                    flowType: 'implicit',
+                },
+            },
+        );
+    }
+
+    private requireClient(): SupabaseClient {
+        if (!this.supabase) {
+            throw new Error(
+                'The Supabase URL and publishable key are not configured.',
             );
-    }
-
-    isAuthenticated(): boolean {
-        const token = this.getStorage('token');
-        if (!token) {
-            return false;
         }
-
-        // Check if token is well-formed and not expired
-        if (!this.isTokenValid(token)) {
-            this.removeStorage('token'); // Clean up invalid token
-            return false;
-        }
-
-        return true;
-    }
-
-    getToken(): string | null {
-        return this.getStorage('token');
-    }
-
-    private isTokenValid(token: string): boolean {
-        try {
-            // Check if token is well-formed (has 3 parts separated by dots)
-            const parts = token.split('.');
-            if (parts.length !== 3) {
-                return false;
-            }
-
-            const payload = this.decodeToken(token);
-            if (!payload.exp) {
-                return false; // If no expiration, consider it invalid
-            }
-
-            // JWT exp is in seconds, Date.now() is in milliseconds
-            const expirationTime = payload.exp * 1000;
-            return Date.now() < expirationTime; // Valid if not expired
-        } catch {
-            // If token can't be decoded or parsed, it's invalid
-            return false;
-        }
-    }
-
-    private decodeToken(token: string): {
-        exp?: number;
-        [key: string]: unknown;
-    } {
-        const parts = token.split('.');
-        if (parts.length !== 3) {
-            throw new Error('Invalid token format');
-        }
-
-        const payload = parts[1];
-        const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-        return JSON.parse(decoded);
+        return this.supabase;
     }
 }

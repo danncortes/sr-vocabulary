@@ -4,6 +4,13 @@ import { loginGuard } from './guards/login.guard';
 
 export const routes: Routes = [
     {
+        path: 'auth/callback',
+        loadComponent: () =>
+            import(
+                './components/auth-callback/auth-callback.component'
+            ).then((m) => m.AuthCallbackComponent),
+    },
+    {
         path: 'login',
         loadComponent: () =>
             import('./components/login/login.component').then(

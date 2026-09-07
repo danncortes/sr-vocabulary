@@ -1,65 +1,30 @@
-import { Component, OnDestroy, signal, inject } from '@angular/core';
-import { FormsModule, NgForm } from '@angular/forms';
+import { Component, inject, signal } from '@angular/core';
 import { AuthService } from '../../services/auth/auth.service';
-import { finalize, from, Observable, Subscription, switchMap } from 'rxjs';
 
 @Component({
     selector: 'app-login',
-    imports: [FormsModule],
     templateUrl: './login.component.html',
     styleUrls: ['./login.component.css'],
 })
-export class LoginComponent implements OnDestroy {
-    private authService = inject(AuthService);
+export class LoginComponent {
+    private readonly authService = inject(AuthService);
 
-    isLoading = signal(false);
-    errorMessage = signal('');
-    subscriptions: Subscription[] = [];
-    qrCodeUrl = signal('');
-    twoFactorloginActive = signal(true);
+    readonly isLoading = signal(false);
+    readonly errorMessage = signal('');
 
-    onSubmit(form: NgForm) {
-        if (form.valid) {
-            this.errorMessage.set('');
-            this.isLoading.set(true);
+    async loginWithGoogle(): Promise<void> {
+        this.errorMessage.set('');
+        this.isLoading.set(true);
 
-            const loginSubscription = this.getTwoFactorCode()
-                .pipe(
-                    switchMap((code) => {
-                        return this.authService.login(
-                            form.value.email,
-                            form.value.password,
-                            code,
-                        );
-                    }),
-                    finalize(() => {
-                        this.isLoading.set(false);
-                    }),
-                )
-                .subscribe({
-                    error: (error) => {
-                        this.errorMessage.set(error.message || 'Login failed');
-                    },
-                });
-
-            this.subscriptions.push(loginSubscription);
+        try {
+            await this.authService.signInWithGoogle();
+        } catch (error) {
+            this.errorMessage.set(
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to sign in with Google.',
+            );
+            this.isLoading.set(false);
         }
-    }
-
-    getTwoFactorCode(): Observable<string> {
-        return from(
-            new Promise<string>((resolve) => {
-                const code = prompt('Enter your 2FA code:');
-                resolve(code || '');
-            }),
-        );
-    }
-
-    setTwoFactorloginActive(value: boolean) {
-        this.twoFactorloginActive.set(value);
-    }
-
-    ngOnDestroy(): void {
-        this.subscriptions.forEach((sub) => sub.unsubscribe());
     }
 }

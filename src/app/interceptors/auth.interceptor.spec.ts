@@ -68,16 +68,6 @@ describe('authInterceptor', () => {
         req.flush({});
     });
 
-    it('should skip auth for refresh endpoint', () => {
-        authServiceSpy.getToken.mockReturnValue('test-token');
-
-        httpClient.post('/user/refresh', {}).subscribe();
-
-        const req = httpMock.expectOne('/user/refresh');
-        expect(req.request.headers.has('Authorization')).toBe(false);
-        req.flush({});
-    });
-
     it('should attempt token refresh on 401 with expired message', () => {
         authServiceSpy.getToken.mockReturnValue('old-token');
         authServiceSpy.refreshToken.mockReturnValue(

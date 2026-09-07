@@ -25,7 +25,7 @@ jobs:
             - name: Use Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: '20'
+                  node-version: '22.22.3'
 
             - name: Install dependencies
               run: npm ci
@@ -37,12 +37,18 @@ jobs:
                     exit 1
                   fi
 
+            - name: Check for Supabase public configuration
+              run: |
+                  if [ -z "${{ secrets.SUPABASE_URL }}" ] || [ -z "${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" ]; then
+                    echo "SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY secrets must be set."
+                    exit 1
+                  fi
+
             - name: Replace environment variable
               run: |
                   sed -i "s|__API_BASE_URL__|${{ secrets.API_BASE_URL }}|g" src/environments/environment.prod.ts
-
-            - name: Show environment.prod.ts content after sed
-              run: cat src/environments/environment.prod.ts
+                  sed -i "s|__SUPABASE_URL__|${{ secrets.SUPABASE_URL }}|g" src/environments/environment.prod.ts
+                  sed -i "s|__SUPABASE_PUBLISHABLE_KEY__|${{ secrets.SUPABASE_PUBLISHABLE_KEY }}|g" src/environments/environment.prod.ts
 
             - name: Build Angular app
               run: npm run build -- --base-href=/sr-vocabulary/

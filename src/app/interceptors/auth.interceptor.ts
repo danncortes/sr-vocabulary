@@ -25,11 +25,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const authService = inject(AuthService);
     const token = authService.getToken();
 
-    // Skip auth for refresh endpoint to avoid infinite loop
-    if (req.url.includes('/user/refresh')) {
-        return next(req);
-    }
-
     if (token) {
         return next(addToken(req, token)).pipe(
             catchError((error: HttpErrorResponse) => {
