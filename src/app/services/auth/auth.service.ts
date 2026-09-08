@@ -12,9 +12,12 @@ import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+    private static readonly OAUTH_SESSION_TIMEOUT_MS = 15_000;
+
     private readonly platformId = inject(PLATFORM_ID);
     private readonly router = inject(Router);
     private readonly supabase: SupabaseClient | null;
+    private readonly sessionWaiters = new Set<(session: Session) => void>();
     private session: Session | null = null;
     private initialization: Promise<boolean> | null = null;
 
@@ -22,6 +25,9 @@ export class AuthService {
         this.supabase = this.createBrowserClient();
         this.supabase?.auth.onAuthStateChange((_event, session) => {
             this.session = session;
+            if (session) {
+                this.resolveSessionWaiters(session);
+            }
         });
     }
 
@@ -30,7 +36,13 @@ export class AuthService {
         const redirectTo = new URL('auth/callback', document.baseURI).toString();
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo },
+            options: {
+                redirectTo,
+                queryParams: {
+                    prompt: 'consent',
+                    authuser: '0',
+                },
+            },
         });
 
         if (error) {
@@ -39,8 +51,12 @@ export class AuthService {
     }
 
     async completeOAuthSignIn(): Promise<void> {
-        const authenticated = await this.initializeSession();
-        if (!authenticated) {
+        this.requireClient();
+        const session =
+            this.session ??
+            (await this.waitForSession(AuthService.OAUTH_SESSION_TIMEOUT_MS));
+
+        if (!session?.access_token) {
             throw new Error('Unable to complete sign-in with Google.');
         }
 
@@ -140,5 +156,28 @@ export class AuthService {
             );
         }
         return this.supabase;
+    }
+
+    private waitForSession(timeoutMs: number): Promise<Session | null> {
+        return new Promise((resolve) => {
+            const onSession = (session: Session): void => {
+                clearTimeout(timeout);
+                this.sessionWaiters.delete(onSession);
+                resolve(session);
+            };
+            const timeout = setTimeout(() => {
+                this.sessionWaiters.delete(onSession);
+                resolve(null);
+            }, timeoutMs);
+
+            this.sessionWaiters.add(onSession);
+        });
+    }
+
+    private resolveSessionWaiters(session: Session): void {
+        for (const resolve of this.sessionWaiters) {
+            resolve(session);
+        }
+        this.sessionWaiters.clear();
     }
 }
