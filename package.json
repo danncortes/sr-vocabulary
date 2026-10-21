@@ -31,11 +31,11 @@
     },
     "devDependencies": {
         "@angular/build": "^21.2.21",
-        "@angular/cli": "^21.2.21",
+        "@angular/cli": "^22.2.3",
         "@angular/compiler-cli": "^21.2.20",
         "@types/node": "^22.20.1",
         "angular-cli-ghpages": "^2.0.3",
-        "angular-eslint": "21.4.0",
+        "angular-eslint": "22.6.0",
         "autoprefixer": "^10.4.21",
         "daisyui": "^4.12.24",
         "eslint": "^9.23.0",
